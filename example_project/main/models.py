@@ -1,3 +1,4 @@
+from django.contrib.auth.models import User
 from django.core.mail import get_connection
 from django.core.mail import EmailMessage
 from django.db import models
