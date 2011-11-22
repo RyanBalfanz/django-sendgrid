@@ -11,7 +11,7 @@ Installation
 
 To install with PyPi::
 
-	pip install django-sendgrid`
+	pip install django-sendgrid
 
 
 Usage
