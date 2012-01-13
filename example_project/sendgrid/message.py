@@ -1,5 +1,6 @@
 import logging
 
+from django.conf import settings
 from django.core import mail
 from django.core.mail.message import EmailMessage
 
@@ -7,6 +8,8 @@ from django.core.mail.message import EmailMessage
 from signals import sendgrid_email_sent
 
 logger = logging.getLogger(__name__)
+
+SENDGRID_EMAIL_BACKEND = getattr(settings, "SENDGRID_EMAIL_BACKEND", "sendgrid.backends.SendGridEmailBackend")
 
 
 class SendGridEmailMessage(EmailMessage):
@@ -21,9 +24,9 @@ class SendGridEmailMessage(EmailMessage):
 	def _get_sendgrid_connection(self, backend=None):
 		"""docstring for _get_sendgrid_connection"""
 		logger.debug("Getting SendGrid connection")
-
+		
 		if not backend:
-			backend = "sendgrid.backends.SendGridEmailBackend"
+			backend = SENDGRID_EMAIL_BACKEND
 			
 		connection = mail.get_connection(backend)
 		return connection
