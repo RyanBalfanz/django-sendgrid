@@ -18,10 +18,14 @@ class SendGridEmailMessage(EmailMessage):
 	def __init__(self, *args, **kwargs):
 		super(SendGridEmailMessage, self).__init__(*args, **kwargs)
 		
-	def _get_sendgrid_connection(self):
+	def _get_sendgrid_connection(self, backend=None):
 		"""docstring for _get_sendgrid_connection"""
 		logger.debug("Getting SendGrid connection")
-		connection = mail.get_connection("sendgrid.backends.SendGridEmailBackend")
+
+		if not backend:
+			backend = "sendgrid.backends.SendGridEmailBackend"
+			
+		connection = mail.get_connection(backend)
 		return connection
 		
 	def send(self, *args, **kwargs):
