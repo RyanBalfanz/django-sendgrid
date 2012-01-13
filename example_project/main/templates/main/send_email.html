@@ -1,0 +1,13 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+	<meta charset="UTF-8">
+	<title>django-sendgrid example project</title>
+</head>
+<body>
+	<form action="/sendgrid/" method="post">{% csrf_token %}
+		{{ form.as_table }}
+		<input type="submit" value="Submit" />
+	</form>
+</body>
+</html>
