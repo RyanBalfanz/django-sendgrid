@@ -7,23 +7,15 @@ from sendgrid.utils import send_email_with_sendgrid
 from sendgrid.message import SendGridEmailMessage
 
 def send_simple_email(request):
-	if request.method == 'POST': # If the form has been submitted...
-		form = EmailForm(request.POST) # A form bound to the POST data
-		if form.is_valid(): # All validation rules pass
-			# Process the data in form.cleaned_data
-			# ...
+	if request.method == 'POST':
+		form = EmailForm(request.POST)
+		if form.is_valid():
 			subject=request.POST["subject"]
 			message=request.POST["message"]
 			from_email=request.POST["sender"]
 			recipient_list=request.POST["to"]
 			recipient_list = [r.strip() for r in recipient_list.split(",")]
 			
-			# send_email_with_sendgrid(
-			# 	subject=request.POST["subject"],
-			# 	message=request.POST["message"],
-			# 	from_email=request.POST["sender"],
-			# 	recipient_list=[request.POST["to"]])
-				
 			sendGridEmail = SendGridEmailMessage(
 				subject,
 				message,
@@ -31,9 +23,9 @@ def send_simple_email(request):
 				recipient_list,
 			)
 			sendGridEmail.send()
-			return HttpResponseRedirect('/') # Redirect after POST
+			return HttpResponseRedirect('/')
 	else:
-		form = EmailForm() # An unbound form
+		form = EmailForm()
 
 	c = { "form": form }
 	c.update(csrf(request))
