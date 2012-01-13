@@ -27,6 +27,7 @@ class SendGridEmailMessage(EmailMessage):
 	def send(self, *args, **kwargs):
 		"""Sends the email message."""
 		connection = self._get_sendgrid_connection()
+		self.connection = connection
 		logger.debug("Connection: {c}".format(c=connection))
 		
 		response = super(SendGridEmailMessage, self).send(*args, **kwargs)
