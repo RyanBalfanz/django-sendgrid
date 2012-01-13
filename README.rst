@@ -24,15 +24,8 @@ Add the following to your ``settings``::
 	SENDGRID_EMAIL_USERNAME = "your_sendgrid_username"
 	SENDGRID_EMAIL_PASSWORD = "your_sendgrid_password"
 
-Create an ``EmailMessage`` and send it::
-
-	>>> from django.core.mail import get_connection
-	>>> from django.core.mail import EmailMessage
-	>>> conn = get_connection("sendgrid.backends.SendGridEmailBackend")
-	>>> email = EmailMessage("Hello django-sendgrid!", "Made with Awesome Sauce!", 'you@example.com', ["your_friend@example.com"], connection=conn)
+Create a ``SendGridEmailMessage`` and send it::
+	
+	>>> from sendgrid.message import SendGridEmailMessage
+	>>> email = SendGridEmailMessage('Subject', 'Body', 'ryan@ryanbalfanz.net', ['ryan@ryanbalfanz.net'])
 	>>> email.send()
-
-Use the helper function ``send_email_with_sendgrid``::
-
-	>>> from sendgrid.utils import send_email_with_sendgrid
-	>>> send_email_with_sendgrid("Hello django-sendgrid!", "Made with Awesome Sauce!", 'you@example.com', ["your_friend@example.com"], connection=conn)
