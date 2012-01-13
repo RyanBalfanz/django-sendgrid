@@ -150,6 +150,8 @@ LOGGING = {
 # django-sendgrid
 # ---------------
 
+SENDGRID_EMAIL_BACKEND = "sendgrid.backends.SendGridEmailBackend"
+# EMAIL_BACKEND = SENDGRID_EMAIL_BACKEND
 SENDGRID_EMAIL_HOST = "smtp.sendgrid.net"
 SENDGRID_EMAIL_PORT = 587
 SENDGRID_EMAIL_USERNAME = os.getenv("SENDGRID_EMAIL_USERNAME")
