@@ -1,3 +1,4 @@
 *.pyc
 secret.sh
-
+dist/*
+django_sendgrid.egg-info/*
