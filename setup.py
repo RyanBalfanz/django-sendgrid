@@ -1,7 +1,14 @@
 #!/usr/bin/env python
+try:
+	from setuptools import setup, find_packages
+except ImportError:
+	from ez_setup import use_setuptools
+	use_setuptools()
+	from setuptools import setup, find_packages
+
 import sendgrid as distmeta
 
-packages, data_files = [], []
+packages, data_files = find_packages(exclude=("example_project",)), []
 root_dir = os.path.dirname(__file__)
 if root_dir != '':
 	os.chdir(root_dir)
