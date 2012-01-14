@@ -1,4 +1,8 @@
 #!/usr/bin/env python
+import os
+import sys
+import codecs
+
 try:
 	from setuptools import setup, find_packages
 except ImportError:
