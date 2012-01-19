@@ -1,5 +1,6 @@
 *.db
 *.pyc
+*.DS_Store
 secret.sh
 dist/*
 django_sendgrid.egg-info/*
