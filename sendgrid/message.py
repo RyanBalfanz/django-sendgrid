@@ -7,9 +7,10 @@ from django.core.mail.message import EmailMessage
 # django-sendgrid imports
 from signals import sendgrid_email_sent
 
-logger = logging.getLogger(__name__)
 
 SENDGRID_EMAIL_BACKEND = getattr(settings, "SENDGRID_EMAIL_BACKEND", "sendgrid.backends.SendGridEmailBackend")
+
+logger = logging.getLogger(__name__)
 
 
 class SendGridEmailMessage(EmailMessage):
@@ -38,7 +39,8 @@ class SendGridEmailMessage(EmailMessage):
 		logger.debug("Connection: {c}".format(c=connection))
 		
 		response = super(SendGridEmailMessage, self).send(*args, **kwargs)
-		sendgrid_email_sent.send(sender=self, email=self.message, response=response)
+		logger.debug("Tried to send an email with SendGrid and got response {r}".format(r=response))
+		sendgrid_email_sent.send(sender=self, response=response)
+		# sendgrid_email_sent.send(sender=SendGridEmailMessage, instance=self, response=response)
 		
 		return response
-		
