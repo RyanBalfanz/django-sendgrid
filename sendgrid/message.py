@@ -23,7 +23,9 @@ class SendGridEmailMessage(EmailMessage):
 		super(SendGridEmailMessage, self).__init__(*args, **kwargs)
 		
 	def _get_sendgrid_connection(self, backend=None):
-		"""docstring for _get_sendgrid_connection"""
+		"""
+		Returns a connection to the backend, defaults to the ``SENDGRID_EMAIL_BACKEND`` setting.
+		"""
 		logger.debug("Getting SendGrid connection")
 		
 		if not backend:
