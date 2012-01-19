@@ -19,7 +19,7 @@ def send_new_user_email(sender, instance, created, raw, using, **kwargs):
 			subject="Your new account!",
 			body="Thanks for signing up.",
 			from_email='welcome@example.com',
-			to=[instance.email],
+			to=[instance.username],
 			connection=connection,
 		)
 		email.send()
