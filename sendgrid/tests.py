@@ -14,6 +14,7 @@ from django.test import TestCase
 # django-sendgrid
 from message import SendGridEmailMessage
 from signals import sendgrid_email_sent
+from utils import send_email_with_sendgrid
 
 
 class SendWithSendGridEmailMessageTest(TestCase):
@@ -40,6 +41,17 @@ class SendWithSendGridEmailMessageTest(TestCase):
 		
 		numEmailSentSignalsRecieved = sum(self.signalsReceived["sendgrid_email_sent"])
 		self.assertEqual(numEmailSentSignalsRecieved, 1)
+		
+	def test_send_with_send_mail(self):
+		"""
+		Tests sending an email with the ``send_email_with_sendgrid`` helper.
+		"""
+		send_email_with_sendgrid(
+			subject="Your new account!",
+			message="Thanks for signing up.",
+			from_email='welcome@example.com',
+			recipient_list=['ryan@example.com'],
+		)
 
 
 class SendWithEmailMessageTest(TestCase):
