@@ -5,4 +5,4 @@ class EmailForm(forms.Form):
 	message = forms.CharField()
 	sender = forms.EmailField()
 	to = forms.EmailField()
-	category = forms.CharField(max_length=100)
+	category = forms.CharField(max_length=100, required=False)
