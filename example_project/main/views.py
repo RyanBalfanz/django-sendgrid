@@ -1,3 +1,5 @@
+import logging
+
 from django.core.context_processors import csrf
 from django.http import HttpResponseRedirect
 from django.shortcuts import render_to_response
@@ -8,6 +10,10 @@ from main.forms import EmailForm
 # django-sendgrid
 from sendgrid.mail import send_sendgrid_mail
 from sendgrid.message import SendGridEmailMessage
+
+
+logger = logging.getLogger(__name__)
+
 
 def send_simple_email(request):
 	if request.method == 'POST':
@@ -27,9 +33,13 @@ def send_simple_email(request):
 				recipient_list,
 			)
 			if category:
+				logger.debug("Category {c} was given".format(c=category))
 				sendGridEmail.sendgrid_headers.setCategory(category)
 				sendGridEmail.update_headers()
-			sendGridEmail.send()
+				
+			logger.debug("Sending SendGrid email {e}".format(e=sendGridEmail))
+			response = sendGridEmail.send()
+			logger.debug("Response {r}".format(r=response))
 			return HttpResponseRedirect('/')
 	else:
 		form = EmailForm()
