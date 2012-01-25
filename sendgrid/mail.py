@@ -32,7 +32,7 @@ def send_sendgrid_mail(subject, message, from_email, recipient_list,
 	"""
 	sendgrid_connection = get_sendgrid_connection()
 	return send_mail(subject, message, from_email, recipient_list,
-		fail_silently=False, auth_user=None, auth_password=None, connection=sendgrid_connection)
+		fail_silently, auth_user, auth_password, connection=sendgrid_connection)
 
 def send_mass_sendgrid_mail(datatuple, fail_silently=False, auth_user=None, auth_password=None, connection=None):
 	"""
