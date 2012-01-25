@@ -7,19 +7,19 @@ from django.db import models
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 
+# django-sendgrid
+from sendgrid.mail import get_sendgrid_connection
+from sendgrid.mail import send_sendgrid_mail
+
 
 logger = logging.getLogger(__name__)
 
 @receiver(post_save, sender=User)
 def send_new_user_email(sender, instance, created, raw, using, **kwargs):
 	if created:
-		connection = get_connection("sendgrid.backends.SendGridEmailBackend")
-		
-		email = EmailMessage(
+		send_email_with_sendgrid(
 			subject="Your new account!",
-			body="Thanks for signing up.",
+			message="Thanks for signing up.",
 			from_email='welcome@example.com',
-			to=[instance.username],
-			connection=connection,
+			recipient_list=[instance.username],
 		)
-		email.send()

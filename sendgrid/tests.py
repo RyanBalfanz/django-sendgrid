@@ -6,15 +6,15 @@ Replace this with more appropriate tests for your application.
 """
 from collections import defaultdict
 
-from django.core.mail import get_connection
 from django.core.mail import EmailMessage
 from django.dispatch import receiver
 from django.test import TestCase
 
 # django-sendgrid
+from mail import get_sendgrid_connection
+from mail import send_sendgrid_mail
 from message import SendGridEmailMessage
 from signals import sendgrid_email_sent
-from utils import send_email_with_sendgrid
 
 
 class SendWithSendGridEmailMessageTest(TestCase):
@@ -46,7 +46,7 @@ class SendWithSendGridEmailMessageTest(TestCase):
 		"""
 		Tests sending an email with the ``send_email_with_sendgrid`` helper.
 		"""
-		send_email_with_sendgrid(
+		send_sendgrid_mail(
 			subject="Your new account!",
 			message="Thanks for signing up.",
 			from_email='welcome@example.com',
@@ -60,7 +60,7 @@ class SendWithEmailMessageTest(TestCase):
 		"""
 		Sets up the tests.
 		"""
-		self.connection = get_connection("sendgrid.backends.SendGridEmailBackend")
+		self.connection = get_sendgrid_connection()
 		
 	def test_send_with_email_message(self):
 		"""

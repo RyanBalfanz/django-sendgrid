@@ -5,10 +5,10 @@ from django.core import mail
 from django.core.mail.message import EmailMessage
 
 # django-sendgrid imports
+from header import SmtpApiHeader
+from mail import get_sendgrid_connection
 from signals import sendgrid_email_sent
 
-
-SENDGRID_EMAIL_BACKEND = getattr(settings, "SENDGRID_EMAIL_BACKEND", "sendgrid.backends.SendGridEmailBackend")
 
 logger = logging.getLogger(__name__)
 
@@ -20,6 +20,9 @@ class SendGridEmailMessage(EmailMessage):
 	sendgrid_headers = None
 	
 	def __init__(self, *args, **kwargs):
+		"""
+		Initialize the object.
+		"""
 		super(SendGridEmailMessage, self).__init__(*args, **kwargs)
 		
 	def _get_sendgrid_connection(self, backend=None):
@@ -36,7 +39,8 @@ class SendGridEmailMessage(EmailMessage):
 		
 	def send(self, *args, **kwargs):
 		"""Sends the email message."""
-		connection = self._get_sendgrid_connection()
+		# Set up the connection
+		connection = get_sendgrid_connection()
 		self.connection = connection
 		logger.debug("Connection: {c}".format(c=connection))
 		
