@@ -18,6 +18,7 @@ def send_simple_email(request):
 			from_email = request.POST["sender"]
 			recipient_list = request.POST["to"]
 			recipient_list = [r.strip() for r in recipient_list.split(",")]
+			category = request.POST["category"]
 			
 			sendGridEmail = SendGridEmailMessage(
 				subject,
@@ -25,6 +26,9 @@ def send_simple_email(request):
 				from_email,
 				recipient_list,
 			)
+			if category:
+				sendGridEmail.sendgrid_headers.setCategory(category)
+				sendGridEmail.update_headers()
 			sendGridEmail.send()
 			return HttpResponseRedirect('/')
 	else:
