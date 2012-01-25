@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 @receiver(post_save, sender=User)
 def send_new_user_email(sender, instance, created, raw, using, **kwargs):
 	if created:
-		send_email_with_sendgrid(
+		send_sendgrid_mail(
 			subject="Your new account!",
 			message="Thanks for signing up.",
 			from_email='welcome@example.com',
