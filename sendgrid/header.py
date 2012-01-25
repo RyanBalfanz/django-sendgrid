@@ -25,14 +25,13 @@ class SmtpApiHeader:
 		if type(val) is str:
 			self.data['sub'][var] = [val]
 		else:
-			self.data['sub'][var] = val	   
+			self.data['sub'][var] = val
  
 	def setUniqueArgs(self, val):
 		if type(val) is dict:
 			self.data['unique_args'] = val
  
 	def setCategory(self, cat):
- 
 		self.data['category'] = cat
  
 	def addFilterSetting(self, fltr, setting, val):

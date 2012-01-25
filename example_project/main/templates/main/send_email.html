@@ -6,7 +6,7 @@
 </head>
 <body>
 	<form action="/sendgrid/" method="post">{% csrf_token %}
-		{{ form.as_table }}
+		{{ form.as_p }}
 		<input type="submit" value="Submit" />
 	</form>
 </body>
