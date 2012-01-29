@@ -23,7 +23,6 @@ class SendGridEmailMessage(EmailMessage):
 	>>> mySendGridCategory = "django-sendgrid"
 	>>> e = SendGridEmailMessage("Subject", "Message", myEmail, [myEmail], headers={"Reply-To": myEmail})
 	>>> e.sendgrid_headers.setCategory(mySendGridCategory)
-	>>> e.update_headers()
 	>>> response = e.send()
 	"""
 	sendgrid_headers = SmtpApiHeader()
