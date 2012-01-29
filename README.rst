@@ -6,6 +6,7 @@ django-sendgrid is the easiest way to send e-mail with SendGrid. It uses the Sen
 
 Although it's rather simple to use, a example project is included to demonstrate usage.
 
+
 Installation
 ------------
 
@@ -17,6 +18,13 @@ To install with PyPi::
 Usage
 -----
 
+Add ``sendgrid`` to your ``INSTALLED_APPS``::
+
+	INSTALLED_APPS = (
+		# Existing apps
+		"sendgrid",
+	)
+
 Add the following to your ``settings``::
 
 	SENDGRID_EMAIL_HOST = "smtp.sendgrid.net"
@@ -24,8 +32,16 @@ Add the following to your ``settings``::
 	SENDGRID_EMAIL_USERNAME = "your_sendgrid_username"
 	SENDGRID_EMAIL_PASSWORD = "your_sendgrid_password"
 
-Create a ``SendGridEmailMessage`` and send it::
+The API is similar to that of Django's; create a ``SendGridEmailMessage`` and send it::
 	
 	>>> from sendgrid.message import SendGridEmailMessage
 	>>> email = SendGridEmailMessage('Subject', 'Body', 'ryan@ryanbalfanz.net', ['ryan@ryanbalfanz.net'])
 	>>> email.send()
+
+
+Additional Information
+----------------------
+
+ - https://docs.djangoproject.com/en/1.3/topics/email/
+ - http://ryanbalfanz.github.com/django-sendgrid/
+ - http://pypi.python.org/pypi/django-sendgrid
