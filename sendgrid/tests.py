@@ -15,7 +15,12 @@ from mail import get_sendgrid_connection
 from mail import send_sendgrid_mail
 from message import SendGridEmailMessage
 from signals import sendgrid_email_sent
+from utils import filterutils
 
+
+validate_filter_setting_value = filterutils.validate_filter_setting_value
+validate_filter_specification = filterutils.validate_filter_specification
+update_filters = filterutils.update_filters
 
 class SendWithSendGridEmailMessageTest(TestCase):
 	def setUp(self):
@@ -74,4 +79,72 @@ class SendWithEmailMessageTest(TestCase):
 			connection=self.connection,
 		)
 		email.send()
+
+
+class FilterUtilsTests(TestCase):
+	"""docstring for FilterUtilsTests"""
+	def setUp(self):
+		"""
+		Set up the tests.
+		"""
+		pass
 		
+	def test_validate_filter_spec(self):
+		"""
+		Tests validation of a filter specification.
+		"""
+		filterSpec = {
+			"subscriptiontrack": {
+				"enable": 1,
+			},
+			"opentrack": {
+				"enable": 0,
+			},
+		}
+		assert validate_filter_specification(filterSpec) == True
+		
+	def test_subscriptiontrack_enable_parameter(self):
+		"""
+		Tests the ``subscriptiontrack`` filter's ``enable`` paramter.
+		"""
+		assert validate_filter_setting_value("subscriptiontrack", "enable", 0) == True
+		assert validate_filter_setting_value("subscriptiontrack", "enable", 1) == True
+		assert validate_filter_setting_value("subscriptiontrack", "enable", 0.0) == True
+		assert validate_filter_setting_value("subscriptiontrack", "enable", 1.0) == True
+		assert validate_filter_setting_value("subscriptiontrack", "enable", "0") == False
+		assert validate_filter_setting_value("subscriptiontrack", "enable", "1") == False
+		assert validate_filter_setting_value("subscriptiontrack", "enable", "0.0") == False
+		assert validate_filter_setting_value("subscriptiontrack", "enable", "1.0") == False
+		
+	def test_opentrack_enable_parameter(self):
+		"""
+		Tests the ``opentrack`` filter's ``enable`` paramter.
+		"""
+		assert validate_filter_setting_value("opentrack", "enable", 0) == True
+		assert validate_filter_setting_value("opentrack", "enable", 1) == True
+		assert validate_filter_setting_value("opentrack", "enable", 0.0) == True
+		assert validate_filter_setting_value("opentrack", "enable", 1.0) == True
+		assert validate_filter_setting_value("opentrack", "enable", "0") == False
+		assert validate_filter_setting_value("opentrack", "enable", "1") == False
+		assert validate_filter_setting_value("opentrack", "enable", "0.0") == False
+		assert validate_filter_setting_value("opentrack", "enable", "1.0") == False
+
+
+class UpdateFiltersTests(TestCase):
+	"""docstring for SendWithFiltersTests"""
+	def setUp(self):
+		"""docstring for setUp"""
+		self.email = SendGridEmailMessage()
+		
+	def test_update_filters(self):
+		"""docstring for test_update_filters"""
+		filterSpec = {
+			"subscriptiontrack": {
+				"enable": 1,
+			},
+			"opentrack": {
+				"enable": 0,
+			},
+		}
+		update_filters(self.email, filterSpec)
+		self.email.send()
