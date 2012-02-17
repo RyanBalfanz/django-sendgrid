@@ -1,6 +1,8 @@
 from django.conf import settings
 
-IS_ZERO_OR_ONE = lambda i: i == 0 or i == 1
+PASS = lambda i: True
+FAIL = lambda i: False
+IS_ZERO_OR_ONE = lambda i: i in (0, 1, "0", "1")
 
 INTERFACES = {
 	"subscriptiontrack": ["enable", "text/html", "text/plain", "replace", "url", "landing"],
@@ -9,6 +11,7 @@ INTERFACES = {
 
 FILTER_SETTING_VALUE_TESTS = {
 	"subscriptiontrack.enable": IS_ZERO_OR_ONE,
+	"subscriptiontrack.text/html": PASS,
 	"opentrack.enable": IS_ZERO_OR_ONE,
 }
 
@@ -49,7 +52,6 @@ def validate_filter_specification(f):
 		for setting, value in spec.iteritems():
 			testKey = ".".join([filter, setting])
 			testResult = validate_filter_setting_value(filter, setting, value)
-
 			testResults[testKey] = testResult
 
 	resultSet = set(testResults.values())
