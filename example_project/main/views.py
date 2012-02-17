@@ -10,6 +10,7 @@ from main.forms import EmailForm
 # django-sendgrid
 from sendgrid.mail import send_sendgrid_mail
 from sendgrid.message import SendGridEmailMessage
+from sendgrid.utils import filterutils
 
 
 logger = logging.getLogger(__name__)
@@ -25,6 +26,7 @@ def send_simple_email(request):
 			recipient_list = request.POST["to"]
 			recipient_list = [r.strip() for r in recipient_list.split(",")]
 			category = request.POST["category"]
+			add_unsubscribe_link = request.POST["add_unsubscribe_link"]
 			
 			sendGridEmail = SendGridEmailMessage(
 				subject,
@@ -36,6 +38,17 @@ def send_simple_email(request):
 				logger.debug("Category {c} was given".format(c=category))
 				sendGridEmail.sendgrid_headers.setCategory(category)
 				sendGridEmail.update_headers()
+				
+			if add_unsubscribe_link:
+				logger.debug("Add unsubscribe link was selected")
+				# sendGridEmail.sendgrid_headers.add
+				filterSpec = {
+					"subscriptiontrack": {
+						"enable": "1",
+						"text/html": "<p>Unsubscribe <%Here%></p>",
+					}
+				}
+				filterutils.update_filters(sendGridEmail, filterSpec, validate=False)
 				
 			logger.debug("Sending SendGrid email {e}".format(e=sendGridEmail))
 			response = sendGridEmail.send()
