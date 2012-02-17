@@ -111,8 +111,8 @@ class FilterUtilsTests(TestCase):
 		assert validate_filter_setting_value("subscriptiontrack", "enable", 1) == True
 		assert validate_filter_setting_value("subscriptiontrack", "enable", 0.0) == True
 		assert validate_filter_setting_value("subscriptiontrack", "enable", 1.0) == True
-		assert validate_filter_setting_value("subscriptiontrack", "enable", "0") == False
-		assert validate_filter_setting_value("subscriptiontrack", "enable", "1") == False
+		assert validate_filter_setting_value("subscriptiontrack", "enable", "0") == True
+		assert validate_filter_setting_value("subscriptiontrack", "enable", "1") == True
 		assert validate_filter_setting_value("subscriptiontrack", "enable", "0.0") == False
 		assert validate_filter_setting_value("subscriptiontrack", "enable", "1.0") == False
 		
@@ -124,8 +124,8 @@ class FilterUtilsTests(TestCase):
 		assert validate_filter_setting_value("opentrack", "enable", 1) == True
 		assert validate_filter_setting_value("opentrack", "enable", 0.0) == True
 		assert validate_filter_setting_value("opentrack", "enable", 1.0) == True
-		assert validate_filter_setting_value("opentrack", "enable", "0") == False
-		assert validate_filter_setting_value("opentrack", "enable", "1") == False
+		assert validate_filter_setting_value("opentrack", "enable", "0") == True
+		assert validate_filter_setting_value("opentrack", "enable", "1") == True
 		assert validate_filter_setting_value("opentrack", "enable", "0.0") == False
 		assert validate_filter_setting_value("opentrack", "enable", "1.0") == False
 
