@@ -5,11 +5,15 @@ FAIL = lambda i: False
 IS_ZERO_OR_ONE = lambda i: i in (0, 1, "0", "1")
 
 INTERFACES = {
+	"gravatar": ["enable"],
+	"clicktrack": ["enable"],
 	"subscriptiontrack": ["enable", "text/html", "text/plain", "replace", "url", "landing"],
-	"opentrack": ["enable"]
+	"opentrack": ["enable"],
 }
 
 FILTER_SETTING_VALUE_TESTS = {
+	"gravatar.enable": IS_ZERO_OR_ONE,
+	"clicktrack.enable": IS_ZERO_OR_ONE,
 	"subscriptiontrack.enable": IS_ZERO_OR_ONE,
 	"subscriptiontrack.text/html": PASS,
 	"opentrack.enable": IS_ZERO_OR_ONE,
