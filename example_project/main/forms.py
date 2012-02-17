@@ -6,4 +6,5 @@ class EmailForm(forms.Form):
 	sender = forms.EmailField()
 	to = forms.EmailField()
 	category = forms.CharField(max_length=100, required=False)
+	html = forms.BooleanField()
 	add_unsubscribe_link = forms.BooleanField()

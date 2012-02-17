@@ -26,6 +26,7 @@ def send_simple_email(request):
 			recipient_list = request.POST["to"]
 			recipient_list = [r.strip() for r in recipient_list.split(",")]
 			category = request.POST["category"]
+			html = request.POST["html"]
 			add_unsubscribe_link = request.POST["add_unsubscribe_link"]
 			
 			sendGridEmail = SendGridEmailMessage(
@@ -34,6 +35,9 @@ def send_simple_email(request):
 				from_email,
 				recipient_list,
 			)
+			if html:
+				sendGridEmail.content_subtype = "html"
+				
 			if category:
 				logger.debug("Category {c} was given".format(c=category))
 				sendGridEmail.sendgrid_headers.setCategory(category)
