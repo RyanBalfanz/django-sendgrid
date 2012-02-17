@@ -48,7 +48,7 @@ def send_simple_email(request):
 				# sendGridEmail.sendgrid_headers.add
 				filterSpec = {
 					"subscriptiontrack": {
-						"enable": "1",
+						"enable": 1,
 						"text/html": "<p>Unsubscribe <%Here%></p>",
 					}
 				}
