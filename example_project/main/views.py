@@ -52,7 +52,7 @@ def send_simple_email(request):
 						"text/html": "<p>Unsubscribe <%Here%></p>",
 					}
 				}
-				filterutils.update_filters(sendGridEmail, filterSpec, validate=False)
+				filterutils.update_filters(sendGridEmail, filterSpec, validate=True)
 				
 			logger.debug("Sending SendGrid email {e}".format(e=sendGridEmail))
 			response = sendGridEmail.send()
