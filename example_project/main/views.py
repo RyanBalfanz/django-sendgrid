@@ -26,8 +26,11 @@ def send_simple_email(request):
 			recipient_list = request.POST["to"]
 			recipient_list = [r.strip() for r in recipient_list.split(",")]
 			category = request.POST["category"]
-			html = request.POST["html"]
-			add_unsubscribe_link = request.POST["add_unsubscribe_link"]
+			# https://docs.djangoproject.com/en/dev/ref/forms/fields/#booleanfield
+			html = getattr(request.POST, "html", False)
+			enable_gravatar = getattr(request.POST, "enable_gravatar", False)
+			enable_click_tracking = getattr(request.POST, "enable_click_tracking", False)
+			add_unsubscribe_link = getattr(request.POST, "add_unsubscribe_link", False)
 			
 			sendGridEmail = SendGridEmailMessage(
 				subject,
@@ -43,15 +46,28 @@ def send_simple_email(request):
 				sendGridEmail.sendgrid_headers.setCategory(category)
 				sendGridEmail.update_headers()
 				
+			filterSpec = {}
+			if enable_gravatar:
+				logger.debug("Enable Gravatar was selected")
+				filterSpec["gravatar"] = {
+					"enable": 1
+				}
+				
+			if enable_gravatar:
+				logger.debug("Enable click tracking was selected")
+				filterSpec["clicktrack"] = {
+					"enable": 1
+				}
+				
 			if add_unsubscribe_link:
 				logger.debug("Add unsubscribe link was selected")
 				# sendGridEmail.sendgrid_headers.add
-				filterSpec = {
-					"subscriptiontrack": {
-						"enable": 1,
-						"text/html": "<p>Unsubscribe <%Here%></p>",
-					}
+				filterSpec["subscriptiontrack"] = {
+					"enable": 1,
+					"text/html": "<p>Unsubscribe <%Here%></p>",
 				}
+				
+			if filterSpec:
 				filterutils.update_filters(sendGridEmail, filterSpec, validate=True)
 				
 			logger.debug("Sending SendGrid email {e}".format(e=sendGridEmail))
