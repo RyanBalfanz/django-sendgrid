@@ -23,7 +23,6 @@ class SendGridEmailMessage(EmailMessage):
 	>>> mySendGridCategory = "django-sendgrid"
 	>>> e = SendGridEmailMessage("Subject", "Message", myEmail, [myEmail], headers={"Reply-To": myEmail})
 	>>> e.sendgrid_headers.setCategory(mySendGridCategory)
-	>>> e.update_headers()
 	>>> response = e.send()
 	"""
 	sendgrid_headers = SmtpApiHeader()
@@ -39,8 +38,12 @@ class SendGridEmailMessage(EmailMessage):
 		Updates the existing headers to include SendGrid headers.
 		"""
 		logger.debug("Updating headers with SendGrid headers")
-		sendgrid_headers_dict = dict(json.loads(self.sendgrid_headers.asJSON()))
-		self.extra_headers.update(sendgrid_headers_dict)
+		if self.sendgrid_headers:
+			additionalHeaders = {
+				"X-SMTPAPI": self.sendgrid_headers.asJSON()
+			}
+			self.extra_headers.update(additionalHeaders)
+		
 		logging.debug(str(self.extra_headers))
 		
 		return self.extra_headers
@@ -58,7 +61,6 @@ class SendGridEmailMessage(EmailMessage):
 		self.connection = connection
 		logger.debug("Connection: {c}".format(c=connection))
 		
-		self.sendgrid_headers.setCategory("django-sendgrid-test")
 		self.update_headers()
 		
 		response = super(SendGridEmailMessage, self).send(*args, **kwargs)
