@@ -17,9 +17,9 @@ def get_sendgrid_connection(*args, **kwargs):
 	Returns an instance of the email backend specified in SENDGRID_EMAIL_BACKEND.
 	"""
 	backend = SENDGRID_EMAIL_BACKEND
-	# if in_test_environment:
-	# 	logger.debug("In test environment!")
-	# 	backend = 'django.core.mail.backends.locmem.EmailBackend'
+	if in_test_environment():
+		logger.debug("In test environment!")
+		backend = "django.core.mail.backends.locmem.EmailBackend"
 		
 	logger.debug("Getting SendGrid connection using backend {b}".format(b=backend))
 	sendgrid_connection = get_connection(backend, *args, **kwargs)
