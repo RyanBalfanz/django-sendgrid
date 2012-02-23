@@ -16,11 +16,21 @@ from mail import send_sendgrid_mail
 from message import SendGridEmailMessage
 from signals import sendgrid_email_sent
 from utils import filterutils
+from utils import in_test_environment
 
 
 validate_filter_setting_value = filterutils.validate_filter_setting_value
 validate_filter_specification = filterutils.validate_filter_specification
 update_filters = filterutils.update_filters
+
+
+class SendGridInTestEnvTest(TestCase):
+	def test_in_test_environment(self):
+		"""
+		Tests that the test environment is detected.
+		"""
+		self.assertEqual(in_test_environment(), True)
+
 
 class SendWithSendGridEmailMessageTest(TestCase):
 	def setUp(self):
