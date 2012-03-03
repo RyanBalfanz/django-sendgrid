@@ -68,3 +68,48 @@ class SendGridEmailMessage(EmailMessage):
 		sendgrid_email_sent.send(sender=self, response=response)
 		
 		return response
+
+
+class SendGridEmailMultiAlternatives(SendGridEmailMessage):
+	"""
+	A version of SendGridEmailMessage that makes it easy to send multipart/alternative
+	messages. For example, including text and HTML versions of the text is
+	made easier.
+	
+	# TODO: Find a better way to support this.
+	"""
+	alternative_subtype = 'alternative'
+	
+	def __init__(self, subject='', body='', from_email=None, to=None, bcc=None,
+			connection=None, attachments=None, headers=None, alternatives=None,
+			cc=None):
+		"""
+		Initialize a single email message (which can be sent to multiple
+		recipients).
+		
+		All strings used to create the message can be unicode strings (or UTF-8
+		bytestrings). The SafeMIMEText class will handle any necessary encoding
+		conversions.
+		"""
+		super(SendGridEmailMultiAlternatives, self).__init__(subject, body, from_email, to, bcc, connection, attachments, headers, cc)
+		self.alternatives = alternatives or []
+
+	def attach_alternative(self, content, mimetype):
+		"""Attach an alternative content representation."""
+		assert content is not None
+		assert mimetype is not None
+		self.alternatives.append((content, mimetype))
+	
+	def _create_message(self, msg):
+		return self._create_attachments(self._create_alternatives(msg))
+	
+	def _create_alternatives(self, msg):
+		encoding = self.encoding or settings.DEFAULT_CHARSET
+		if self.alternatives:
+			body_msg = msg
+			msg = SafeMIMEMultipart(_subtype=self.alternative_subtype, encoding=encoding)
+			if self.body:
+				msg.attach(body_msg)
+			for alternative in self.alternatives:
+				msg.attach(self._create_mime_attachment(*alternative))
+		return msg

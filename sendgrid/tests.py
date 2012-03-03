@@ -14,6 +14,7 @@ from django.test import TestCase
 from mail import get_sendgrid_connection
 from mail import send_sendgrid_mail
 from message import SendGridEmailMessage
+from message import SendGridEmailMultiAlternatives
 from signals import sendgrid_email_sent
 from utils import filterutils
 from utils import in_test_environment
@@ -89,6 +90,35 @@ class SendWithEmailMessageTest(TestCase):
 			connection=self.connection,
 		)
 		email.send()
+
+
+class SendWithEmailMessageTest(TestCase):
+	def setUp(self):
+		self.signalsReceived = defaultdict(list)
+		
+	def test_send_multipart_email(self):
+		"""docstring for send_multipart_email"""
+		subject, from_email, to = 'hello', 'from@example.com', 'to@example.com'
+		text_content = 'This is an important message.'
+		html_content = '<p>This is an <strong>important</strong> message.</p>'
+		msg = SendGridEmailMultiAlternatives(subject, text_content, from_email, [to])
+		msg.attach_alternative(html_content, "text/html")
+		msg.send()
+		
+	def test_send_multipart_email_sends_signal(self):
+		@receiver(sendgrid_email_sent)
+		def receive_sendgrid_email_sent(*args, **kwargs):
+			"""
+			Receives sendgrid_email_sent signals.
+			"""
+			self.signalsReceived["sendgrid_email_sent"].append(1)
+			return True
+			
+		email = SendGridEmailMultiAlternatives()
+		email.send()
+		
+		numEmailSentSignalsRecieved = sum(self.signalsReceived["sendgrid_email_sent"])
+		self.assertEqual(numEmailSentSignalsRecieved, 1)
 
 
 class FilterUtilsTests(TestCase):
