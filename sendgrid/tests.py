@@ -25,6 +25,36 @@ validate_filter_specification = filterutils.validate_filter_specification
 update_filters = filterutils.update_filters
 
 
+class SendGridEmailTest(TestCase):
+	"""docstring for SendGridEmailTest"""
+	def setUp(self):
+		"""docstring for setUp"""
+		pass
+		
+	def test_email_has_unique_id(self):
+		"""docstring for email_has_unique_id"""
+		email = SendGridEmailMessage()
+		self.assertTrue(email._message_id)
+		
+	def test_email_sends_unique_id(self):
+		"""docstring for email_sends_unique_id"""
+		email = SendGridEmailMessage()
+		email.send()
+		self.assertTrue(email.sendgrid_headers.data["unique_args"]["message_id"])
+		
+	def test_email_sent_signal_has_message(self):
+		"""docstring for email_sent_signal_has_message"""
+		@receiver(sendgrid_email_sent)
+		def receive_sendgrid_email_sent(*args, **kwargs):
+			"""
+			Receives sendgrid_email_sent signals.
+			"""
+			self.assertTrue("response" in kwargs)
+			# self.assertTrue("message" in kwargs)
+			
+		email = SendGridEmailMessage()
+		response = email.send()
+
 class SendGridInTestEnvTest(TestCase):
 	def test_in_test_environment(self):
 		"""
@@ -92,7 +122,7 @@ class SendWithEmailMessageTest(TestCase):
 		email.send()
 
 
-class SendWithEmailMessageTest(TestCase):
+class SendWithSendGridEmailMultiAlternativesTest(TestCase):
 	def setUp(self):
 		self.signalsReceived = defaultdict(list)
 		
@@ -141,33 +171,33 @@ class FilterUtilsTests(TestCase):
 				"enable": 0,
 			},
 		}
-		assert validate_filter_specification(filterSpec) == True
+		self.assertEqual(validate_filter_specification(filterSpec), True)
 		
 	def test_subscriptiontrack_enable_parameter(self):
 		"""
 		Tests the ``subscriptiontrack`` filter's ``enable`` paramter.
 		"""
-		assert validate_filter_setting_value("subscriptiontrack", "enable", 0) == True
-		assert validate_filter_setting_value("subscriptiontrack", "enable", 1) == True
-		assert validate_filter_setting_value("subscriptiontrack", "enable", 0.0) == True
-		assert validate_filter_setting_value("subscriptiontrack", "enable", 1.0) == True
-		assert validate_filter_setting_value("subscriptiontrack", "enable", "0") == True
-		assert validate_filter_setting_value("subscriptiontrack", "enable", "1") == True
-		assert validate_filter_setting_value("subscriptiontrack", "enable", "0.0") == False
-		assert validate_filter_setting_value("subscriptiontrack", "enable", "1.0") == False
+		self.assertEqual(validate_filter_setting_value("subscriptiontrack", "enable", 0), True)
+		self.assertEqual(validate_filter_setting_value("subscriptiontrack", "enable", 1), True)
+		self.assertEqual(validate_filter_setting_value("subscriptiontrack", "enable", 0.0), True)
+		self.assertEqual(validate_filter_setting_value("subscriptiontrack", "enable", 1.0), True)
+		self.assertEqual(validate_filter_setting_value("subscriptiontrack", "enable", "0"), True)
+		self.assertEqual(validate_filter_setting_value("subscriptiontrack", "enable", "1"), True)
+		self.assertEqual(validate_filter_setting_value("subscriptiontrack", "enable", "0.0"), False)
+		self.assertEqual(validate_filter_setting_value("subscriptiontrack", "enable", "1.0"), False)
 		
 	def test_opentrack_enable_parameter(self):
 		"""
 		Tests the ``opentrack`` filter's ``enable`` paramter.
 		"""
-		assert validate_filter_setting_value("opentrack", "enable", 0) == True
-		assert validate_filter_setting_value("opentrack", "enable", 1) == True
-		assert validate_filter_setting_value("opentrack", "enable", 0.0) == True
-		assert validate_filter_setting_value("opentrack", "enable", 1.0) == True
-		assert validate_filter_setting_value("opentrack", "enable", "0") == True
-		assert validate_filter_setting_value("opentrack", "enable", "1") == True
-		assert validate_filter_setting_value("opentrack", "enable", "0.0") == False
-		assert validate_filter_setting_value("opentrack", "enable", "1.0") == False
+		self.assertEqual(validate_filter_setting_value("opentrack", "enable", 0), True)
+		self.assertEqual(validate_filter_setting_value("opentrack", "enable", 1), True)
+		self.assertEqual(validate_filter_setting_value("opentrack", "enable", 0.0), True)
+		self.assertEqual(validate_filter_setting_value("opentrack", "enable", 1.0), True)
+		self.assertEqual(validate_filter_setting_value("opentrack", "enable", "0"), True)
+		self.assertEqual(validate_filter_setting_value("opentrack", "enable", "1"), True)
+		self.assertEqual(validate_filter_setting_value("opentrack", "enable", "0.0"), False)
+		self.assertEqual(validate_filter_setting_value("opentrack", "enable", "1.0"), False)
 
 
 class UpdateFiltersTests(TestCase):
