@@ -70,8 +70,17 @@ class SendGridEmailMessageMixin:
 		return uniqueArgs
 	unique_args = property(get_unique_args)
 	
+	def setup_connection(self):
+		"""docstring for setup_connection"""
+		# Set up the connection
+		connection = get_sendgrid_connection()
+		self.connection = connection
+		logger.debug("Connection: {c}".format(c=connection))
+	
 	def prep_message_for_sending(self):
 		"""docstring for prep_message_for_sending"""
+		self.setup_connection()
+		
 		# now = tz.localize(datetime.datetime.strptime(timestamp[:26], POSTMARK_DATETIME_STRING)).astimezone(pytz.utc)
 		uniqueArgs = {
 			"message_id": str(self._message_id),
@@ -104,11 +113,6 @@ class SendGridEmailMessage(EmailMessage, SendGridEmailMessageMixin):
 		
 	def send(self, *args, **kwargs):
 		"""Sends the email message."""
-		# Set up the connection
-		connection = get_sendgrid_connection()
-		self.connection = connection
-		logger.debug("Connection: {c}".format(c=connection))
-		
 		self.prep_message_for_sending()
 		
 		response = super(SendGridEmailMessage, self).send(*args, **kwargs)
@@ -130,13 +134,8 @@ class SendGridEmailMultiAlternatives(EmailMultiAlternatives, SendGridEmailMessag
 		
 	def send(self, *args, **kwargs):
 		"""Sends the email message."""
-		# Set up the connection
-		connection = get_sendgrid_connection()
-		self.connection = connection
-		logger.debug("Connection: {c}".format(c=connection))
-
 		self.prep_message_for_sending()
-
+		
 		response = super(SendGridEmailMultiAlternatives, self).send(*args, **kwargs)
 		logger.debug("Tried to send an email with SendGrid and got response {r}".format(r=response))
 		sendgrid_email_sent.send(sender=self, response=response)
