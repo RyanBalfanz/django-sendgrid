@@ -102,12 +102,12 @@ class SendGridEmailMessage(EmailMessage, SendGridEmailMessageMixin):
 	>>> e.sendgrid_headers.setCategory(mySendGridCategory)
 	>>> response = e.send()
 	"""
-	sendgrid_headers = SmtpApiHeader()
 	
 	def __init__(self, *args, **kwargs):
 		"""
 		Initialize the object.
 		"""
+		self.sendgrid_headers = SmtpApiHeader()
 		self._message_id = uuid.uuid4()
 		super(SendGridEmailMessage, self).__init__(*args, **kwargs)
 		
@@ -126,9 +126,9 @@ class SendGridEmailMultiAlternatives(EmailMultiAlternatives, SendGridEmailMessag
 	"""
 	Adapts Django's ``EmailMultiAlternatives`` for use with SendGrid.
 	"""
-	sendgrid_headers = SmtpApiHeader()
 	
 	def __init__(self, *args, **kwargs):
+		self.sendgrid_headers = SmtpApiHeader()
 		self._message_id = uuid.uuid4()
 		super(SendGridEmailMultiAlternatives, self).__init__(*args, **kwargs)
 		
