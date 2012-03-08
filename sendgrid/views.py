@@ -49,6 +49,10 @@ def listener(request):
 
 	# SendGrid Event API Documentation
 	# http://docs.sendgrid.com/documentation/api/event-api/
+	
+	Example Request ::
+		
+		curl -i -d 'email=test@gmail.com&amp;arg2=2&amp;arg1=1&amp;category=testing&amp;event=processed' http://127.0.0.1:8000/sendgrid/events/
 	"""
 	sendgrid_event_recieved.send(sender=None)
 	
