@@ -55,13 +55,9 @@ def listener(request):
 		curl -i -d 'email=test@gmail.com&amp;arg2=2&amp;arg1=1&amp;category=testing&amp;event=processed' http://127.0.0.1:8000/sendgrid/events/
 	"""
 	sendgrid_event_recieved.send(sender=None)
-	
-	print "REQUEST METHOD:", request.method
-	
+		
 	response = None
 	if request.method == 'POST':
-		print "POST:", request.POST
-		
 		if request.META["CONTENT_TYPE"] == "application/json":
 			response = handle_batched_events_request(request)
 		elif request.META["CONTENT_TYPE"] == "application/xml":
@@ -69,9 +65,8 @@ def listener(request):
 		elif request.META["CONTENT_TYPE"] == "application/x-www-form-urlencoded":
 			response = handle_single_event_request(request)
 		else:
-			msg = "MIME type {m} unexpected".format(m=request.META["CONTENT_TYPE"])
+			msg = "Content type {m} unexpected".format(m=request.META["CONTENT_TYPE"])
 			logger.error(msg)
-			# raise Exception(msg)
 	else:
 		msg = "Request method not allowed: {error}".format(error=request.method)
 		logger.error(msg)
