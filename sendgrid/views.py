@@ -30,7 +30,8 @@ def handle_single_event_request(request):
 		sendgrid_event_recieved.send(sender=None, email=email, event=event)
 		
 		response = HttpResponse()
-		response.write("\n".join(map(str, [email, event])) + "\n")
+		
+		logger.debug("\n".join(map(str, [email, event])) + "\n")
 		
 	return response
 
