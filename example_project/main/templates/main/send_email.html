@@ -3,11 +3,39 @@
 <head>
 	<meta charset="UTF-8">
 	<title>django-sendgrid example project</title>
+	<style type="text/css">
+		body {
+			padding-top: 60px;
+			padding-bottom: 40px;
+		}
+	</style>
+	<link rel="stylesheet" href="http://twitter.github.com/bootstrap/assets/css/bootstrap.css" type="text/css" media="screen" charset="utf-8">
 </head>
 <body>
-	<form action="/sendgrid/" method="post">{% csrf_token %}
-		{{ form.as_p }}
-		<input type="submit" value="Submit" />
-	</form>
+	<div class="navbar navbar-fixed-top">
+		<div class="navbar-inner">
+			<div class="container">
+			<a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+			</a>
+			<a class="brand" href="#">django-sendgrid</a>
+			<div class="nav-collapse">
+				<ul class="nav">
+					<li><a href="https://github.com/RyanBalfanz/django-sendgrid">Github</a></li>
+					<li><a href="http://pypi.python.org/pypi/django-sendgrid">PyPI</a></li>
+					<li><a href="http://djangopackages.com/packages/p/django-sendgrid/">django-packages</a></li>
+				</ul>
+			</div><!--/.nav-collapse -->
+			</div>
+		</div>
+	</div>
+	<div class="container">
+		<form action="/sendgrid/" method="post">{% csrf_token %}
+			{{ form.as_p }}
+			<input type="submit" value="Send" />
+		</form>
+	</div>
 </body>
 </html>
