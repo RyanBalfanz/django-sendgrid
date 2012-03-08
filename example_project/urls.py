@@ -6,8 +6,8 @@ admin.autodiscover()
 
 urlpatterns = patterns('',
 	# Examples:
-	url(r'^$', include("sendgrid.urls")),
-	url(r"^sendgrid/", include("sendgrid.urls")),
+	url(r'^$', include("example_project.main.urls")),
+	url(r"^sendgrid/", include("example_project.main.urls")),
 	# Uncomment the admin/doc line below to enable admin documentation:
 	# url(r'^admin/doc/', include('django.contrib.admindocs.urls')),
 
