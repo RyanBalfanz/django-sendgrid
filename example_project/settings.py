@@ -172,5 +172,5 @@ SENDGRID_EMAIL_PASSWORD = os.getenv("SENDGRID_EMAIL_PASSWORD")
 
 try:
 	from settings_local import *
-except:
+except ImportError:
 	pass
