@@ -25,7 +25,6 @@ class SendGridUserMixin:
 		Adds the ``User``.``email`` from the unsubscribe list.
 		"""
 		result = add_unsubscribes(email=self.email)
-		print result
 		return result
 		
 	def delete_from_unsubscribes(self):
@@ -33,5 +32,4 @@ class SendGridUserMixin:
 		Removes the ``User``.``email`` from the unsubscribe list.
 		"""
 		result = delete_unsubscribes(email=self.email)
-		print result
 		return result
