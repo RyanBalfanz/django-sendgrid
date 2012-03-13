@@ -117,9 +117,13 @@ class SendGridEmailMessage(EmailMessage, SendGridEmailMessageMixin):
 		
 		response = super(SendGridEmailMessage, self).send(*args, **kwargs)
 		logger.debug("Tried to send an email with SendGrid and got response {r}".format(r=response))
-		sendgrid_email_sent.send(sender=self, response=response)
+		sendgrid_email_sent.send(sender=self, response=response, message=self)
 		
 		return response
+
+	def get_message_id(self):
+		return self._message_id
+	message_id = property(get_message_id)
 
 
 class SendGridEmailMultiAlternatives(EmailMultiAlternatives, SendGridEmailMessageMixin):
