@@ -78,11 +78,11 @@ class SendGridEmailMessage(models.Model):
 	# recipient_email_list = JSONField(blank=True, null=True)
 	# cc_email_list = JSONField(blank=True, null=True)
 	# bcc_email_list = JSONField(blank=True, null=True)
-	reply_to_email = models.EmailField()
+	reply_to_email = models.EmailField(blank=True, null=True)
 
 	subject = models.CharField("Subject", max_length=SENDGRID_EMAIL_MESSAGE_MAX_SUBJECT_LENGTH)
-	text_body = models.TextField("Text Body")
-	html_body = models.TextField("HTML Body")
+	text_body = models.TextField("Text Body", blank=True, null=True)
+	html_body = models.TextField("HTML Body", blank=True, null=True)
 
 	status = models.IntegerField("Status", choices=SENDGRID_EMAIL_MESSAGE_STATUS_TYPES, default=SENDGRID_EMAIL_MESSAGE_UNKNOWN_TYPE)
 	last_modified_time = models.DateTimeField(blank=True, default=datetime.datetime.now)
