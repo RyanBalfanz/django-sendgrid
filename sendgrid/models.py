@@ -142,6 +142,6 @@ class SendGridEvent(models.Model):
 	def __unicode__(self):
 		return u"SendGridEmailMessage"
 	
-	def save(*args, **kwargs):
+	def save(self, *args, **kwargs):
 		self.last_modified_time = datetime.datetime.now()
-		super(SendGridEmailMessage, self).save(*args, **kwrags)
+		super(SendGridEvent, self).save(*args, **kwargs)
