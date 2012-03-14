@@ -73,7 +73,7 @@ def send_simple_email(request):
 			logger.debug("Sending SendGrid email {e}".format(e=sendGridEmail))
 			response = sendGridEmail.send()
 			logger.debug("Response {r}".format(r=response))
-			return HttpResponseRedirect('/')
+			return HttpResponseRedirect("/")
 	else:
 		form = EmailForm()
 
