@@ -2,11 +2,8 @@ from __future__ import absolute_import
 
 import logging
 
-from django.core.context_processors import csrf
 from django.http import HttpResponse
 from django.http import HttpResponseBadRequest
-from django.http import HttpResponseRedirect
-from django.shortcuts import render_to_response
 from django.utils import simplejson
 from django.views.decorators.csrf import csrf_exempt
 
