@@ -1,20 +1,22 @@
+from __future__ import absolute_import
+
 import logging
 
 from django.core.context_processors import csrf
+from django.core.urlresolvers import reverse
 from django.http import HttpResponseRedirect
 from django.shortcuts import render_to_response
-
-# example_project
-from main.forms import EmailForm
 
 # django-sendgrid
 from sendgrid.mail import send_sendgrid_mail
 from sendgrid.message import SendGridEmailMessage
 from sendgrid.utils import filterutils
 
+# example_project
+from .forms import EmailForm
+
 
 logger = logging.getLogger(__name__)
-
 
 def send_simple_email(request):
 	if request.method == 'POST':
