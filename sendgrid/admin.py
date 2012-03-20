@@ -46,4 +46,8 @@ class SendGridEmailMessageAdmin(admin.ModelAdmin):
 	)
 
 
+# class SendGridEventAdmin(admin.ModelAdmin):
+# 	pass
+
 admin.site.register(SendGridEmailMessage, SendGridEmailMessageAdmin)
+admin.site.register(SendGridEvent)
