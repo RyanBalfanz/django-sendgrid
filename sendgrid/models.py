@@ -42,11 +42,15 @@ def handle_sendgrid_event(sender, **kwargs):
 
 	eventDetail = kwargs["detail"]
 
-	email = eventDetail["email"]
-	event = eventDetail["event"]
-	category = eventDetail["category"]
-	uniqueArgs = eventDetail["unique_args"]
-	message_id = uniqueArgs["message_id"]
+	try:
+		email = eventDetail["email"]
+		event = eventDetail["event"]
+		category = eventDetail["category"]
+		uniqueArgs = eventDetail["unique_args"]
+		message_id = uniqueArgs["message_id"]
+	except KeyError as e:
+		logger.exception("Caught KeyError: {error}".format(error=e))
+		return
 
 	emailMessage, created = SendGridEmailMessage.objects.get_or_create(message_id=message_id)
 	if created:
