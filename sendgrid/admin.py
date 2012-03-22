@@ -9,21 +9,17 @@ from .models import SendGridEmailMessage
 
 class SendGridEventInline(admin.TabularInline):
 	model = SendGridEvent
-	can_delete = False
-	
-	max_num = 1
+	can_delete = True
 	extra = 0
-	
-	readonly_fields = ("id",)
+	verbose_name = "Event"
+	verbose_name_plural = "Events"
 
 
 class SendGridEmailMessageAdmin(admin.ModelAdmin):
-	# list_display = ("to", "to_type", "subject", "tag", "status", "submitted_at")
-	# list_filter = ("status", "tag", "to_type", "submitted_at")
-	# search_fields = ("message_id", "to", "subject")
+	list_display = ("message_id", "creation_time", "last_modified_time", "status", "event_count")
+	list_filter = ("status",)
+	search_fields = ("message_id",)
 	list_select_related = True
-	
-	# readonly_fields = ("message_id", "status", "subject", "tag", "to", "to_type", "sender", "reply_to", "submitted_at", "text_body", "html_body", "headers", "attachments")
 	
 	inlines = [SendGridEventInline]
 	
@@ -46,8 +42,4 @@ class SendGridEmailMessageAdmin(admin.ModelAdmin):
 	)
 
 
-# class SendGridEventAdmin(admin.ModelAdmin):
-# 	pass
-
 admin.site.register(SendGridEmailMessage, SendGridEmailMessageAdmin)
-admin.site.register(SendGridEvent)

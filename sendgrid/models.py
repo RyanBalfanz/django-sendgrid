@@ -89,16 +89,12 @@ class SendGridEmailMessage(models.Model):
 
 	# events = models.ManyToManyField(Event)
 
-	class Admin:
-		list_display = ('',)
-		search_fields = ('',)
-
 	class Meta:
-		verbose_name = _("SendGrid E-mail Message")
-		verbose_name_plural = _("SendGrid E-mail Messages")
+		verbose_name = _("E-mail Message")
+		verbose_name_plural = _("E-mail Messages")
 
 	def __unicode__(self):
-		return u"SendGridEmailMessage"
+		return u"{}".format(self.message_id)
 
 	def save(self, *args, **kwargs):
 		self.last_modified_time = datetime.datetime.now()
