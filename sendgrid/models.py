@@ -104,6 +104,9 @@ class SendGridEmailMessage(models.Model):
 		self.last_modified_time = datetime.datetime.now()
 		super(SendGridEmailMessage, self).save(*args, **kwargs)
 
+	def get_event_count(self):
+		return self.events.count()
+	event_count = property(get_event_count)
 
 class SendGridEvent(models.Model):
 	# Received
