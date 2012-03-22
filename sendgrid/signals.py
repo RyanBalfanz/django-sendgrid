@@ -1,5 +1,5 @@
 import django.dispatch
 
 sendgrid_email_sent = django.dispatch.Signal(providing_args=["response", "message"])
-post_send = sendgrid_email_sent
-sendgrid_event_recieved = django.dispatch.Signal()
+sendgrid_event_recieved = django.dispatch.Signal(providing_args=["request"])
+sendgrid_event_processed = django.dispatch.Signal(providing_args=["detail"])

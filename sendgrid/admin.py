@@ -17,7 +17,7 @@ class SendGridEventInline(admin.TabularInline):
 
 class SendGridEmailMessageAdmin(admin.ModelAdmin):
 	list_display = ("message_id", "creation_time", "last_modified_time", "status", "event_count")
-	list_filter = ("status",)
+	# list_filter = ("status",)
 	search_fields = ("message_id",)
 	list_select_related = True
 	

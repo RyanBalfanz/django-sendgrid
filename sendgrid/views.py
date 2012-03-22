@@ -8,6 +8,7 @@ from django.utils import simplejson
 from django.views.decorators.csrf import csrf_exempt
 
 from .signals import sendgrid_event_recieved
+from .signals import sendgrid_event_processed
 
 
 REQUIRED_KEYS = ("email", "event")
@@ -41,7 +42,13 @@ def handle_single_json_event(e):
 	if not email or not event:
 		raise SendGridEventValueError
 
-	return True
+	result = {
+		"email": email,
+		"event": event,
+		"category": category,
+		"unique_args": uniqueArgs
+	}
+	return result
 
 def convert_single_event_request_to_json_event(request):
 	"""
@@ -84,11 +91,11 @@ def handle_single_event_request(request):
 	jsonEvent = simplejson.loads(jsonEvent)
 
 	try:
-		handle_single_json_event(jsonEvent)
+		result = handle_single_json_event(jsonEvent)
 	except SendGridEventValueError:
 		response = HttpResponseBadRequest()
 	else:
-		# sendgrid_event_recieved.send(sender=None, email=email, event=event)
+		sendgrid_event_processed.send(sender=None, detail=result)
 		response = HttpResponse()
 	
 	return response
@@ -116,9 +123,9 @@ def listener(request):
 	
 	Example Request ::
 		
-		curl -i -d 'email=test@gmail.com&amp;arg2=2&amp;arg1=1&amp;category=testing&amp;event=processed' http://127.0.0.1:8000/sendgrid/events/
+		curl -i -d 'message_id=1&amp;email=test@gmail.com&amp;arg2=2&amp;arg1=1&amp;category=testing&amp;event=processed' http://127.0.0.1:8000/sendgrid/events/
 	"""
-	sendgrid_event_recieved.send(sender=None)
+	sendgrid_event_recieved.send(sender=None, request=request)
 		
 	response = None
 	if request.method == 'POST':

@@ -9,11 +9,25 @@ from django.contrib.auth.models import User
 from django.dispatch import receiver
 from django.utils.translation import ugettext_lazy as _
 
-from .signals import sendgrid_email_sent, sendgrid_event_recieved
+from .constants import EVENT_TYPES_MAP
+from .signals import sendgrid_email_sent
+from .signals import sendgrid_event_recieved
+from .signals import sendgrid_event_processed
 
 
 SENDGRID_EMAIL_MESSAGE_MAX_SUBJECT_LENGTH = getattr(settings, "SENDGRID_EMAIL_MESSAGE_MAX_SUBJECT_LENGTH", 255)
 SENDGRID_USER_MIXIN_ENABLED = getattr(settings, "SENDGRID_USER_MIXIN_ENABLED", True)
+
+SENDGRID_EVENT_UNKNOWN_TYPE = EVENT_TYPES_MAP["UNKNOWN"]
+SENDGRID_EVENT_DEFERRED_TYPE = EVENT_TYPES_MAP["DEFERRED"]
+SENDGRID_EVENT_PROCESSED_TYPE = EVENT_TYPES_MAP["PROCESSED"]
+SENDGRID_EVENT_DROPPED_TYPE = EVENT_TYPES_MAP["DROPPED"]
+SENDGRID_EVENT_DELIVERED_TYPE = EVENT_TYPES_MAP["DELIVERED"]
+SENDGRID_EVENT_BOUNCE_TYPE = EVENT_TYPES_MAP["BOUNCED"]
+SENDGRID_EVENT_OPEN_TYPE = EVENT_TYPES_MAP["OPENED"]
+SENDGRID_EVENT_CLICK_TYPE = EVENT_TYPES_MAP["CLICKED"]
+SENDGRID_EVENT_SPAM_REPORT_TYPE = EVENT_TYPES_MAP["SPAMREPORT"]
+SENDGRID_EVENT_UNSUBSCRIBE_TYPE = EVENT_TYPES_MAP["UNSUBSCRIBED"]
 
 if SENDGRID_USER_MIXIN_ENABLED:
 	from .mixins import SendGridUserMixin
@@ -33,43 +47,30 @@ def create_sendgrid_email_message(sender, **kwargs):
 	)
 	emsg.save()
 
-@receiver(sendgrid_event_recieved)
+@receiver(sendgrid_event_processed)
 def handle_sendgrid_event(sender, **kwargs):
 	logger.debug("SendGrid event recieved!")
 
-	# event = SendGridEvent()
-	# event.save()
+	eventDetail = kwargs["detail"]
+
+	email = eventDetail["email"]
+	event = eventDetail["event"]
+	category = eventDetail["category"]
+	uniqueArgs = eventDetail["unique_args"]
+	message_id = uniqueArgs["message_id"]
+
+	emailMessage, created = SendGridEmailMessage.objects.get_or_create(message_id=message_id)
+	if created:
+		pass
+
+	sendgridEvent = SendGridEvent.objects.create(
+		email_message=emailMessage,
+		type=EVENT_TYPES_MAP[event.upper()],
+	)
 
 
 class SendGridEmailMessage(models.Model):
 	"""(SendGridEmailMessage description)"""
-	SENDGRID_EMAIL_MESSAGE_UNKNOWN_TYPE = 0
-	# Process
-	SENDGRID_EMAIL_MESSAGE_PROCESSED_TYPE = 1000
-	SENDGRID_EVENT_DROPPED_TYPE = 1000
-	# Deliver
-	SENDGRID_EVENT_DELIVERED_TYPE = 2000
-	SENDGRID_EVENT_DEFERRED_TYPE = 2000
-	SENDGRID_EVENT_BOUNCE_TYPE = 2000
-	# Read
-	SENDGRID_EVENT_OPEN_TYPE = 3000
-	SENDGRID_EVENT_CLICK_TYPE = 3000
-	SENDGRID_EVENT_SPAM_REPORT_TYPE = 3000
-	SENDGRID_EVENT_UNSUBSCRIBE_TYPE = 3000
-
-	SENDGRID_EMAIL_MESSAGE_STATUS_TYPES = (
-		(SENDGRID_EMAIL_MESSAGE_UNKNOWN_TYPE, "Unknown"),
-		(SENDGRID_EMAIL_MESSAGE_PROCESSED_TYPE, "Processed"),
-		(SENDGRID_EVENT_DROPPED_TYPE, "Dropped"),
-		(SENDGRID_EVENT_DELIVERED_TYPE, "Delivered"),
-		(SENDGRID_EVENT_DEFERRED_TYPE, "Deferred"),
-		(SENDGRID_EVENT_BOUNCE_TYPE, "Bounced"),
-		(SENDGRID_EVENT_OPEN_TYPE, "Opened"),
-		(SENDGRID_EVENT_CLICK_TYPE, "Clicked"),
-		(SENDGRID_EVENT_SPAM_REPORT_TYPE, "Reported as span"),
-		(SENDGRID_EVENT_UNSUBSCRIBE_TYPE, "Unsubscribed"),
-	)
-
 	message_id = models.CharField(blank=True, null=True, max_length=36) # Version 4 UUID
 	creation_time = models.DateTimeField(blank=True, default=datetime.datetime.now)
 
@@ -84,7 +85,6 @@ class SendGridEmailMessage(models.Model):
 	text_body = models.TextField("Text Body", blank=True, null=True)
 	html_body = models.TextField("HTML Body", blank=True, null=True)
 
-	status = models.IntegerField("Status", choices=SENDGRID_EMAIL_MESSAGE_STATUS_TYPES, default=SENDGRID_EMAIL_MESSAGE_UNKNOWN_TYPE)
 	last_modified_time = models.DateTimeField(blank=True, default=datetime.datetime.now)
 
 	# events = models.ManyToManyField(Event)
@@ -104,28 +104,35 @@ class SendGridEmailMessage(models.Model):
 		return self.events.count()
 	event_count = property(get_event_count)
 
+	def get_latest_event(self):
+		latestEvent = None
+		if self.events.exists():
+			self.events.all()[0]
+
+		return latestEvent
+	latest_event = property(get_latest_event)
+
+	def get_latest_event_type(self):
+		return self.get_latest_event().get_type_display() if self.get_event_count() > 0 else "No Events"
+	status = property(get_latest_event_type)
+
 class SendGridEvent(models.Model):
-	# Received
-	SENDGRID_EVENT_UNKNOWN_TYPE = 0
-	# SENDGRID_EVENT_RECEIVED_TYPE = 1000
-	# Process
-	SENDGRID_EVENT_PROCESSED_TYPE = 1100
-	SENDGRID_EVENT_DROPPED_TYPE = 1200
-	# Deliver
-	SENDGRID_EVENT_DELIVERED_TYPE = 2100
-	SENDGRID_EVENT_DEFERRED_TYPE = 2200
-	SENDGRID_EVENT_BOUNCE_TYPE = 2300
-	# Read
-	SENDGRID_EVENT_OPEN_TYPE = 3100
-	SENDGRID_EVENT_CLICK_TYPE = 3200
-	SENDGRID_EVENT_SPAM_REPORT_TYPE = 3300
-	SENDGRID_EVENT_UNSUBSCRIBE_TYPE = 3400
+	SENDGRID_EVENT_UNKNOWN_TYPE = EVENT_TYPES_MAP["UNKNOWN"]
+	SENDGRID_EVENT_DEFERRED_TYPE = EVENT_TYPES_MAP["DEFERRED"]
+	SENDGRID_EVENT_PROCESSED_TYPE = EVENT_TYPES_MAP["PROCESSED"]
+	SENDGRID_EVENT_DROPPED_TYPE = EVENT_TYPES_MAP["DROPPED"]
+	SENDGRID_EVENT_DELIVERED_TYPE = EVENT_TYPES_MAP["DELIVERED"]
+	SENDGRID_EVENT_BOUNCE_TYPE = EVENT_TYPES_MAP["BOUNCED"]
+	SENDGRID_EVENT_OPEN_TYPE = EVENT_TYPES_MAP["OPENED"]
+	SENDGRID_EVENT_CLICK_TYPE = EVENT_TYPES_MAP["CLICKED"]
+	SENDGRID_EVENT_SPAM_REPORT_TYPE = EVENT_TYPES_MAP["SPAMREPORT"]
+	SENDGRID_EVENT_UNSUBSCRIBE_TYPE = EVENT_TYPES_MAP["UNSUBSCRIBED"]
 	SENDGRID_EVENT_TYPES = (
 		(SENDGRID_EVENT_UNKNOWN_TYPE, "Unknown"),
+		(SENDGRID_EVENT_DEFERRED_TYPE, "Deferred"),
 		(SENDGRID_EVENT_PROCESSED_TYPE, "Processed"),
 		(SENDGRID_EVENT_DROPPED_TYPE, "Dropped"),
 		(SENDGRID_EVENT_DELIVERED_TYPE, "Delivered"),
-		(SENDGRID_EVENT_DEFERRED_TYPE, "Deferred"),
 		(SENDGRID_EVENT_BOUNCE_TYPE, "Bounce"),
 		(SENDGRID_EVENT_OPEN_TYPE, "Open"),
 		(SENDGRID_EVENT_CLICK_TYPE, "Click"),
