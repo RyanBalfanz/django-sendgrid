@@ -139,7 +139,7 @@ class SendGridEvent(models.Model):
 	last_modified_time = models.DateTimeField(blank=True, default=datetime.datetime.now)
 
 	def __unicode__(self):
-		return u"SendGridEmailMessage"
+		return u"{} - {}".format(self.email_message, self.get_type_display())
 	
 	def save(self, *args, **kwargs):
 		self.last_modified_time = datetime.datetime.now()
