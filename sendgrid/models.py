@@ -42,9 +42,9 @@ def handle_sendgrid_event(sender, **kwargs):
 
 	eventDetail = kwargs["detail"]
 
+	email = eventDetail["email"]
+	event = eventDetail["event"]
 	try:
-		email = eventDetail["email"]
-		event = eventDetail["event"]
 		category = eventDetail["category"]
 		uniqueArgs = eventDetail["unique_args"]
 		message_id = uniqueArgs["message_id"]
