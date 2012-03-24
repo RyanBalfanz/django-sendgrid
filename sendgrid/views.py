@@ -2,6 +2,7 @@ from __future__ import absolute_import
 
 import logging
 
+from django.conf import settings
 from django.http import HttpResponse
 from django.http import HttpResponseBadRequest
 from django.utils import simplejson
@@ -10,6 +11,8 @@ from django.views.decorators.csrf import csrf_exempt
 from .signals import sendgrid_event_recieved
 from .signals import sendgrid_event_processed
 
+
+POST_EVENTS_RESPONSE_STATUS_CODE = getattr(settings, "POST_EVENT_HANDLER_RESPONSE_STATUS_CODE", None)
 
 REQUIRED_KEYS = ("email", "event")
 OPTIONAL_KEYS = ("category")
@@ -40,7 +43,15 @@ def handle_single_json_event(e):
 	uniqueArgs = dict(((k, v) for (k, v) in e.iteritems() if keyIsUniqueArg(k)))
 
 	if not email or not event:
-		raise SendGridEventValueError
+		issues = []
+		if not email:
+			issues.append("email")
+		if not event:
+			issues.append("event")
+
+		missingItems = ", ".join(issues)
+		exceptionMessage = "{missing} does not exist".format(missing=missingItems)
+		raise SendGridEventValueError(exceptionMessage)
 
 	result = {
 		"email": email,
@@ -92,8 +103,9 @@ def handle_single_event_request(request):
 
 	try:
 		result = handle_single_json_event(jsonEvent)
-	except SendGridEventValueError:
+	except SendGridEventValueError as e:
 		response = HttpResponseBadRequest()
+		response.write("EXCEPTION: {e}\n".format(e=e))
 	else:
 		sendgrid_event_processed.send(sender=None, detail=result)
 		response = HttpResponse()
@@ -114,7 +126,7 @@ def handle_batched_events_request(request):
 	raise NotImplementedError
 
 @csrf_exempt
-def listener(request):
+def listener(request, statusCode=POST_EVENTS_RESPONSE_STATUS_CODE):
 	"""
 	Handles POSTs from SendGrid
 
@@ -141,7 +153,7 @@ def listener(request):
 			msg = "Unexpected content type: {m}".format(m=request.META["CONTENT_TYPE"])
 			logger.error(msg)
 	else:
-		msg = "Request method not allowed: {error}".format(error=request.method)
+		msg = "Request method '{method}' not allowed: {error}".format(method=request.method, error=request.method)
 		logger.error(msg)
 		
 		response = HttpResponse()
@@ -150,5 +162,12 @@ def listener(request):
 	if not response:
 		logger.error("A response was not created!")
 		response = HttpResponse()
-		
+
+	if statusCode and response.status_code != statusCode:
+		logger.debug("Attempted to send status code {c}".format(c=response.status_code))
+		logger.debug("Setting status code to {c}".format(c=statusCode))
+
+		response.write("PREVIOUS_STATUS_CODE: {c}\n".format(c=response.status_code))
+		response.status_code = statusCode
+
 	return response
