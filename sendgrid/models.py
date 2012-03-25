@@ -106,7 +106,8 @@ class SendGridEmailMessage(models.Model):
 	latest_event = property(get_latest_event)
 
 	def get_latest_event_type(self):
-		return self.get_latest_event().get_type_display() if self.get_event_count() > 0 else "No Events"
+
+		return self.get_latest_event().get_type_display() if self.get_latest_event() else "No Events"
 	status = property(get_latest_event_type)
 
 class SendGridEvent(models.Model):
