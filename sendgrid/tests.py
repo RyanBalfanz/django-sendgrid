@@ -14,13 +14,54 @@ from django.test import TestCase
 from mail import get_sendgrid_connection
 from mail import send_sendgrid_mail
 from message import SendGridEmailMessage
+from message import SendGridEmailMultiAlternatives
 from signals import sendgrid_email_sent
 from utils import filterutils
+from utils import in_test_environment
 
 
 validate_filter_setting_value = filterutils.validate_filter_setting_value
 validate_filter_specification = filterutils.validate_filter_specification
 update_filters = filterutils.update_filters
+
+
+class SendGridEmailTest(TestCase):
+	"""docstring for SendGridEmailTest"""
+	def setUp(self):
+		"""docstring for setUp"""
+		pass
+		
+	def test_email_has_unique_id(self):
+		"""docstring for email_has_unique_id"""
+		email = SendGridEmailMessage()
+		self.assertTrue(email._message_id)
+		
+	def test_email_sends_unique_id(self):
+		"""docstring for email_sends_unique_id"""
+		email = SendGridEmailMessage()
+		email.send()
+		self.assertTrue(email.sendgrid_headers.data["unique_args"]["message_id"])
+		
+	def test_email_sent_signal_has_message(self):
+		"""docstring for email_sent_signal_has_message"""
+		@receiver(sendgrid_email_sent)
+		def receive_sendgrid_email_sent(*args, **kwargs):
+			"""
+			Receives sendgrid_email_sent signals.
+			"""
+			self.assertTrue("response" in kwargs)
+			# self.assertTrue("message" in kwargs)
+			
+		email = SendGridEmailMessage()
+		response = email.send()
+
+class SendGridInTestEnvTest(TestCase):
+	def test_in_test_environment(self):
+		"""
+		Tests that the test environment is detected.
+		"""
+		self.assertEqual(in_test_environment(), True)
+
 
 class SendWithSendGridEmailMessageTest(TestCase):
 	def setUp(self):
@@ -81,6 +122,35 @@ class SendWithEmailMessageTest(TestCase):
 		email.send()
 
 
+class SendWithSendGridEmailMultiAlternativesTest(TestCase):
+	def setUp(self):
+		self.signalsReceived = defaultdict(list)
+		
+	def test_send_multipart_email(self):
+		"""docstring for send_multipart_email"""
+		subject, from_email, to = 'hello', 'from@example.com', 'to@example.com'
+		text_content = 'This is an important message.'
+		html_content = '<p>This is an <strong>important</strong> message.</p>'
+		msg = SendGridEmailMultiAlternatives(subject, text_content, from_email, [to])
+		msg.attach_alternative(html_content, "text/html")
+		msg.send()
+		
+	def test_send_multipart_email_sends_signal(self):
+		@receiver(sendgrid_email_sent)
+		def receive_sendgrid_email_sent(*args, **kwargs):
+			"""
+			Receives sendgrid_email_sent signals.
+			"""
+			self.signalsReceived["sendgrid_email_sent"].append(1)
+			return True
+			
+		email = SendGridEmailMultiAlternatives()
+		email.send()
+		
+		numEmailSentSignalsRecieved = sum(self.signalsReceived["sendgrid_email_sent"])
+		self.assertEqual(numEmailSentSignalsRecieved, 1)
+
+
 class FilterUtilsTests(TestCase):
 	"""docstring for FilterUtilsTests"""
 	def setUp(self):
@@ -101,33 +171,33 @@ class FilterUtilsTests(TestCase):
 				"enable": 0,
 			},
 		}
-		assert validate_filter_specification(filterSpec) == True
+		self.assertEqual(validate_filter_specification(filterSpec), True)
 		
 	def test_subscriptiontrack_enable_parameter(self):
 		"""
 		Tests the ``subscriptiontrack`` filter's ``enable`` paramter.
 		"""
-		assert validate_filter_setting_value("subscriptiontrack", "enable", 0) == True
-		assert validate_filter_setting_value("subscriptiontrack", "enable", 1) == True
-		assert validate_filter_setting_value("subscriptiontrack", "enable", 0.0) == True
-		assert validate_filter_setting_value("subscriptiontrack", "enable", 1.0) == True
-		assert validate_filter_setting_value("subscriptiontrack", "enable", "0") == True
-		assert validate_filter_setting_value("subscriptiontrack", "enable", "1") == True
-		assert validate_filter_setting_value("subscriptiontrack", "enable", "0.0") == False
-		assert validate_filter_setting_value("subscriptiontrack", "enable", "1.0") == False
+		self.assertEqual(validate_filter_setting_value("subscriptiontrack", "enable", 0), True)
+		self.assertEqual(validate_filter_setting_value("subscriptiontrack", "enable", 1), True)
+		self.assertEqual(validate_filter_setting_value("subscriptiontrack", "enable", 0.0), True)
+		self.assertEqual(validate_filter_setting_value("subscriptiontrack", "enable", 1.0), True)
+		self.assertEqual(validate_filter_setting_value("subscriptiontrack", "enable", "0"), True)
+		self.assertEqual(validate_filter_setting_value("subscriptiontrack", "enable", "1"), True)
+		self.assertEqual(validate_filter_setting_value("subscriptiontrack", "enable", "0.0"), False)
+		self.assertEqual(validate_filter_setting_value("subscriptiontrack", "enable", "1.0"), False)
 		
 	def test_opentrack_enable_parameter(self):
 		"""
 		Tests the ``opentrack`` filter's ``enable`` paramter.
 		"""
-		assert validate_filter_setting_value("opentrack", "enable", 0) == True
-		assert validate_filter_setting_value("opentrack", "enable", 1) == True
-		assert validate_filter_setting_value("opentrack", "enable", 0.0) == True
-		assert validate_filter_setting_value("opentrack", "enable", 1.0) == True
-		assert validate_filter_setting_value("opentrack", "enable", "0") == True
-		assert validate_filter_setting_value("opentrack", "enable", "1") == True
-		assert validate_filter_setting_value("opentrack", "enable", "0.0") == False
-		assert validate_filter_setting_value("opentrack", "enable", "1.0") == False
+		self.assertEqual(validate_filter_setting_value("opentrack", "enable", 0), True)
+		self.assertEqual(validate_filter_setting_value("opentrack", "enable", 1), True)
+		self.assertEqual(validate_filter_setting_value("opentrack", "enable", 0.0), True)
+		self.assertEqual(validate_filter_setting_value("opentrack", "enable", 1.0), True)
+		self.assertEqual(validate_filter_setting_value("opentrack", "enable", "0"), True)
+		self.assertEqual(validate_filter_setting_value("opentrack", "enable", "1"), True)
+		self.assertEqual(validate_filter_setting_value("opentrack", "enable", "0.0"), False)
+		self.assertEqual(validate_filter_setting_value("opentrack", "enable", "1.0"), False)
 
 
 class UpdateFiltersTests(TestCase):

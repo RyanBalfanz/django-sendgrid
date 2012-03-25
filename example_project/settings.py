@@ -169,3 +169,8 @@ SENDGRID_EMAIL_HOST = "smtp.sendgrid.net"
 SENDGRID_EMAIL_PORT = 587
 SENDGRID_EMAIL_USERNAME = os.getenv("SENDGRID_EMAIL_USERNAME")
 SENDGRID_EMAIL_PASSWORD = os.getenv("SENDGRID_EMAIL_PASSWORD")
+
+try:
+	from settings_local import *
+except ImportError:
+	pass

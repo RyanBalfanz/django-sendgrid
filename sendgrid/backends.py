@@ -1,6 +1,7 @@
 import logging
 
 from django.conf import settings
+from django.core.exceptions import ImproperlyConfigured
 from django.core.mail.backends.smtp import EmailBackend
 
 
@@ -11,8 +12,7 @@ SENDGRID_EMAIL_PASSWORD = getattr(settings, "SENDGRID_EMAIL_PASSWORD", None)
 
 logger = logging.getLogger(__name__)
 
-
-def check_settings():
+def check_settings(fail_silently=False):
 	"""
 	Checks that the required settings are available.
 	"""
@@ -29,8 +29,11 @@ def check_settings():
 		if not value:
 			logger.warn("{k} is not set".format(k=key))
 			allOk = False
+			if not fail_silently:
+				raise ImproperlyConfigured("{k} was not found".format(k=key))
 			
 	return allOk
+
 
 class SendGridEmailBackend(EmailBackend):
 	"""
@@ -38,8 +41,8 @@ class SendGridEmailBackend(EmailBackend):
 	"""
 	def __init__(self, host=None, port=None, username=None, password=None, use_tls=None, fail_silently=False, **kwargs):
 		if not check_settings():
-			raise ValueError("A required setting was not found")
-			
+			logger.exception("A required setting was not found")
+
 		super(SendGridEmailBackend, self).__init__(
 			host=SENDGRID_EMAIL_HOST,
 			port=SENDGRID_EMAIL_PORT,

@@ -45,3 +45,4 @@ Additional Information
  - https://docs.djangoproject.com/en/1.3/topics/email/
  - http://ryanbalfanz.github.com/django-sendgrid/
  - http://pypi.python.org/pypi/django-sendgrid
+ - http://djangopackages.com/packages/p/django-sendgrid/
