@@ -54,7 +54,7 @@ def handle_sendgrid_event(sender, **kwargs):
 
 	emailMessage, created = SendGridEmailMessage.objects.get_or_create(message_id=message_id)
 	if created:
-		pass
+		logger.info("Created {obj}".format(obj=emailMessage))
 
 	sendgridEvent = SendGridEvent.objects.create(
 		email_message=emailMessage,
