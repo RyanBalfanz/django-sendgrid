@@ -20,6 +20,9 @@ from utils import filterutils
 from utils import in_test_environment
 
 
+TEST_SENDER_EMAIL = "ryan@example.com"
+TEST_RECIPIENTS = ["ryan@example.com"]
+
 validate_filter_setting_value = filterutils.validate_filter_setting_value
 validate_filter_specification = filterutils.validate_filter_specification
 update_filters = filterutils.update_filters
@@ -38,13 +41,13 @@ class SendGridEmailTest(TestCase):
 		
 	def test_email_sends_unique_id(self):
 		"""docstring for email_sends_unique_id"""
-		email = SendGridEmailMessage()
+		email = SendGridEmailMessage(to=TEST_RECIPIENTS, from_email=TEST_SENDER_EMAIL)
 		email.send()
 		self.assertTrue(email.sendgrid_headers.data["unique_args"]["message_id"])
-
+		
 	def test_unique_args_persist(self):
 		"""docstring for email_sends_unique_id"""
-		email = SendGridEmailMessage()
+		email = SendGridEmailMessage(to=TEST_RECIPIENTS, from_email=TEST_SENDER_EMAIL)
 		uniqueArgs = {
 			"unique_arg_1": 1,
 			"unique_arg_2": 2,
@@ -57,7 +60,7 @@ class SendGridEmailTest(TestCase):
 			self.assertEqual(v, email.sendgrid_headers.data["unique_args"][k])
 
 		self.assertTrue(email.sendgrid_headers.data["unique_args"]["message_id"])
-		
+
 	def test_email_sent_signal_has_message(self):
 		"""docstring for email_sent_signal_has_message"""
 		@receiver(sendgrid_email_sent)
@@ -66,10 +69,11 @@ class SendGridEmailTest(TestCase):
 			Receives sendgrid_email_sent signals.
 			"""
 			self.assertTrue("response" in kwargs)
-			# self.assertTrue("message" in kwargs)
+			self.assertTrue("message" in kwargs)
 			
-		email = SendGridEmailMessage()
+		email = SendGridEmailMessage(to=TEST_RECIPIENTS, from_email=TEST_SENDER_EMAIL)
 		response = email.send()
+
 
 class SendGridInTestEnvTest(TestCase):
 	def test_in_test_environment(self):
@@ -98,7 +102,7 @@ class SendWithSendGridEmailMessageTest(TestCase):
 			self.signalsReceived["sendgrid_email_sent"].append(1)
 			return True
 			
-		email = SendGridEmailMessage()
+		email = SendGridEmailMessage(to=TEST_RECIPIENTS, from_email=TEST_SENDER_EMAIL)
 		email.send()
 		
 		numEmailSentSignalsRecieved = sum(self.signalsReceived["sendgrid_email_sent"])
@@ -160,7 +164,7 @@ class SendWithSendGridEmailMultiAlternativesTest(TestCase):
 			self.signalsReceived["sendgrid_email_sent"].append(1)
 			return True
 			
-		email = SendGridEmailMultiAlternatives()
+		email = SendGridEmailMultiAlternatives(to=TEST_RECIPIENTS, from_email=TEST_SENDER_EMAIL)
 		email.send()
 		
 		numEmailSentSignalsRecieved = sum(self.signalsReceived["sendgrid_email_sent"])
@@ -220,7 +224,7 @@ class UpdateFiltersTests(TestCase):
 	"""docstring for SendWithFiltersTests"""
 	def setUp(self):
 		"""docstring for setUp"""
-		self.email = SendGridEmailMessage()
+		self.email = SendGridEmailMessage(to=TEST_RECIPIENTS, from_email=TEST_SENDER_EMAIL)
 		
 	def test_update_filters(self):
 		"""docstring for test_update_filters"""
