@@ -152,7 +152,7 @@ class EmailMessageSendGridHeadersData(models.Model):
 
 class EmailMessageExtraHeadersData(models.Model):
 	email_message = models.OneToOneField(EmailMessage, primary_key=True, related_name="extra_headers")
-	data = models.TextField(_("Extra Headers"), editable=False) # TODO: JSONField, __getattr__
+	data = models.TextField(_("Extra Headers"), editable=False)
 
 	class Meta:
 		verbose_name = _("EmailMessageExtraHeadersData")
@@ -164,7 +164,7 @@ class EmailMessageExtraHeadersData(models.Model):
 
 class EmailMessageBodyData(models.Model):
 	email_message = models.OneToOneField(EmailMessage, primary_key=True, related_name="body")
-	data = models.TextField(_("Body"), editable=False) # TODO: JSONField, __getattr__
+	data = models.TextField(_("Body"), editable=False)
 
 	class Meta:
 		verbose_name = _("EmailMessageBodyData")
@@ -176,7 +176,7 @@ class EmailMessageBodyData(models.Model):
 
 class EmailMessageAttachmentsData(models.Model):
 	email_message = models.OneToOneField(EmailMessage, primary_key=True, related_name="attachments")
-	data = models.TextField(_("Attachments"), editable=False) # TODO: JSONField, __getattr__
+	data = models.TextField(_("Attachments"), editable=False)
 
 	class Meta:
 		verbose_name = _("EmailMessageAttachmentData")
@@ -188,7 +188,7 @@ class EmailMessageAttachmentsData(models.Model):
 
 class EmailMessageBccData(models.Model):
 	email_message = models.OneToOneField(EmailMessage, primary_key=True, related_name="bcc")
-	data = models.TextField(_("Blind Carbon Copies"), editable=False) # TODO: JSONField, __getattr__
+	data = models.TextField(_("Blind Carbon Copies"), editable=False)
 
 	class Meta:
 		verbose_name = _("EmailMessageBccData")
@@ -200,7 +200,7 @@ class EmailMessageBccData(models.Model):
 
 class EmailMessageCcData(models.Model):
 	email_message = models.OneToOneField(EmailMessage, primary_key=True, related_name="cc")
-	data = models.TextField(_("Carbon Copies"), editable=False) # TODO: JSONField, __getattr__
+	data = models.TextField(_("Carbon Copies"), editable=False)
 
 	class Meta:
 		verbose_name = _("EmailMessageCcData")
@@ -212,7 +212,7 @@ class EmailMessageCcData(models.Model):
 
 class EmailMessageToData(models.Model):
 	email_message = models.OneToOneField(EmailMessage, primary_key=True, related_name="to")
-	data = models.TextField(_("To"), editable=False) # TODO: JSONField, __getattr__
+	data = models.TextField(_("To"), editable=False)
 
 	class Meta:
 		verbose_name = _("EmailMessageToData")
