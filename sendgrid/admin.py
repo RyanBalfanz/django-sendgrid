@@ -22,6 +22,9 @@ class EmailMessageGenericDataInline(admin.TabularInline):
 	max_num = 1
 	can_delete = False
 
+	def has_add_permission(self, request):
+		return False
+
 
 class EmailMessageAttachmentsDataInline(EmailMessageGenericDataInline):
 	model = EmailMessageAttachmentsData
@@ -70,6 +73,9 @@ class EmailMessageAdmin(admin.ModelAdmin):
 		EmailMessageExtraHeadersDataInline,
 		EmailMessageAttachmentsDataInline,
 	)
+
+	def has_add_permission(self, request):
+		return False
 
 
 class EmailMessageGenericDataAdmin(admin.ModelAdmin):
