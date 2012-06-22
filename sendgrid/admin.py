@@ -54,9 +54,9 @@ class EmailMessageToDataInline(EmailMessageGenericDataInline):
 
 class EmailMessageAdmin(admin.ModelAdmin):
 	date_hierarchy = "creation_time"
-	list_display = ("message_id", "from_email", "to_email", "subject_data", "response")
-	list_filter = ("from_email", "subject__data", "response")
-	readonly_fields = ("message_id", "from_email", "to_email", "response")
+	list_display = ("message_id", "from_email", "to_email", "category", "subject_data", "response")
+	list_filter = ("from_email", "subject__data", "category", "response")
+	readonly_fields = ("message_id", "from_email", "to_email", "category", "response")
 	inlines = (
 		EmailMessageToDataInline,
 		EmailMessageCcInline,
