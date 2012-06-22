@@ -64,12 +64,7 @@ class SendGridEmailMessageMixin:
 
 	def get_unique_args(self):
 		"""docstring for get_unique_args"""
-		if "unique_args" in self.sendgrid_headers.data:
-			# raise Exception(self.sendgrid_headers.data["unique_args"])
-			uniqueArgs = self.sendgrid_headers.data["unique_args"]
-		else:
-			uniqueArgs = None
-		return uniqueArgs
+		return self.sendgrid_headers.data.get("unique_args", None)
 	unique_args = property(get_unique_args)
 	
 	def setup_connection(self):
