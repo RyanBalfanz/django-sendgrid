@@ -1,24 +1,22 @@
-"""
-This file demonstrates writing tests using the unittest module. These will pass
-when you run "manage.py test".
+from __future__ import absolute_import
 
-Replace this with more appropriate tests for your application.
-"""
 from collections import defaultdict
 
 from django.core.mail import EmailMessage
 from django.dispatch import receiver
 from django.test import TestCase
 
-# django-sendgrid
-from mail import get_sendgrid_connection
-from mail import send_sendgrid_mail
-from message import SendGridEmailMessage
-from message import SendGridEmailMultiAlternatives
-from signals import sendgrid_email_sent
-from utils import filterutils
-from utils import in_test_environment
+from .mail import get_sendgrid_connection
+from .mail import send_sendgrid_mail
+from .message import SendGridEmailMessage
+from .message import SendGridEmailMultiAlternatives
+from .signals import sendgrid_email_sent
+from .utils import filterutils
+from .utils import in_test_environment
 
+
+TEST_SENDER_EMAIL = "ryan@example.com"
+TEST_RECIPIENTS = ["ryan@example.com"]
 
 validate_filter_setting_value = filterutils.validate_filter_setting_value
 validate_filter_specification = filterutils.validate_filter_specification
@@ -27,24 +25,26 @@ update_filters = filterutils.update_filters
 
 class SendGridEmailTest(TestCase):
 	"""docstring for SendGridEmailTest"""
-	def setUp(self):
-		"""docstring for setUp"""
-		pass
-		
 	def test_email_has_unique_id(self):
-		"""docstring for email_has_unique_id"""
+		"""
+		Tests the existence of the ``SendGridEmailMessage._message_id`` attribute.
+		"""
 		email = SendGridEmailMessage()
 		self.assertTrue(email._message_id)
 		
 	def test_email_sends_unique_id(self):
-		"""docstring for email_sends_unique_id"""
-		email = SendGridEmailMessage()
+		"""
+		Tests sending a ``SendGridEmailMessage`` adds a ``message_id`` to the unique args.
+		"""
+		email = SendGridEmailMessage(to=TEST_RECIPIENTS, from_email=TEST_SENDER_EMAIL)
 		email.send()
 		self.assertTrue(email.sendgrid_headers.data["unique_args"]["message_id"])
-
+		
 	def test_unique_args_persist(self):
-		"""docstring for email_sends_unique_id"""
-		email = SendGridEmailMessage()
+		"""
+		Tests that unique args are not lost due to sending adding the ``message_id`` arg.
+		"""
+		email = SendGridEmailMessage(to=TEST_RECIPIENTS, from_email=TEST_SENDER_EMAIL)
 		uniqueArgs = {
 			"unique_arg_1": 1,
 			"unique_arg_2": 2,
@@ -57,19 +57,22 @@ class SendGridEmailTest(TestCase):
 			self.assertEqual(v, email.sendgrid_headers.data["unique_args"][k])
 
 		self.assertTrue(email.sendgrid_headers.data["unique_args"]["message_id"])
-		
+
 	def test_email_sent_signal_has_message(self):
-		"""docstring for email_sent_signal_has_message"""
+		"""
+		Tests the existence of the ``message`` keywork arg from the ``sendgrid_email_sent`` signal.
+		"""
 		@receiver(sendgrid_email_sent)
 		def receive_sendgrid_email_sent(*args, **kwargs):
 			"""
 			Receives sendgrid_email_sent signals.
 			"""
 			self.assertTrue("response" in kwargs)
-			# self.assertTrue("message" in kwargs)
+			self.assertTrue("message" in kwargs)
 			
-		email = SendGridEmailMessage()
+		email = SendGridEmailMessage(to=TEST_RECIPIENTS, from_email=TEST_SENDER_EMAIL)
 		response = email.send()
+
 
 class SendGridInTestEnvTest(TestCase):
 	def test_in_test_environment(self):
@@ -98,7 +101,7 @@ class SendWithSendGridEmailMessageTest(TestCase):
 			self.signalsReceived["sendgrid_email_sent"].append(1)
 			return True
 			
-		email = SendGridEmailMessage()
+		email = SendGridEmailMessage(to=TEST_RECIPIENTS, from_email=TEST_SENDER_EMAIL)
 		email.send()
 		
 		numEmailSentSignalsRecieved = sum(self.signalsReceived["sendgrid_email_sent"])
@@ -143,7 +146,9 @@ class SendWithSendGridEmailMultiAlternativesTest(TestCase):
 		self.signalsReceived = defaultdict(list)
 		
 	def test_send_multipart_email(self):
-		"""docstring for send_multipart_email"""
+		"""
+		Tests sending multipart emails.
+		"""
 		subject, from_email, to = 'hello', 'from@example.com', 'to@example.com'
 		text_content = 'This is an important message.'
 		html_content = '<p>This is an <strong>important</strong> message.</p>'
@@ -160,7 +165,7 @@ class SendWithSendGridEmailMultiAlternativesTest(TestCase):
 			self.signalsReceived["sendgrid_email_sent"].append(1)
 			return True
 			
-		email = SendGridEmailMultiAlternatives()
+		email = SendGridEmailMultiAlternatives(to=TEST_RECIPIENTS, from_email=TEST_SENDER_EMAIL)
 		email.send()
 		
 		numEmailSentSignalsRecieved = sum(self.signalsReceived["sendgrid_email_sent"])
@@ -220,10 +225,12 @@ class UpdateFiltersTests(TestCase):
 	"""docstring for SendWithFiltersTests"""
 	def setUp(self):
 		"""docstring for setUp"""
-		self.email = SendGridEmailMessage()
+		self.email = SendGridEmailMessage(to=TEST_RECIPIENTS, from_email=TEST_SENDER_EMAIL)
 		
 	def test_update_filters(self):
-		"""docstring for test_update_filters"""
+		"""
+		Tests SendGrid filter functionality.
+		"""
 		filterSpec = {
 			"subscriptiontrack": {
 				"enable": 1,
