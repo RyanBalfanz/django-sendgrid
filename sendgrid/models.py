@@ -86,10 +86,10 @@ def save_email_message(sender, **kwargs):
 
 
 class EmailMessage(models.Model):
-	message_id = models.CharField(unique=True, max_length=36, editable=False, blank=True)
+	message_id = models.CharField(unique=True, max_length=36, editable=False, blank=True, null=True)
 	from_email = models.CharField(max_length=EMAIL_MESSAGE_FROM_EMAIL_MAX_LENGTH)
 	to_email = models.CharField(max_length=EMAIL_MESSAGE_TO_EMAIL_MAX_LENGTH)
-	category = models.CharField(max_length=EMAIL_MESSAGE_CATEGORY_MAX_LENGTH)
+	category = models.CharField(max_length=EMAIL_MESSAGE_CATEGORY_MAX_LENGTH, blank=True, null=True)
 	response = models.IntegerField(blank=True, null=True)
 	creation_time = models.DateTimeField(auto_now_add=True)
 	last_modified_time = models.DateTimeField(auto_now=True)
