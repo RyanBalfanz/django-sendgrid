@@ -41,6 +41,22 @@ class SendGridEmailTest(TestCase):
 		email = SendGridEmailMessage()
 		email.send()
 		self.assertTrue(email.sendgrid_headers.data["unique_args"]["message_id"])
+
+	def test_unique_args_persist(self):
+		"""docstring for email_sends_unique_id"""
+		email = SendGridEmailMessage()
+		uniqueArgs = {
+			"unique_arg_1": 1,
+			"unique_arg_2": 2,
+			"unique_arg_3": 3,
+		}
+		email.sendgrid_headers.setUniqueArgs(uniqueArgs)
+		email.send()
+
+		for k, v in uniqueArgs.iteritems():
+			self.assertEqual(v, email.sendgrid_headers.data["unique_args"][k])
+
+		self.assertTrue(email.sendgrid_headers.data["unique_args"]["message_id"])
 		
 	def test_email_sent_signal_has_message(self):
 		"""docstring for email_sent_signal_has_message"""
