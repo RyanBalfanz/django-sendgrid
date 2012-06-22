@@ -8,6 +8,7 @@ from .models import EmailMessageBodyData
 from .models import EmailMessageBccData
 from .models import EmailMessageCcData
 from .models import EmailMessageExtraHeadersData
+from .models import EmailMessageSendGridHeadersData
 from .models import EmailMessageSubjectData
 from .models import EmailMessageToData
 
@@ -39,6 +40,10 @@ class EmailMessageExtraHeadersDataInline(EmailMessageGenericDataInline):
 	model = EmailMessageExtraHeadersData
 
 
+class EmailMessageSendGridDataInline(EmailMessageGenericDataInline):
+	model = EmailMessageSendGridHeadersData
+
+
 class EmailMessageSubjectDataInline(EmailMessageGenericDataInline):
 	model = EmailMessageSubjectData
 
@@ -58,6 +63,7 @@ class EmailMessageAdmin(admin.ModelAdmin):
 		EmailMessageBccInline,
 		EmailMessageSubjectDataInline,
 		EmailMessageBodyDataInline,
+		EmailMessageSendGridDataInline,
 		EmailMessageExtraHeadersDataInline,
 		EmailMessageAttachmentsDataInline,
 	)
@@ -72,6 +78,7 @@ admin.site.register(EmailMessageAttachmentsData, EmailMessageGenericDataAdmin)
 admin.site.register(EmailMessageBccData, EmailMessageGenericDataAdmin)
 admin.site.register(EmailMessageBodyData, EmailMessageGenericDataAdmin)
 admin.site.register(EmailMessageCcData, EmailMessageGenericDataAdmin)
+admin.site.register(EmailMessageSendGridHeadersData, EmailMessageGenericDataAdmin)
 admin.site.register(EmailMessageExtraHeadersData, EmailMessageGenericDataAdmin)
 admin.site.register(EmailMessageSubjectData, EmailMessageGenericDataAdmin)
 admin.site.register(EmailMessageToData, EmailMessageGenericDataAdmin)

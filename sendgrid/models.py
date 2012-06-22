@@ -14,6 +14,7 @@ DEFAULT_SENDGRID_EMAIL_TRACKING_COMPONENTS = (
 	"bcc",
 	"subject",
 	"body",
+	"sendgrid_headers",
 	"extra_headers",
 	"attachments",
 )
@@ -44,6 +45,7 @@ def save_email_message(sender, **kwargs):
 		"bcc": EmailMessageBccData,
 		"subject": EmailMessageSubjectData,
 		"body": EmailMessageBodyData,
+		"sendgrid_headers": EmailMessageSendGridHeadersData,
 		"extra_headers": EmailMessageExtraHeadersData,
 		"attachments": EmailMessageAttachmentsData,
 	}
@@ -63,15 +65,21 @@ def save_email_message(sender, **kwargs):
 
 		for component, componentModel in COMPONENT_DATA_MODEL_MAP.iteritems():
 			if component in SENDGRID_EMAIL_TRACKING_COMPONENTS:
-				componentData = getattr(message, component, None)
+				if component == "sendgrid_headers":
+					componentData = message.sendgrid_headers.asJSON()
+				else:
+					componentData = getattr(message, component, None)
+
 				if componentData:
 					componentData = componentModel.objects.create(
 						email_message=emailMessage,
 						data=componentData,
 					)
+				else:
+					logger.debug("Could not get data for '{c}' component: {d}".format(c=component, d=componentData))
 			else:
 				logMessage = "Component {c} is not tracked"
-				logger.debug(logMEssage.format(c=component))
+				logger.debug(logMessage.format(c=component))
 
 
 class EmailMessage(models.Model):
@@ -125,6 +133,18 @@ class EmailMessageSubjectData(models.Model):
 	class Meta:
 		verbose_name = _("EmailMessageSubjectData")
 		verbose_name_plural = _("EmailMessageSubjectDatas")
+
+	def __unicode__(self):
+		return "{0}".format(self.email_message)
+
+
+class EmailMessageSendGridHeadersData(models.Model):
+	email_message = models.OneToOneField(EmailMessage, primary_key=True, related_name="sendgrid_headers")
+	data = models.TextField(_("SendGrid Headers"), editable=False)
+
+	class Meta:
+		verbose_name = _("EmailMessageSendGridHeadersData")
+		verbose_name_plural = _("EmailMessageSendGridHeadersDatas")
 
 	def __unicode__(self):
 		return "{0}".format(self.email_message)
