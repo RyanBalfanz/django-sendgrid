@@ -54,7 +54,7 @@ def save_email_message(sender, **kwargs):
 	if SENDGRID_EMAIL_TRACKING:
 		messageId = getattr(message, "_message_id", None) # TODO: Fix _message_id access
 		fromEmail = getattr(message, "from_email", None)
-		recipients = getattr(message, "to", None) # TODO: Handle multiple recipients
+		recipients = getattr(message, "to", None)
 		toEmail = recipients[0]
 		category = message.sendgrid_headers.data.get("category", None)
 
