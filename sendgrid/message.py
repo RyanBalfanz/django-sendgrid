@@ -44,10 +44,12 @@ class SendGridEmailMessageMixin:
 		
 	def _update_unique_args(self, uniqueArgs):
 		"""docstring for _update_unique_args"""
-		# assert self.unique_args is None, self.unique_args
-		self.sendgrid_headers.setUniqueArgs(uniqueArgs)
+		oldUniqueArgs = self.sendgrid_headers.data.get("unique_args", None)
+		newUniquieArgs = oldUniqueArgs.copy() if oldUniqueArgs else {}
+		newUniquieArgs.update(uniqueArgs)
+		self.sendgrid_headers.setUniqueArgs(newUniquieArgs)
 
-		return self.unique_args
+		return self.sendgrid_headers.data["unique_args"]
 
 	def update_headers(self, *args, **kwargs):
 		"""
