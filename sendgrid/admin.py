@@ -13,6 +13,9 @@ from .models import EmailMessageSubjectData
 from .models import EmailMessageToData
 
 
+DEBUG_SHOW_DATA_ADMIN_MODELS = False
+
+
 class EmailMessageGenericDataInline(admin.TabularInline):
 	model = None
 	readonly_fields = ("data",)
@@ -74,11 +77,13 @@ class EmailMessageGenericDataAdmin(admin.ModelAdmin):
 
 
 admin.site.register(EmailMessage, EmailMessageAdmin)
-admin.site.register(EmailMessageAttachmentsData, EmailMessageGenericDataAdmin)
-admin.site.register(EmailMessageBccData, EmailMessageGenericDataAdmin)
-admin.site.register(EmailMessageBodyData, EmailMessageGenericDataAdmin)
-admin.site.register(EmailMessageCcData, EmailMessageGenericDataAdmin)
-admin.site.register(EmailMessageSendGridHeadersData, EmailMessageGenericDataAdmin)
-admin.site.register(EmailMessageExtraHeadersData, EmailMessageGenericDataAdmin)
-admin.site.register(EmailMessageSubjectData, EmailMessageGenericDataAdmin)
-admin.site.register(EmailMessageToData, EmailMessageGenericDataAdmin)
+
+if DEBUG_SHOW_DATA_ADMIN_MODELS:
+	admin.site.register(EmailMessageAttachmentsData, EmailMessageGenericDataAdmin)
+	admin.site.register(EmailMessageBccData, EmailMessageGenericDataAdmin)
+	admin.site.register(EmailMessageBodyData, EmailMessageGenericDataAdmin)
+	admin.site.register(EmailMessageCcData, EmailMessageGenericDataAdmin)
+	admin.site.register(EmailMessageSendGridHeadersData, EmailMessageGenericDataAdmin)
+	admin.site.register(EmailMessageExtraHeadersData, EmailMessageGenericDataAdmin)
+	admin.site.register(EmailMessageSubjectData, EmailMessageGenericDataAdmin)
+	admin.site.register(EmailMessageToData, EmailMessageGenericDataAdmin)
