@@ -1,23 +1,18 @@
-"""
-This file demonstrates writing tests using the unittest module. These will pass
-when you run "manage.py test".
+from __future__ import absolute_import
 
-Replace this with more appropriate tests for your application.
-"""
 from collections import defaultdict
 
 from django.core.mail import EmailMessage
 from django.dispatch import receiver
 from django.test import TestCase
 
-# django-sendgrid
-from mail import get_sendgrid_connection
-from mail import send_sendgrid_mail
-from message import SendGridEmailMessage
-from message import SendGridEmailMultiAlternatives
-from signals import sendgrid_email_sent
-from utils import filterutils
-from utils import in_test_environment
+from .mail import get_sendgrid_connection
+from .mail import send_sendgrid_mail
+from .message import SendGridEmailMessage
+from .message import SendGridEmailMultiAlternatives
+from .signals import sendgrid_email_sent
+from .utils import filterutils
+from .utils import in_test_environment
 
 
 TEST_SENDER_EMAIL = "ryan@example.com"
