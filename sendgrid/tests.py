@@ -30,23 +30,25 @@ update_filters = filterutils.update_filters
 
 class SendGridEmailTest(TestCase):
 	"""docstring for SendGridEmailTest"""
-	def setUp(self):
-		"""docstring for setUp"""
-		pass
-		
 	def test_email_has_unique_id(self):
-		"""docstring for email_has_unique_id"""
+		"""
+		Tests the existence of the ``SendGridEmailMessage._message_id`` attribute.
+		"""
 		email = SendGridEmailMessage()
 		self.assertTrue(email._message_id)
 		
 	def test_email_sends_unique_id(self):
-		"""docstring for email_sends_unique_id"""
+		"""
+		Tests sending a ``SendGridEmailMessage`` adds a ``message_id`` to the unique args.
+		"""
 		email = SendGridEmailMessage(to=TEST_RECIPIENTS, from_email=TEST_SENDER_EMAIL)
 		email.send()
 		self.assertTrue(email.sendgrid_headers.data["unique_args"]["message_id"])
 		
 	def test_unique_args_persist(self):
-		"""docstring for email_sends_unique_id"""
+		"""
+		Tests that unique args are not lost due to sending adding the ``message_id`` arg.
+		"""
 		email = SendGridEmailMessage(to=TEST_RECIPIENTS, from_email=TEST_SENDER_EMAIL)
 		uniqueArgs = {
 			"unique_arg_1": 1,
@@ -62,7 +64,9 @@ class SendGridEmailTest(TestCase):
 		self.assertTrue(email.sendgrid_headers.data["unique_args"]["message_id"])
 
 	def test_email_sent_signal_has_message(self):
-		"""docstring for email_sent_signal_has_message"""
+		"""
+		Tests the existence of the ``message`` keywork arg from the ``sendgrid_email_sent`` signal.
+		"""
 		@receiver(sendgrid_email_sent)
 		def receive_sendgrid_email_sent(*args, **kwargs):
 			"""
@@ -147,7 +151,9 @@ class SendWithSendGridEmailMultiAlternativesTest(TestCase):
 		self.signalsReceived = defaultdict(list)
 		
 	def test_send_multipart_email(self):
-		"""docstring for send_multipart_email"""
+		"""
+		Tests sending multipart emails.
+		"""
 		subject, from_email, to = 'hello', 'from@example.com', 'to@example.com'
 		text_content = 'This is an important message.'
 		html_content = '<p>This is an <strong>important</strong> message.</p>'
@@ -227,7 +233,9 @@ class UpdateFiltersTests(TestCase):
 		self.email = SendGridEmailMessage(to=TEST_RECIPIENTS, from_email=TEST_SENDER_EMAIL)
 		
 	def test_update_filters(self):
-		"""docstring for test_update_filters"""
+		"""
+		Tests SendGrid filter functionality.
+		"""
 		filterSpec = {
 			"subscriptiontrack": {
 				"enable": 1,
