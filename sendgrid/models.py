@@ -25,6 +25,7 @@ SENDGRID_EMAIL_TRACKING_COMPONENTS = getattr(settings, "SENDGRID_USER_MIXIN_ENAB
 
 EMAIL_MESSAGE_FROM_EMAIL_MAX_LENGTH = 150
 EMAIL_MESSAGE_TO_EMAIL_MAX_LENGTH = 150
+EMAIL_MESSAGE_CATEGORY_MAX_LENGTH = 150
 
 if SENDGRID_USER_MIXIN_ENABLED:
 	from django.contrib.auth.models import User
@@ -55,18 +56,20 @@ def save_email_message(sender, **kwargs):
 		fromEmail = getattr(message, "from_email", None)
 		recipients = getattr(message, "to", None) # TODO: Handle multiple recipients
 		toEmail = recipients[0]
+		category = message.sendgrid_headers.data.get("category", None)
 
 		emailMessage = EmailMessage.objects.create(
 			message_id=messageId,
 			from_email=fromEmail,
 			to_email=toEmail,
+			category=category,
 			response=response,
 		)
 
 		for component, componentModel in COMPONENT_DATA_MODEL_MAP.iteritems():
 			if component in SENDGRID_EMAIL_TRACKING_COMPONENTS:
 				if component == "sendgrid_headers":
-					componentData = message.sendgrid_headers.asJSON()
+					componentData = message.sendgrid_headers.as_string()
 				else:
 					componentData = getattr(message, component, None)
 
@@ -86,6 +89,7 @@ class EmailMessage(models.Model):
 	message_id = models.CharField(unique=True, max_length=36, editable=False, blank=True)
 	from_email = models.CharField(max_length=EMAIL_MESSAGE_FROM_EMAIL_MAX_LENGTH)
 	to_email = models.CharField(max_length=EMAIL_MESSAGE_TO_EMAIL_MAX_LENGTH)
+	category = models.CharField(max_length=EMAIL_MESSAGE_CATEGORY_MAX_LENGTH)
 	response = models.IntegerField(blank=True, null=True)
 	creation_time = models.DateTimeField(auto_now_add=True)
 	last_modified_time = models.DateTimeField(auto_now=True)
