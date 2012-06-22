@@ -118,6 +118,10 @@ class SendGridEmailMessage(EmailMessage, SendGridEmailMessageMixin):
 		
 		return response
 
+	def get_message_id(self):
+		return self._message_id
+	message_id = property(get_message_id)
+
 
 class SendGridEmailMultiAlternatives(EmailMultiAlternatives, SendGridEmailMessageMixin):
 	"""

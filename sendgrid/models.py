@@ -52,7 +52,7 @@ def save_email_message(sender, **kwargs):
 	}
 
 	if SENDGRID_EMAIL_TRACKING:
-		messageId = getattr(message, "_message_id", None) # TODO: Fix _message_id access
+		messageId = getattr(message, "message_id", None)
 		fromEmail = getattr(message, "from_email", None)
 		recipients = getattr(message, "to", None)
 		toEmail = recipients[0]
