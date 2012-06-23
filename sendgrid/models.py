@@ -3,15 +3,9 @@ from __future__ import absolute_import
 import datetime
 import logging
 
-import logging
-
+from django.conf import settings
 from django.db import models
-from django.conf import settings
-from django.contrib.auth.models import User
 from django.dispatch import receiver
-from django.utils.translation import ugettext_lazy as _
-from django.dispatch import receiver
-from django.conf import settings
 from django.utils.translation import ugettext_lazy as _
 
 from .constants import EVENT_TYPES_MAP
@@ -34,6 +28,7 @@ DEFAULT_SENDGRID_EMAIL_TRACKING_COMPONENTS = (
 SENDGRID_EMAIL_MESSAGE_MAX_SUBJECT_LENGTH = getattr(settings, "SENDGRID_EMAIL_MESSAGE_MAX_SUBJECT_LENGTH", 255)
 SENDGRID_EMAIL_TRACKING = getattr(settings, "SENDGRID_USER_MIXIN_ENABLED", True)
 SENDGRID_EMAIL_TRACKING_COMPONENTS = getattr(settings, "SENDGRID_USER_MIXIN_ENABLED", DEFAULT_SENDGRID_EMAIL_TRACKING_COMPONENTS)
+SENDGRID_USER_MIXIN_ENABLED = getattr(settings, "SENDGRID_USER_MIXIN_ENABLED", True)
 
 EMAIL_MESSAGE_CATEGORY_MAX_LENGTH = 150
 
@@ -42,7 +37,6 @@ EMAIL_MESSAGE_CATEGORY_MAX_LENGTH = 150
 EMAIL_MESSAGE_FROM_EMAIL_MAX_LENGTH = 254
 EMAIL_MESSAGE_TO_EMAIL_MAX_LENGTH = 254
 
-SENDGRID_USER_MIXIN_ENABLED = getattr(settings, "SENDGRID_USER_MIXIN_ENABLED", True)
 if SENDGRID_USER_MIXIN_ENABLED:
 	from django.contrib.auth.models import User
 	from .mixins import SendGridUserMixin
@@ -50,31 +44,6 @@ if SENDGRID_USER_MIXIN_ENABLED:
 	User.__bases__ += (SendGridUserMixin,)
 
 logger = logging.getLogger(__name__)
-
-@receiver(sendgrid_event_processed)
-def handle_sendgrid_event(sender, **kwargs):
-	logger.debug("SendGrid event recieved!")
-
-	eventDetail = kwargs["detail"]
-
-	email = eventDetail["email"]
-	event = eventDetail["event"]
-	try:
-		category = eventDetail["category"]
-		uniqueArgs = eventDetail["unique_args"]
-		message_id = uniqueArgs["message_id"]
-	except KeyError as e:
-		logger.exception("Caught KeyError: {error}".format(error=e))
-		return
-
-	emailMessage, created = SendGridEmailMessage.objects.get_or_create(message_id=message_id)
-	if created:
-		logger.info("Created {obj}".format(obj=emailMessage))
-
-	sendgridEvent = SendGridEvent.objects.create(
-		email_message=emailMessage,
-		type=EVENT_TYPES_MAP[event.upper()],
-	)
 
 @receiver(sendgrid_email_sent)
 def save_email_message(sender, **kwargs):
@@ -124,6 +93,31 @@ def save_email_message(sender, **kwargs):
 			else:
 				logMessage = "Component {c} is not tracked"
 				logger.debug(logMessage.format(c=component))
+
+@receiver(sendgrid_event_processed)
+def handle_sendgrid_event(sender, **kwargs):
+	logger.debug("SendGrid event recieved!")
+
+	eventDetail = kwargs["detail"]
+
+	email = eventDetail["email"]
+	event = eventDetail["event"]
+	try:
+		category = eventDetail["category"]
+		uniqueArgs = eventDetail["unique_args"]
+		message_id = uniqueArgs["message_id"]
+	except KeyError as e:
+		logger.exception("Caught KeyError: {error}".format(error=e))
+		return
+
+	emailMessage, created = SendGridEmailMessage.objects.get_or_create(message_id=message_id)
+	if created:
+		logger.info("Created {obj}".format(obj=emailMessage))
+
+	sendgridEvent = SendGridEvent.objects.create(
+		email_message=emailMessage,
+		type=EVENT_TYPES_MAP[event.upper()],
+	)
 
 
 class EmailMessage(models.Model):
