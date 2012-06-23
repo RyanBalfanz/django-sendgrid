@@ -59,6 +59,14 @@ class EmailMessageToDataInline(EmailMessageGenericDataInline):
 	model = EmailMessageToData
 
 
+class SendGridEventInline(admin.TabularInline):
+	model = SendGridEvent
+	can_delete = True
+	extra = 0
+	verbose_name = "Event"
+	verbose_name_plural = "Events"
+
+
 class EmailMessageAdmin(admin.ModelAdmin):
 	date_hierarchy = "creation_time"
 	list_display = ("message_id", "from_email", "to_email", "category", "subject_data", "response")
@@ -73,18 +81,11 @@ class EmailMessageAdmin(admin.ModelAdmin):
 		EmailMessageSendGridDataInline,
 		EmailMessageExtraHeadersDataInline,
 		EmailMessageAttachmentsDataInline,
+		SendGridEventInline,
 	)
 
 	def has_add_permission(self, request):
 		return False
-
-
-class SendGridEventInline(admin.TabularInline):
-	model = SendGridEvent
-	can_delete = True
-	extra = 0
-	verbose_name = "Event"
-	verbose_name_plural = "Events"
 
 
 class EmailMessageGenericDataAdmin(admin.ModelAdmin):
