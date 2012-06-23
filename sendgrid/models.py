@@ -15,19 +15,41 @@ from django.conf import settings
 from django.utils.translation import ugettext_lazy as _
 
 from .constants import EVENT_TYPES_MAP
+from .signals import sendgrid_email_sent
 from .signals import sendgrid_event_recieved
 from .signals import sendgrid_event_processed
 
 
-SENDGRID_EMAIL_MESSAGE_MAX_SUBJECT_LENGTH = getattr(settings, "SENDGRID_EMAIL_MESSAGE_MAX_SUBJECT_LENGTH", 255)
-SENDGRID_USER_MIXIN_ENABLED = getattr(settings, "SENDGRID_USER_MIXIN_ENABLED", True)
+DEFAULT_SENDGRID_EMAIL_TRACKING_COMPONENTS = (
+	"to",
+	"cc",
+	"bcc",
+	"subject",
+	"body",
+	"sendgrid_headers",
+	"extra_headers",
+	"attachments",
+)
 
+SENDGRID_EMAIL_MESSAGE_MAX_SUBJECT_LENGTH = getattr(settings, "SENDGRID_EMAIL_MESSAGE_MAX_SUBJECT_LENGTH", 255)
+SENDGRID_EMAIL_TRACKING = getattr(settings, "SENDGRID_USER_MIXIN_ENABLED", True)
+SENDGRID_EMAIL_TRACKING_COMPONENTS = getattr(settings, "SENDGRID_USER_MIXIN_ENABLED", DEFAULT_SENDGRID_EMAIL_TRACKING_COMPONENTS)
+
+EMAIL_MESSAGE_CATEGORY_MAX_LENGTH = 150
+
+# To store all possible valid email addresses, a max_length of 254 is required.
+# See RFC3696/5321
+EMAIL_MESSAGE_FROM_EMAIL_MAX_LENGTH = 254
+EMAIL_MESSAGE_TO_EMAIL_MAX_LENGTH = 254
+
+SENDGRID_USER_MIXIN_ENABLED = getattr(settings, "SENDGRID_USER_MIXIN_ENABLED", True)
 if SENDGRID_USER_MIXIN_ENABLED:
+	from django.contrib.auth.models import User
 	from .mixins import SendGridUserMixin
+	
 	User.__bases__ += (SendGridUserMixin,)
 
 logger = logging.getLogger(__name__)
-
 
 @receiver(sendgrid_event_processed)
 def handle_sendgrid_event(sender, **kwargs):
@@ -89,38 +111,7 @@ class SendGridEvent(models.Model):
 	def save(self, *args, **kwargs):
 		self.last_modified_time = datetime.datetime.now()
 		super(SendGridEvent, self).save(*args, **kwargs)
-from sendgrid.signals import sendgrid_email_sent
 
-
-DEFAULT_SENDGRID_EMAIL_TRACKING_COMPONENTS = (
-	"to",
-	"cc",
-	"bcc",
-	"subject",
-	"body",
-	"sendgrid_headers",
-	"extra_headers",
-	"attachments",
-)
-
-SENDGRID_USER_MIXIN_ENABLED = getattr(settings, "SENDGRID_USER_MIXIN_ENABLED", True)
-SENDGRID_EMAIL_TRACKING = getattr(settings, "SENDGRID_USER_MIXIN_ENABLED", True)
-SENDGRID_EMAIL_TRACKING_COMPONENTS = getattr(settings, "SENDGRID_USER_MIXIN_ENABLED", DEFAULT_SENDGRID_EMAIL_TRACKING_COMPONENTS)
-
-EMAIL_MESSAGE_CATEGORY_MAX_LENGTH = 150
-
-# To store all possible valid email addresses, a max_length of 254 is required.
-# See RFC3696/5321
-EMAIL_MESSAGE_FROM_EMAIL_MAX_LENGTH = 254
-EMAIL_MESSAGE_TO_EMAIL_MAX_LENGTH = 254
-
-if SENDGRID_USER_MIXIN_ENABLED:
-	from django.contrib.auth.models import User
-	from sendgrid.mixins import SendGridUserMixin
-	
-	User.__bases__ += (SendGridUserMixin,)
-
-logger = logging.getLogger(__name__)
 
 @receiver(sendgrid_email_sent)
 def save_email_message(sender, **kwargs):

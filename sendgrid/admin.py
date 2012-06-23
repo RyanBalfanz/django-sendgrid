@@ -2,18 +2,6 @@ from __future__ import absolute_import
 
 from django.contrib import admin
 
-from .models import SendGridEvent
-
-
-class SendGridEventInline(admin.TabularInline):
-	model = SendGridEvent
-	can_delete = True
-	extra = 0
-	verbose_name = "Event"
-	verbose_name_plural = "Events"
-
-
-admin.site.register(SendGridEmailMessage, SendGridEmailMessageAdmin)
 from .models import EmailMessage
 from .models import EmailMessageAttachmentsData
 from .models import EmailMessageBodyData
@@ -23,6 +11,7 @@ from .models import EmailMessageExtraHeadersData
 from .models import EmailMessageSendGridHeadersData
 from .models import EmailMessageSubjectData
 from .models import EmailMessageToData
+from .models import SendGridEvent
 
 
 DEBUG_SHOW_DATA_ADMIN_MODELS = False
@@ -90,11 +79,20 @@ class EmailMessageAdmin(admin.ModelAdmin):
 		return False
 
 
+class SendGridEventInline(admin.TabularInline):
+	model = SendGridEvent
+	can_delete = True
+	extra = 0
+	verbose_name = "Event"
+	verbose_name_plural = "Events"
+
+
 class EmailMessageGenericDataAdmin(admin.ModelAdmin):
 	list_display = ("email_message", "data")
 
 
 admin.site.register(EmailMessage, EmailMessageAdmin)
+admin.site.register(SendGridEvent)
 
 if DEBUG_SHOW_DATA_ADMIN_MODELS:
 	admin.site.register(EmailMessageAttachmentsData, EmailMessageGenericDataAdmin)
