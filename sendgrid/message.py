@@ -121,7 +121,7 @@ class SendGridEmailMessage(EmailMessage, SendGridEmailMessageMixin):
 		
 		response = super(SendGridEmailMessage, self).send(*args, **kwargs)
 		logger.debug("Tried to send an email with SendGrid and got response {r}".format(r=response))
-		sendgrid_email_sent.send(sender=self, response=response, message=self)
+		sendgrid_email_sent.send(sender=self, message=self, response=response)
 		
 		return response
 
@@ -142,6 +142,6 @@ class SendGridEmailMultiAlternatives(EmailMultiAlternatives, SendGridEmailMessag
 		
 		response = super(SendGridEmailMultiAlternatives, self).send(*args, **kwargs)
 		logger.debug("Tried to send an email with SendGrid and got response {r}".format(r=response))
-		sendgrid_email_sent.send(sender=self, response=response, message=self)
+		sendgrid_email_sent.send(sender=self, message=self, response=response)
 
 		return response
