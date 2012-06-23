@@ -102,34 +102,6 @@ class EmailMessage(models.Model):
 	def __unicode__(self):
 		return "{0}".format(self.message_id)
 
-	def get_to_data(self):
-		return self.to.data
-	to_data = property(get_to_data)
-
-	def get_cc_data(self):
-		return self.to.data
-	cc_data = property(get_cc_data)
-
-	def get_bcc_data(self):
-		return self.to.data
-	bcc_data = property(get_bcc_data)
-
-	def get_subject_data(self):
-		return self.subject.data
-	subject_data = property(get_subject_data)
-
-	def get_body_data(self):
-		return self.subject.data
-	body_data = property(get_body_data)
-
-	def get_extra_headers_data(self):
-		return self.headers.data
-	extra_headers_data = property(get_extra_headers_data)
-
-	def get_attachments_data(self):
-		return self.headers.data
-	attachments_data = property(get_attachments_data)
-
 
 class EmailMessageSubjectData(models.Model):
 	email_message = models.OneToOneField(EmailMessage, primary_key=True, related_name="subject")
