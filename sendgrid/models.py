@@ -23,9 +23,12 @@ SENDGRID_USER_MIXIN_ENABLED = getattr(settings, "SENDGRID_USER_MIXIN_ENABLED", T
 SENDGRID_EMAIL_TRACKING = getattr(settings, "SENDGRID_USER_MIXIN_ENABLED", True)
 SENDGRID_EMAIL_TRACKING_COMPONENTS = getattr(settings, "SENDGRID_USER_MIXIN_ENABLED", DEFAULT_SENDGRID_EMAIL_TRACKING_COMPONENTS)
 
-EMAIL_MESSAGE_FROM_EMAIL_MAX_LENGTH = 150
-EMAIL_MESSAGE_TO_EMAIL_MAX_LENGTH = 150
 EMAIL_MESSAGE_CATEGORY_MAX_LENGTH = 150
+
+# To store all possible valid email addresses, a max_length of 254 is required.
+# See RFC3696/5321
+EMAIL_MESSAGE_FROM_EMAIL_MAX_LENGTH = 254
+EMAIL_MESSAGE_TO_EMAIL_MAX_LENGTH = 254
 
 if SENDGRID_USER_MIXIN_ENABLED:
 	from django.contrib.auth.models import User
@@ -101,34 +104,6 @@ class EmailMessage(models.Model):
 
 	def __unicode__(self):
 		return "{0}".format(self.message_id)
-
-	def get_to_data(self):
-		return self.to.data
-	to_data = property(get_to_data)
-
-	def get_cc_data(self):
-		return self.to.data
-	cc_data = property(get_cc_data)
-
-	def get_bcc_data(self):
-		return self.to.data
-	bcc_data = property(get_bcc_data)
-
-	def get_subject_data(self):
-		return self.subject.data
-	subject_data = property(get_subject_data)
-
-	def get_body_data(self):
-		return self.subject.data
-	body_data = property(get_body_data)
-
-	def get_extra_headers_data(self):
-		return self.headers.data
-	extra_headers_data = property(get_extra_headers_data)
-
-	def get_attachments_data(self):
-		return self.headers.data
-	attachments_data = property(get_attachments_data)
 
 
 class EmailMessageSubjectData(models.Model):
