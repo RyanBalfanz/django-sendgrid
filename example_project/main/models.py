@@ -50,10 +50,11 @@ def send_registration_email_to_new_user(user, emailOptions=REGISTRATION_EMAIL_SP
 	user = get_user(user)
 	
 	registrationEmail = SendGridEmailMessage(
-		to=[user.username],
+		to=[user.email],
 		**emailOptions
 	)
 	registrationEmail.sendgrid_headers.setCategory("Registration")
+	registrationEmail.sendgrid_headers.setUniqueArgs({"user_id": user.id})
 	response = registrationEmail.send()
 	
 	return response
