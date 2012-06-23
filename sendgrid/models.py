@@ -76,43 +76,6 @@ def handle_sendgrid_event(sender, **kwargs):
 		type=EVENT_TYPES_MAP[event.upper()],
 	)
 
-
-class SendGridEvent(models.Model):
-	SENDGRID_EVENT_UNKNOWN_TYPE = EVENT_TYPES_MAP["UNKNOWN"]
-	SENDGRID_EVENT_DEFERRED_TYPE = EVENT_TYPES_MAP["DEFERRED"]
-	SENDGRID_EVENT_PROCESSED_TYPE = EVENT_TYPES_MAP["PROCESSED"]
-	SENDGRID_EVENT_DROPPED_TYPE = EVENT_TYPES_MAP["DROPPED"]
-	SENDGRID_EVENT_DELIVERED_TYPE = EVENT_TYPES_MAP["DELIVERED"]
-	SENDGRID_EVENT_BOUNCE_TYPE = EVENT_TYPES_MAP["BOUNCED"]
-	SENDGRID_EVENT_OPEN_TYPE = EVENT_TYPES_MAP["OPENED"]
-	SENDGRID_EVENT_CLICK_TYPE = EVENT_TYPES_MAP["CLICKED"]
-	SENDGRID_EVENT_SPAM_REPORT_TYPE = EVENT_TYPES_MAP["SPAMREPORT"]
-	SENDGRID_EVENT_UNSUBSCRIBE_TYPE = EVENT_TYPES_MAP["UNSUBSCRIBED"]
-	SENDGRID_EVENT_TYPES = (
-		(SENDGRID_EVENT_UNKNOWN_TYPE, "Unknown"),
-		(SENDGRID_EVENT_DEFERRED_TYPE, "Deferred"),
-		(SENDGRID_EVENT_PROCESSED_TYPE, "Processed"),
-		(SENDGRID_EVENT_DROPPED_TYPE, "Dropped"),
-		(SENDGRID_EVENT_DELIVERED_TYPE, "Delivered"),
-		(SENDGRID_EVENT_BOUNCE_TYPE, "Bounce"),
-		(SENDGRID_EVENT_OPEN_TYPE, "Open"),
-		(SENDGRID_EVENT_CLICK_TYPE, "Click"),
-		(SENDGRID_EVENT_SPAM_REPORT_TYPE, "Spam Report"),
-		(SENDGRID_EVENT_UNSUBSCRIBE_TYPE, "Unsubscribe"),
-	)
-	creation_time = models.DateTimeField(blank=True, default=datetime.datetime.now)
-	
-	type = models.IntegerField(blank=True, null=True, choices=SENDGRID_EVENT_TYPES, default=SENDGRID_EVENT_UNKNOWN_TYPE)
-	last_modified_time = models.DateTimeField(blank=True, default=datetime.datetime.now)
-
-	def __unicode__(self):
-		return u"{} - {}".format(self.email_message, self.get_type_display())
-	
-	def save(self, *args, **kwargs):
-		self.last_modified_time = datetime.datetime.now()
-		super(SendGridEvent, self).save(*args, **kwargs)
-
-
 @receiver(sendgrid_email_sent)
 def save_email_message(sender, **kwargs):
 	message = kwargs.get("message", None)
@@ -303,3 +266,39 @@ class EmailMessageToData(models.Model):
 
 	def __unicode__(self):
 		return "{0}".format(self.email_message)
+
+
+class SendGridEvent(models.Model):
+	SENDGRID_EVENT_UNKNOWN_TYPE = EVENT_TYPES_MAP["UNKNOWN"]
+	SENDGRID_EVENT_DEFERRED_TYPE = EVENT_TYPES_MAP["DEFERRED"]
+	SENDGRID_EVENT_PROCESSED_TYPE = EVENT_TYPES_MAP["PROCESSED"]
+	SENDGRID_EVENT_DROPPED_TYPE = EVENT_TYPES_MAP["DROPPED"]
+	SENDGRID_EVENT_DELIVERED_TYPE = EVENT_TYPES_MAP["DELIVERED"]
+	SENDGRID_EVENT_BOUNCE_TYPE = EVENT_TYPES_MAP["BOUNCED"]
+	SENDGRID_EVENT_OPEN_TYPE = EVENT_TYPES_MAP["OPENED"]
+	SENDGRID_EVENT_CLICK_TYPE = EVENT_TYPES_MAP["CLICKED"]
+	SENDGRID_EVENT_SPAM_REPORT_TYPE = EVENT_TYPES_MAP["SPAMREPORT"]
+	SENDGRID_EVENT_UNSUBSCRIBE_TYPE = EVENT_TYPES_MAP["UNSUBSCRIBED"]
+	SENDGRID_EVENT_TYPES = (
+		(SENDGRID_EVENT_UNKNOWN_TYPE, "Unknown"),
+		(SENDGRID_EVENT_DEFERRED_TYPE, "Deferred"),
+		(SENDGRID_EVENT_PROCESSED_TYPE, "Processed"),
+		(SENDGRID_EVENT_DROPPED_TYPE, "Dropped"),
+		(SENDGRID_EVENT_DELIVERED_TYPE, "Delivered"),
+		(SENDGRID_EVENT_BOUNCE_TYPE, "Bounce"),
+		(SENDGRID_EVENT_OPEN_TYPE, "Open"),
+		(SENDGRID_EVENT_CLICK_TYPE, "Click"),
+		(SENDGRID_EVENT_SPAM_REPORT_TYPE, "Spam Report"),
+		(SENDGRID_EVENT_UNSUBSCRIBE_TYPE, "Unsubscribe"),
+	)
+	creation_time = models.DateTimeField(blank=True, default=datetime.datetime.now)
+	email_message = models.ForeignKey(EmailMessage)
+	type = models.IntegerField(blank=True, null=True, choices=SENDGRID_EVENT_TYPES, default=SENDGRID_EVENT_UNKNOWN_TYPE)
+	last_modified_time = models.DateTimeField(blank=True, default=datetime.datetime.now)
+
+	def __unicode__(self):
+		return u"{} - {}".format(self.email_message, self.get_type_display())
+	
+	def save(self, *args, **kwargs):
+		self.last_modified_time = datetime.datetime.now()
+		super(SendGridEvent, self).save(*args, **kwargs)
