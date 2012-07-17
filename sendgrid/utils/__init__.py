@@ -8,11 +8,27 @@ import urllib2
 from django.conf import settings
 from django.core import mail
 
+# from sendgrid.models import EmailMessage
+
 
 SENDGRID_EMAIL_USERNAME = getattr(settings, "SENDGRID_EMAIL_USERNAME", None)
 SENDGRID_EMAIL_PASSWORD = getattr(settings, "SENDGRID_EMAIL_PASSWORD", None)
 
 logger = logging.getLogger(__name__)
+
+# def get_email_message(key):
+# 	if isinstance(key, EmailMessage):
+# 		emailMessage = key
+# 	elif isinstance(key, int):
+# 		emailMessage = EmailMessage.objects.get(id=key)
+# 	elif isinstance(key, long):
+# 		emailMessage = EmailMessage.objects.get(id=key)
+# 	elif isinstance(key, basestring):
+# 		emailMessage = EmailMessage.objects.get(message_id=key)
+# 	else:
+# 		raise ValueError
+
+# 	return emailMessage
 
 def in_test_environment():
 	"""
