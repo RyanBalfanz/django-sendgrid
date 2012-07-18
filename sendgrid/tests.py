@@ -12,6 +12,7 @@ from .message import SendGridEmailMessage
 from .message import SendGridEmailMultiAlternatives
 from .signals import sendgrid_email_sent
 from .utils import filterutils
+# from .utils import get_email_message
 from .utils import in_test_environment
 
 
@@ -241,3 +242,28 @@ class UpdateFiltersTests(TestCase):
 		}
 		update_filters(self.email, filterSpec)
 		self.email.send()
+
+
+# class TestGetEmailMessageUtil(TestCase):
+# 	"""docstring for TestGetEmailMessageUtil"""
+# 	def test_get_with_email_message(self):
+# 		from .models import EmailMessage as SGEmailMessage
+
+# 		original = SGEmailMessage.objects.create()
+# 		result = get_email_message(original)
+# 		self.assertEqual(original, result)
+
+# 	def test_get_with_id(self):
+# 		from .models import EmailMessage as SGEmailMessage
+
+# 		original = SGEmailMessage.objects.create()
+# 		result = get_email_message(original.id)
+# 		self.assertEqual(original, result)
+
+# 	def test_with_message_id(self):
+# 		from sendgrid.models import EmailMessage as SGEmailMessage
+
+# 		original = SGEmailMessage.objects.create()
+# 		result = get_email_message(original.message_id)
+# 		self.assertEqual(original, result)
+		

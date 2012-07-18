@@ -1,5 +1,6 @@
 from django.conf import settings
 
+
 PASS = lambda i: True
 FAIL = lambda i: False
 IS_ZERO_OR_ONE = lambda i: i in (0, 1, "0", "1")
