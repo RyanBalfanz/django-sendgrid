@@ -11,7 +11,7 @@ from .models import EmailMessageExtraHeadersData
 from .models import EmailMessageSendGridHeadersData
 from .models import EmailMessageSubjectData
 from .models import EmailMessageToData
-from .models import SendGridEvent
+from .models import Event
 
 
 DEBUG_SHOW_DATA_ADMIN_MODELS = False
@@ -59,9 +59,9 @@ class EmailMessageToDataInline(EmailMessageGenericDataInline):
 	model = EmailMessageToData
 
 
-class SendGridEventInline(admin.TabularInline):
-	model = SendGridEvent
-	can_delete = True
+class EventInline(admin.TabularInline):
+	model = Event
+	can_delete = False
 	extra = 0
 	verbose_name = "Event"
 	verbose_name_plural = "Events"
@@ -81,11 +81,17 @@ class EmailMessageAdmin(admin.ModelAdmin):
 		EmailMessageSendGridDataInline,
 		EmailMessageExtraHeadersDataInline,
 		EmailMessageAttachmentsDataInline,
-		SendGridEventInline,
+		EventInline,
 	)
 
 	def has_add_permission(self, request):
 		return False
+
+
+class EventAdmin(admin.ModelAdmin):
+	date_hierarchy = "creation_time"
+	list_display = ("email_message", "type")
+	list_filter = ("type",)
 
 
 class EmailMessageGenericDataAdmin(admin.ModelAdmin):
@@ -93,7 +99,7 @@ class EmailMessageGenericDataAdmin(admin.ModelAdmin):
 
 
 admin.site.register(EmailMessage, EmailMessageAdmin)
-admin.site.register(SendGridEvent)
+admin.site.register(Event, EventAdmin)
 
 if DEBUG_SHOW_DATA_ADMIN_MODELS:
 	admin.site.register(EmailMessageAttachmentsData, EmailMessageGenericDataAdmin)

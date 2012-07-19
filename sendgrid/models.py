@@ -99,8 +99,8 @@ def handle_sendgrid_event(sender, **kwargs):
 
 	eventDetail = kwargs["detail"]
 
-	email = eventDetail["email"]
-	event = eventDetail["event"]
+	eventEmail = eventDetail["email"]
+	eventType = eventDetail["event"]
 	try:
 		category = eventDetail["category"]
 		uniqueArgs = eventDetail["unique_args"]
@@ -113,9 +113,9 @@ def handle_sendgrid_event(sender, **kwargs):
 	if created:
 		logger.info("Created {obj}".format(obj=emailMessage))
 
-	sendgridEvent = SendGridEvent.objects.create(
+	event = Event.objects.create(
 		email_message=emailMessage,
-		type=EVENT_TYPES_MAP[event.upper()],
+		type=EVENT_TYPES_MAP[eventType.upper()],
 	)
 
 
@@ -261,7 +261,7 @@ class EmailMessageToData(models.Model):
 		return "{0}".format(self.email_message)
 
 
-class SendGridEvent(models.Model):
+class Event(models.Model):
 	SENDGRID_EVENT_UNKNOWN_TYPE = EVENT_TYPES_MAP["UNKNOWN"]
 	SENDGRID_EVENT_DEFERRED_TYPE = EVENT_TYPES_MAP["DEFERRED"]
 	SENDGRID_EVENT_PROCESSED_TYPE = EVENT_TYPES_MAP["PROCESSED"]
@@ -288,6 +288,10 @@ class SendGridEvent(models.Model):
 	type = models.IntegerField(blank=True, null=True, choices=SENDGRID_EVENT_TYPES, default=SENDGRID_EVENT_UNKNOWN_TYPE)
 	creation_time = models.DateTimeField(auto_now_add=True)
 	last_modified_time = models.DateTimeField(auto_now=True)
+
+	class Meta:
+		verbose_name = _("Event")
+		verbose_name_plural = _("Events")
 
 	def __unicode__(self):
 		return u"{} - {}".format(self.email_message, self.get_type_display())
