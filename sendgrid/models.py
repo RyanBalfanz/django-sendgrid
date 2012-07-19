@@ -284,9 +284,9 @@ class SendGridEvent(models.Model):
 		(SENDGRID_EVENT_SPAM_REPORT_TYPE, "Spam Report"),
 		(SENDGRID_EVENT_UNSUBSCRIBE_TYPE, "Unsubscribe"),
 	)
-	creation_time = models.DateTimeField(blank=True, default=datetime.datetime.now)
 	email_message = models.ForeignKey(EmailMessage)
 	type = models.IntegerField(blank=True, null=True, choices=SENDGRID_EVENT_TYPES, default=SENDGRID_EVENT_UNKNOWN_TYPE)
+	creation_time = models.DateTimeField(blank=True, default=datetime.datetime.now)
 	last_modified_time = models.DateTimeField(blank=True, default=datetime.datetime.now)
 
 	def __unicode__(self):
