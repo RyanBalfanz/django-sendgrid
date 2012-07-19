@@ -286,8 +286,8 @@ class SendGridEvent(models.Model):
 	)
 	email_message = models.ForeignKey(EmailMessage)
 	type = models.IntegerField(blank=True, null=True, choices=SENDGRID_EVENT_TYPES, default=SENDGRID_EVENT_UNKNOWN_TYPE)
-	creation_time = models.DateTimeField(blank=True, default=datetime.datetime.now)
-	last_modified_time = models.DateTimeField(blank=True, default=datetime.datetime.now)
+	creation_time = models.DateTimeField(auto_now_add=True)
+	last_modified_time = models.DateTimeField(auto_now=True)
 
 	def __unicode__(self):
 		return u"{} - {}".format(self.email_message, self.get_type_display())
