@@ -291,7 +291,4 @@ class SendGridEvent(models.Model):
 
 	def __unicode__(self):
 		return u"{} - {}".format(self.email_message, self.get_type_display())
-	
-	def save(self, *args, **kwargs):
-		self.last_modified_time = datetime.datetime.now()
-		super(SendGridEvent, self).save(*args, **kwargs)
+
