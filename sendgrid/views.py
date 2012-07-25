@@ -141,13 +141,14 @@ def listener(request, statusCode=POST_EVENTS_RESPONSE_STATUS_CODE):
 		
 	response = None
 	if request.method == 'POST':
-		if request.META["CONTENT_TYPE"] == "application/json":
+		if request.META["CONTENT_TYPE"].startswith("application/json"):
 			# Batched event POSTs have a content-type header of application/json
 			# They contain exactly one JSON string per line, with each line representing one event.
 			response = handle_batched_events_request(request)
-		elif request.META["CONTENT_TYPE"] == "application/xml":
+		elif request.META["CONTENT_TYPE"].startswith("application/xml"):
 			response = handle_single_event_request(request)
-		elif request.META["CONTENT_TYPE"] == "application/x-www-form-urlencoded":
+		elif request.META["CONTENT_TYPE"].startswith("application/x-www-form-urlencoded"):
+			# application/x-www-form-urlencoded; charset=utf-8
 			response = handle_single_event_request(request)
 		else:
 			msg = "Unexpected content type: {m}".format(m=request.META["CONTENT_TYPE"])
