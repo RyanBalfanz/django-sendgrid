@@ -140,7 +140,7 @@ def listener(request, statusCode=POST_EVENTS_RESPONSE_STATUS_CODE):
 	sendgrid_event_recieved.send(sender=None, request=request)
 		
 	response = None
-	if request.method == 'POST':
+	if request.method == "POST":
 		if request.META["CONTENT_TYPE"].startswith("application/json"):
 			# Batched event POSTs have a content-type header of application/json
 			# They contain exactly one JSON string per line, with each line representing one event.
