@@ -98,6 +98,29 @@ def handle_single_event_request(request):
 	"""
 	Handles single event POST requests.
 	"""
+	eventData = simplejson.loads(request.POST)
+
+	# Parameters that are always passed with each event
+	email = eventData.get("email", None)
+	event = eventData.get("event", None)
+
+	messageId = eventData.get("message_id", None)
+	if messageId:
+		emailMessage, created = EmailMessage.objects.get_or_create(message_id=messageId)
+		if created:
+			logger.info("Recieved an event for non-existent EmailMessage with message_id '{0}'".format(messageId))
+
+		Event.objects.create(
+			email_message=emailMessage,
+			type=event,
+		)
+
+		return
+	else:
+		logger.debug("Expected 'message_id' was not found in event data")
+		return
+
+
 	jsonEvent = convert_single_event_request_to_json_event(request)
 	jsonEvent = simplejson.loads(jsonEvent)
 
