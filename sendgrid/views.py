@@ -146,6 +146,7 @@ def listener(request, statusCode=POST_EVENTS_RESPONSE_STATUS_CODE):
 			# They contain exactly one JSON string per line, with each line representing one event.
 			response = handle_batched_events_request(request)
 		elif request.META["CONTENT_TYPE"].startswith("application/xml"):
+			raise NotImplementedError
 			response = handle_single_event_request(request)
 		elif request.META["CONTENT_TYPE"].startswith("application/x-www-form-urlencoded"):
 			# application/x-www-form-urlencoded; charset=utf-8
