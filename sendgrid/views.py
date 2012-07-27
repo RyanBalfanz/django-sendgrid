@@ -98,7 +98,7 @@ def handle_single_event_request(request):
 	"""
 	Handles single event POST requests.
 	"""
-	eventData = simplejson.loads(request.POST)
+	eventData = request.POST
 
 	# Parameters that are always passed with each event
 	email = eventData.get("email", None)
