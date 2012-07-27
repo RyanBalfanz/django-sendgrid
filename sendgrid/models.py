@@ -294,5 +294,5 @@ class Event(models.Model):
 		verbose_name_plural = _("Events")
 
 	def __unicode__(self):
-		return u"{} - {}".format(self.email_message, self.get_type_display())
+		return u"{0} - {1}".format(self.email_message, self.get_type_display())
 

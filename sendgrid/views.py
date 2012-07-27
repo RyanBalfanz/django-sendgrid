@@ -11,6 +11,9 @@ from django.views.decorators.csrf import csrf_exempt
 from .signals import sendgrid_event_recieved
 from .signals import sendgrid_event_processed
 
+from sendgrid.models import EmailMessage, Event
+from .constants import EVENT_TYPES_MAP
+
 
 POST_EVENTS_RESPONSE_STATUS_CODE = getattr(settings, "POST_EVENT_HANDLER_RESPONSE_STATUS_CODE", None)
 
@@ -98,7 +101,7 @@ def handle_single_event_request(request):
 	"""
 	Handles single event POST requests.
 	"""
-	eventData = simplejson.loads(request.POST)
+	eventData = request.POST
 
 	# Parameters that are always passed with each event
 	email = eventData.get("email", None)
@@ -112,7 +115,7 @@ def handle_single_event_request(request):
 
 		Event.objects.create(
 			email_message=emailMessage,
-			type=event,
+			type=EVENT_TYPES_MAP[event.upper()],
 		)
 
 		return
