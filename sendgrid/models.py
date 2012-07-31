@@ -148,7 +148,13 @@ class EmailMessage(models.Model):
 	event_count = property(get_event_count)
 
 	def get_first_event(self):
-		return self.event_set.order_by("creation_time")[0]
+		events = self.event_set.all()
+		if events.exists():
+			firstEvent = events.order_by("creation_time")[0]
+		else:
+			firstEvent = None
+
+		return firstEvent
 	first_event = property(get_first_event)
 
 	def get_latest_event(self):
