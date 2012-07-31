@@ -69,7 +69,7 @@ def clean_response(response):
 
 	if not response:
 		logger.error("A response was not created!")
-		response = HttpResponse
+		response = HttpResponse()
 
 	if response.status_code != expectedStatusCode:
 		logger.debug("Attempted to send status code {c}".format(c=response.status_code))
