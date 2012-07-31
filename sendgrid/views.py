@@ -9,7 +9,7 @@ from django.utils import simplejson
 from django.views.decorators.csrf import csrf_exempt
 
 from .signals import sendgrid_event_recieved
-from .signals import sendgrid_event_processed
+# from .signals import sendgrid_event_processed
 
 from sendgrid.models import EmailMessage, Event
 from .constants import EVENT_TYPES_MAP
