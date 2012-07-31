@@ -93,6 +93,10 @@ def save_email_message(sender, **kwargs):
 				logMessage = "Component {c} is not tracked"
 				logger.debug(logMessage.format(c=component))
 
+@receiver(sendgrid_event_recieved)
+def log_event_recieved(sender, request):
+	logger.debug("Recieved event request: {request}".format(request=request))
+
 
 class EmailMessage(models.Model):
 	message_id = models.CharField(unique=True, max_length=36, editable=False, blank=True, null=True, help_text="UUID")
