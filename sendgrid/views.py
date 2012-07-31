@@ -36,6 +36,7 @@ def handle_single_event_request(request):
 
 		eventObj = Event.objects.create(
 			email_message=emailMessage,
+			email=email,
 			type=EVENT_TYPES_MAP[event.upper()],
 		)
 

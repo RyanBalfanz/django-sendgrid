@@ -264,6 +264,7 @@ class Event(models.Model):
 		(SENDGRID_EVENT_UNSUBSCRIBE_TYPE, "Unsubscribe"),
 	)
 	email_message = models.ForeignKey(EmailMessage)
+	email = models.EmailField(default="")
 	type = models.IntegerField(blank=True, null=True, choices=SENDGRID_EVENT_TYPES, default=SENDGRID_EVENT_UNKNOWN_TYPE)
 	creation_time = models.DateTimeField(auto_now_add=True)
 	last_modified_time = models.DateTimeField(auto_now=True)
