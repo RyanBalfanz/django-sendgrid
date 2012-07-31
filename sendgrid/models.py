@@ -147,6 +147,16 @@ class EmailMessage(models.Model):
 		return self.event_set.count()
 	event_count = property(get_event_count)
 
+	def get_first_event(self):
+		return self.event_set.order_by("creation_time")[0]
+	first_event = property(get_first_event)
+
+	def get_latest_event(self):
+		# If your model's Meta specifies get_latest_by,
+		# you can leave off the field_name argument to latest()
+		return self.event_set.latest("creation_time")
+	latest_event = property(get_latest_event)
+
 
 class EmailMessageSubjectData(models.Model):
 	email_message = models.OneToOneField(EmailMessage, primary_key=True, related_name="subject")
