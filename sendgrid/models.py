@@ -94,7 +94,7 @@ def save_email_message(sender, **kwargs):
 				logger.debug(logMessage.format(c=component))
 
 @receiver(sendgrid_event_recieved)
-def log_event_recieved(sender, request):
+def log_event_recieved(sender, request, **kwargs):
 	logger.debug("Recieved event request: {request}".format(request=request))
 
 
