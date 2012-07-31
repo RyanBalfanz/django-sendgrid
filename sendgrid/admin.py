@@ -1,5 +1,6 @@
 from __future__ import absolute_import
 
+from django.conf import settings
 from django.contrib import admin
 
 from .models import EmailMessage
@@ -14,8 +15,8 @@ from .models import EmailMessageToData
 from .models import Event
 
 
-DEBUG_SHOW_DATA_ADMIN_MODELS = False
-DEBUG_SHOW_EVENT_ADMIN_MODELS = False
+DEBUG_SHOW_DATA_ADMIN_MODELS = settings.DEBUG
+DEBUG_SHOW_EVENT_ADMIN_MODELS = settings.DEBUG
 
 
 class EmailMessageGenericDataInline(admin.TabularInline):
