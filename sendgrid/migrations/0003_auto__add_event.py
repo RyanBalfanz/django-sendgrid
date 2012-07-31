@@ -12,6 +12,7 @@ class Migration(SchemaMigration):
         db.create_table('sendgrid_event', (
             ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
             ('email_message', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['sendgrid.EmailMessage'])),
+            ('email', self.gf('django.db.models.fields.EmailField')(max_length=75)),
             ('type', self.gf('django.db.models.fields.IntegerField')(default=0, null=True, blank=True)),
             ('creation_time', self.gf('django.db.models.fields.DateTimeField')(auto_now_add=True, blank=True)),
             ('last_modified_time', self.gf('django.db.models.fields.DateTimeField')(auto_now=True, blank=True)),
@@ -79,6 +80,7 @@ class Migration(SchemaMigration):
         'sendgrid.event': {
             'Meta': {'object_name': 'Event'},
             'creation_time': ('django.db.models.fields.DateTimeField', [], {'auto_now_add': 'True', 'blank': 'True'}),
+            'email': ('django.db.models.fields.EmailField', [], {'max_length': '75'}),
             'email_message': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['sendgrid.EmailMessage']"}),
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'last_modified_time': ('django.db.models.fields.DateTimeField', [], {'auto_now': 'True', 'blank': 'True'}),
