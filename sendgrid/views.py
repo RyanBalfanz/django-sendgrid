@@ -14,7 +14,7 @@ from sendgrid.models import EmailMessage, Event
 from .constants import EVENT_TYPES_MAP
 
 
-POST_EVENTS_RESPONSE_STATUS_CODE = getattr(settings, "POST_EVENT_HANDLER_RESPONSE_STATUS_CODE", None)
+POST_EVENTS_RESPONSE_STATUS_CODE = getattr(settings, "POST_EVENT_HANDLER_RESPONSE_STATUS_CODE", 200)
 
 logger = logging.getLogger(__name__)
 
@@ -64,8 +64,6 @@ def handle_batched_events_request(request):
 
 def clean_response(response):
 	expectedStatusCode = POST_EVENTS_RESPONSE_STATUS_CODE
-	if not expectedStatusCode:
-		expectedStatusCode = 200
 
 	if not response:
 		logger.error("A response was not created!")
