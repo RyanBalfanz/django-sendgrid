@@ -16,7 +16,6 @@ from .models import Event
 
 
 DEBUG_SHOW_DATA_ADMIN_MODELS = settings.DEBUG
-DEBUG_SHOW_EVENT_ADMIN_MODELS = settings.DEBUG
 
 
 class EmailMessageGenericDataInline(admin.TabularInline):
@@ -71,9 +70,28 @@ class EventInline(admin.TabularInline):
 
 class EmailMessageAdmin(admin.ModelAdmin):
 	date_hierarchy = "creation_time"
-	list_display = ("message_id", "from_email", "to_email", "category", "subject_data", "response")
+	list_display = (
+		"message_id",
+		"from_email",
+		"to_email",
+		"category",
+		"subject_data",
+		"response",
+		"creation_time",
+		"last_modified_time",
+		"event_count",
+	)
 	list_filter = ("from_email", "subject__data", "category", "response")
-	readonly_fields = ("message_id", "from_email", "to_email", "category", "response")
+	readonly_fields = (
+		"message_id",
+		"from_email",
+		"to_email",
+		"category",
+		"response",
+		"creation_time",
+		"last_modified_time",
+		"event_count",
+	)
 	inlines = (
 		EmailMessageToDataInline,
 		EmailMessageCcInline,
@@ -92,16 +110,35 @@ class EmailMessageAdmin(admin.ModelAdmin):
 
 class EventAdmin(admin.ModelAdmin):
 	date_hierarchy = "creation_time"
-	list_display = ("email_message", "type")
+	list_display = (
+		"email_message",
+		"type",
+		"email",
+		"creation_time",
+		"last_modified_time",
+	)
 	list_filter = ("type",)
-	readonly_fields = ("email_message",)
+	readonly_fields = (
+		"email_message",
+		"type",
+		"email",
+		"creation_time",
+		"last_modified_time",
+	)
+
+	def has_add_permission(self, request):
+		return False
 
 
 class EmailMessageGenericDataAdmin(admin.ModelAdmin):
 	list_display = ("email_message", "data")
 
 
+	def has_add_permission(self, request):
+		return False
+
 admin.site.register(EmailMessage, EmailMessageAdmin)
+admin.site.register(Event, EventAdmin)
 
 if DEBUG_SHOW_DATA_ADMIN_MODELS:
 	admin.site.register(EmailMessageAttachmentsData, EmailMessageGenericDataAdmin)
@@ -112,6 +149,3 @@ if DEBUG_SHOW_DATA_ADMIN_MODELS:
 	admin.site.register(EmailMessageExtraHeadersData, EmailMessageGenericDataAdmin)
 	admin.site.register(EmailMessageSubjectData, EmailMessageGenericDataAdmin)
 	admin.site.register(EmailMessageToData, EmailMessageGenericDataAdmin)
-
-if DEBUG_SHOW_EVENT_ADMIN_MODELS:
-	admin.site.register(Event, EventAdmin)
