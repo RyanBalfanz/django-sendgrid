@@ -44,7 +44,6 @@ def handle_single_event_request(request):
 		)
 
 		response = HttpResponse()
-		response.write(eventObj)
 	else:
 		msg = "Expected 'message_id' was not found in event data"
 		logger.debug(msg)
