@@ -17,9 +17,6 @@ from .constants import EVENT_TYPES_MAP
 
 POST_EVENTS_RESPONSE_STATUS_CODE = getattr(settings, "POST_EVENT_HANDLER_RESPONSE_STATUS_CODE", None)
 
-REQUIRED_KEYS = ("email", "event")
-OPTIONAL_KEYS = ("category")
-
 logger = logging.getLogger(__name__)
 
 def handle_single_event_request(request):
@@ -77,7 +74,7 @@ def listener(request, statusCode=POST_EVENTS_RESPONSE_STATUS_CODE):
 		
 		curl -i -d 'message_id=1&amp;email=test@gmail.com&amp;arg2=2&amp;arg1=1&amp;category=testing&amp;event=processed' http://127.0.0.1:8000/sendgrid/events/
 	"""
-	logger.debug("Request: {request}".format(request=request))
+	# logger.debug("Request: {request}".format(request=request))
 	sendgrid_event_recieved.send(sender=None, request=request)
 
 	response = None
@@ -88,7 +85,6 @@ def listener(request, statusCode=POST_EVENTS_RESPONSE_STATUS_CODE):
 			response = handle_batched_events_request(request)
 		elif request.META["CONTENT_TYPE"].startswith("application/xml"):
 			raise NotImplementedError
-			response = handle_single_event_request(request)
 		elif request.META["CONTENT_TYPE"].startswith("application/x-www-form-urlencoded"):
 			# application/x-www-form-urlencoded; charset=utf-8
 			response = handle_single_event_request(request)
