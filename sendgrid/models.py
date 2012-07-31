@@ -143,6 +143,10 @@ class EmailMessage(models.Model):
 		return self.headers.data
 	attachments_data = property(get_attachments_data)
 
+	def get_event_count(self):
+		return self.event_set.count()
+	event_count = property(get_event_count)
+
 
 class EmailMessageSubjectData(models.Model):
 	email_message = models.OneToOneField(EmailMessage, primary_key=True, related_name="subject")
