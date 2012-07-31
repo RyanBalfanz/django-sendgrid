@@ -92,6 +92,7 @@ class EventAdmin(admin.ModelAdmin):
 	date_hierarchy = "creation_time"
 	list_display = ("email_message", "type")
 	list_filter = ("type",)
+	readonly_fields = ("email_message",)
 
 
 class EmailMessageGenericDataAdmin(admin.ModelAdmin):
