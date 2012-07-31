@@ -85,7 +85,6 @@ def listener(request, statusCode=POST_EVENTS_RESPONSE_STATUS_CODE):
 		elif request.META["CONTENT_TYPE"].startswith("application/xml"):
 			raise NotImplementedError
 		elif request.META["CONTENT_TYPE"].startswith("application/x-www-form-urlencoded"):
-			# application/x-www-form-urlencoded; charset=utf-8
 			response = handle_single_event_request(request)
 		else:
 			msg = "Unexpected content type: {m}".format(m=request.META["CONTENT_TYPE"])
