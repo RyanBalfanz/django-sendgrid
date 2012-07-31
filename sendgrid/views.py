@@ -64,6 +64,8 @@ def handle_batched_events_request(request):
 
 def clean_response(response):
 	expectedStatusCode = POST_EVENTS_RESPONSE_STATUS_CODE
+	if not expectedStatusCode:
+		expectedStatusCode = 200
 
 	if not response:
 		logger.error("A response was not created!")
