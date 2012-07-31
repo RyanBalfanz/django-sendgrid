@@ -5,6 +5,7 @@ import logging
 from django.conf import settings
 from django.http import HttpResponse
 from django.http import HttpResponseBadRequest
+from django.http import HttpResponseNotFound
 from django.utils import simplejson
 from django.views.decorators.csrf import csrf_exempt
 
@@ -30,22 +31,34 @@ def handle_single_event_request(request):
 
 	messageId = eventData.get("message_id", None)
 	if messageId:
-		emailMessage, created = EmailMessage.objects.get_or_create(message_id=messageId)
-		if created:
-			logger.info("Recieved an event for non-existent EmailMessage with message_id '{0}'".format(messageId))
+		try:
+			emailMessage = EmailMessage.objects.get(message_id=messageId)
+		except EmailMessage.DoesNotExist:
+			msg = "EmailMessage with message_id {m} does not exist"
+			logger.exception(msg.format(m=message_id))
 
-		eventObj = Event.objects.create(
-			email_message=emailMessage,
-			email=email,
-			type=EVENT_TYPES_MAP[event.upper()],
-		)
+			response = HttpResponseNotFound()
+			response.write(msg.format(m=message_id) + "\n")
+		else:
+			eventObj = Event.objects.create(
+				email_message=emailMessage,
+				email=email,
+				type=EVENT_TYPES_MAP[event.upper()],
+			)
 
-		response = HttpResponse()
+			response = HttpResponse()
 	else:
 		msg = "Expected 'message_id' was not found in event data"
-		logger.debug(msg)
+		logger.info(msg)
+
+		eventObj = Event.objects.create(
+			emailMessage=None,
+			email=email,
+			type=type=EVENT_TYPES_MAP[event.upper()],
+		)
+
 		response = HttpResponseBadRequest()
-		response.write(msg)
+		response.write(msg + "\n")
 
 	return response
 
@@ -73,7 +86,7 @@ def clean_response(response):
 		logger.debug("Attempted to send status code {c}".format(c=response.status_code))
 		logger.debug("Setting status code to {c}".format(c=expectedStatusCode))
 
-		response.write("PREVIOUS_STATUS_CODE: {c}\n".format(c=response.status_code))
+		response.write("Previous status code: {c}\n".format(c=response.status_code))
 		response.status_code = expectedStatusCode
 
 	return response
