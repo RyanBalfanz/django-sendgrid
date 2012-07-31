@@ -80,6 +80,8 @@ class EmailMessageAdmin(admin.ModelAdmin):
 		"creation_time",
 		"last_modified_time",
 		"event_count",
+		"first_event_type",
+		"latest_event_type",
 	)
 	list_filter = ("from_email", "subject__data", "category", "response")
 	readonly_fields = (
@@ -91,6 +93,8 @@ class EmailMessageAdmin(admin.ModelAdmin):
 		"creation_time",
 		"last_modified_time",
 		"event_count",
+		"first_event_type",
+		"latest_event_type",
 	)
 	search_fields = ("message_id",)
 	inlines = (
@@ -107,6 +111,12 @@ class EmailMessageAdmin(admin.ModelAdmin):
 
 	def has_add_permission(self, request):
 		return False
+
+	def first_event_type(self, emailMessage):
+		return emailMessage.first_event.get_type_display()
+
+	def latest_event_type(self, emailMessage):
+		return emailMessage.latest_event.get_type_display()
 
 
 class EventAdmin(admin.ModelAdmin):
