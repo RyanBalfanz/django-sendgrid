@@ -11,7 +11,6 @@ from django.utils.translation import ugettext_lazy as _
 from .constants import EVENT_TYPES_MAP
 from .signals import sendgrid_email_sent
 from .signals import sendgrid_event_recieved
-from .signals import sendgrid_event_processed
 
 
 DEFAULT_SENDGRID_EMAIL_TRACKING_COMPONENTS = (
