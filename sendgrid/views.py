@@ -54,7 +54,7 @@ def handle_single_event_request(request):
 		eventObj = Event.objects.create(
 			emailMessage=None,
 			email=email,
-			type=type=EVENT_TYPES_MAP[event.upper()],
+			type=EVENT_TYPES_MAP[event.upper()],
 		)
 
 		response = HttpResponseBadRequest()
