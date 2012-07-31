@@ -15,6 +15,7 @@ from .models import Event
 
 
 DEBUG_SHOW_DATA_ADMIN_MODELS = False
+DEBUG_SHOW_EVENT_ADMIN_MODELS = False
 
 
 class EmailMessageGenericDataInline(admin.TabularInline):
@@ -100,7 +101,6 @@ class EmailMessageGenericDataAdmin(admin.ModelAdmin):
 
 
 admin.site.register(EmailMessage, EmailMessageAdmin)
-admin.site.register(Event, EventAdmin)
 
 if DEBUG_SHOW_DATA_ADMIN_MODELS:
 	admin.site.register(EmailMessageAttachmentsData, EmailMessageGenericDataAdmin)
@@ -111,3 +111,6 @@ if DEBUG_SHOW_DATA_ADMIN_MODELS:
 	admin.site.register(EmailMessageExtraHeadersData, EmailMessageGenericDataAdmin)
 	admin.site.register(EmailMessageSubjectData, EmailMessageGenericDataAdmin)
 	admin.site.register(EmailMessageToData, EmailMessageGenericDataAdmin)
+
+if DEBUG_SHOW_EVENT_ADMIN_MODELS:
+	admin.site.register(Event, EventAdmin)
