@@ -277,7 +277,7 @@ class Event(models.Model):
 		(SENDGRID_EVENT_SPAM_REPORT_TYPE, "Spam Report"),
 		(SENDGRID_EVENT_UNSUBSCRIBE_TYPE, "Unsubscribe"),
 	)
-	email_message = models.ForeignKey(EmailMessage)
+	email_message = models.ForeignKey(EmailMessage, blank=True, null=True)
 	email = models.EmailField()
 	type = models.IntegerField(blank=True, null=True, choices=SENDGRID_EVENT_TYPES, default=SENDGRID_EVENT_UNKNOWN_TYPE)
 	creation_time = models.DateTimeField(auto_now_add=True)
