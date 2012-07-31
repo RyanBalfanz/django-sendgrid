@@ -92,6 +92,7 @@ class EmailMessageAdmin(admin.ModelAdmin):
 		"last_modified_time",
 		"event_count",
 	)
+	search_fields = ("message_id",)
 	inlines = (
 		EmailMessageToDataInline,
 		EmailMessageCcInline,
@@ -118,6 +119,7 @@ class EventAdmin(admin.ModelAdmin):
 		"last_modified_time",
 	)
 	list_filter = ("type",)
+	search_fields = ("email_message__message_id",)
 	readonly_fields = (
 		"email_message",
 		"type",
