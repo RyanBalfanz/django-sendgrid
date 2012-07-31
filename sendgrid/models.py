@@ -149,8 +149,8 @@ class EmailMessageSubjectData(models.Model):
 	data = models.TextField(_("Subject"), editable=False)
 
 	class Meta:
-		verbose_name = _("EmailMessageSubjectData")
-		verbose_name_plural = _("EmailMessageSubjectDatas")
+		verbose_name = _("Email Message Subject Data")
+		verbose_name_plural = _("Email Message Subject Data")
 
 	def __unicode__(self):
 		return "{0}".format(self.email_message)
@@ -161,8 +161,8 @@ class EmailMessageSendGridHeadersData(models.Model):
 	data = models.TextField(_("SendGrid Headers"), editable=False)
 
 	class Meta:
-		verbose_name = _("EmailMessageSendGridHeadersData")
-		verbose_name_plural = _("EmailMessageSendGridHeadersDatas")
+		verbose_name = _("Email Message SendGrid Headers Data")
+		verbose_name_plural = _("Email Message SendGrid Headers Data")
 
 	def __unicode__(self):
 		return "{0}".format(self.email_message)
@@ -173,8 +173,8 @@ class EmailMessageExtraHeadersData(models.Model):
 	data = models.TextField(_("Extra Headers"), editable=False)
 
 	class Meta:
-		verbose_name = _("EmailMessageExtraHeadersData")
-		verbose_name_plural = _("EmailMessageExtraHeadersDatas")
+		verbose_name = _("Email Message Extra Headers Data")
+		verbose_name_plural = _("Email Message Extra Headers Data")
 
 	def __unicode__(self):
 		return "{0}".format(self.email_message)
@@ -185,8 +185,8 @@ class EmailMessageBodyData(models.Model):
 	data = models.TextField(_("Body"), editable=False)
 
 	class Meta:
-		verbose_name = _("EmailMessageBodyData")
-		verbose_name_plural = _("EmailMessageBodyDatas")
+		verbose_name = _("Email Message Body Data")
+		verbose_name_plural = _("Email Message Body Data")
 
 	def __unicode__(self):
 		return "{0}".format(self.email_message)
@@ -197,8 +197,8 @@ class EmailMessageAttachmentsData(models.Model):
 	data = models.TextField(_("Attachments"), editable=False)
 
 	class Meta:
-		verbose_name = _("EmailMessageAttachmentData")
-		verbose_name_plural = _("EmailMessageAttachmentsDatas")
+		verbose_name = _("Email Message Attachment Data")
+		verbose_name_plural = _("Email Message Attachments Data")
 
 	def __unicode__(self):
 		return "{0}".format(self.email_message)
@@ -209,8 +209,8 @@ class EmailMessageBccData(models.Model):
 	data = models.TextField(_("Blind Carbon Copies"), editable=False)
 
 	class Meta:
-		verbose_name = _("EmailMessageBccData")
-		verbose_name_plural = _("EmailMessageBccDatas")
+		verbose_name = _("Email Message Bcc Data")
+		verbose_name_plural = _("Email Message Bcc Data")
 
 	def __unicode__(self):
 		return "{0}".format(self.email_message)
@@ -221,8 +221,8 @@ class EmailMessageCcData(models.Model):
 	data = models.TextField(_("Carbon Copies"), editable=False)
 
 	class Meta:
-		verbose_name = _("EmailMessageCcData")
-		verbose_name_plural = _("EmailMessageCcDatas")
+		verbose_name = _("Email Message Cc Data")
+		verbose_name_plural = _("Email Message Cc Data")
 
 	def __unicode__(self):
 		return "{0}".format(self.email_message)
@@ -233,8 +233,8 @@ class EmailMessageToData(models.Model):
 	data = models.TextField(_("To"), editable=False)
 
 	class Meta:
-		verbose_name = _("EmailMessageToData")
-		verbose_name_plural = _("EmailMessageToDatas")
+		verbose_name = _("Email Message To Data")
+		verbose_name_plural = _("Email Message To Data")
 
 	def __unicode__(self):
 		return "{0}".format(self.email_message)
