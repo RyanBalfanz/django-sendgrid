@@ -62,6 +62,22 @@ def handle_batched_events_request(request):
 	logger.exception("Batched events are not currently supported!")
 	raise NotImplementedError
 
+def clean_response(response):
+	expectedStatusCode = POST_EVENTS_RESPONSE_STATUS_CODE
+
+	if not response:
+		logger.error("A response was not created!")
+		response = HttpResponse
+
+	if response.status_code != expectedStatusCode:
+		logger.debug("Attempted to send status code {c}".format(c=response.status_code))
+		logger.debug("Setting status code to {c}".format(c=expectedStatusCode))
+
+		response.write("PREVIOUS_STATUS_CODE: {c}\n".format(c=response.status_code))
+		response.status_code = expectedStatusCode
+
+	return response
+
 @csrf_exempt
 def listener(request, statusCode=POST_EVENTS_RESPONSE_STATUS_CODE):
 	"""
@@ -95,16 +111,5 @@ def listener(request, statusCode=POST_EVENTS_RESPONSE_STATUS_CODE):
 		
 		response = HttpResponse()
 		response.status_code = 405
-		
-	if not response:
-		logger.error("A response was not created!")
-		response = HttpResponse()
 
-	if statusCode and response.status_code != statusCode:
-		logger.debug("Attempted to send status code {c}".format(c=response.status_code))
-		logger.debug("Setting status code to {c}".format(c=statusCode))
-
-		response.write("PREVIOUS_STATUS_CODE: {c}\n".format(c=response.status_code))
-		response.status_code = statusCode
-
-	return response
+	return clean_response(response)
