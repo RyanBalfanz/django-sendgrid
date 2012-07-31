@@ -95,7 +95,8 @@ def save_email_message(sender, **kwargs):
 
 @receiver(sendgrid_event_recieved)
 def log_event_recieved(sender, request, **kwargs):
-	logger.debug("Recieved event request: {request}".format(request=request))
+	if settings.DEBUG:
+		logger.debug("Recieved event request: {request}".format(request=request))
 
 
 class EmailMessage(models.Model):
