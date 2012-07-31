@@ -93,31 +93,6 @@ def save_email_message(sender, **kwargs):
 				logMessage = "Component {c} is not tracked"
 				logger.debug(logMessage.format(c=component))
 
-@receiver(sendgrid_event_processed)
-def handle_sendgrid_event(sender, **kwargs):
-	logger.debug("SendGrid event recieved!")
-
-	eventDetail = kwargs["detail"]
-
-	eventEmail = eventDetail["email"]
-	eventType = eventDetail["event"]
-	try:
-		category = eventDetail["category"]
-		uniqueArgs = eventDetail["unique_args"]
-		message_id = uniqueArgs["message_id"]
-	except KeyError as e:
-		logger.exception("Caught KeyError: {error}".format(error=e))
-		return
-
-	emailMessage, created = SendGridEmailMessage.objects.get_or_create(message_id=message_id)
-	if created:
-		logger.info("Created {obj}".format(obj=emailMessage))
-
-	event = Event.objects.create(
-		email_message=emailMessage,
-		type=EVENT_TYPES_MAP[eventType.upper()],
-	)
-
 
 class EmailMessage(models.Model):
 	message_id = models.CharField(unique=True, max_length=36, editable=False, blank=True, null=True, help_text="UUID")
