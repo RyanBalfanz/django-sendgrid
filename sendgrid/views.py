@@ -113,16 +113,17 @@ def handle_single_event_request(request):
 		if created:
 			logger.info("Recieved an event for non-existent EmailMessage with message_id '{0}'".format(messageId))
 
-		Event.objects.create(
+		eventObj = Event.objects.create(
 			email_message=emailMessage,
 			type=EVENT_TYPES_MAP[event.upper()],
 		)
 
-		return
+		response = HttpResponse()
+		response.write(eventObj)
+		return response
 	else:
 		logger.debug("Expected 'message_id' was not found in event data")
-		return
-
+		return HttpResponseBadRequest()
 
 	jsonEvent = convert_single_event_request_to_json_event(request)
 	jsonEvent = simplejson.loads(jsonEvent)
