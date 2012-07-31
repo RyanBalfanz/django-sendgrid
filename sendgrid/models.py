@@ -105,8 +105,8 @@ class EmailMessage(models.Model):
 	last_modified_time = models.DateTimeField(auto_now=True)
 
 	class Meta:
-		verbose_name = _("EmailMessage")
-		verbose_name_plural = _("EmailMessages")
+		verbose_name = _("Email Message")
+		verbose_name_plural = _("Email Messages")
 
 	def __unicode__(self):
 		return "{0}".format(self.message_id)
