@@ -88,6 +88,29 @@ def save_email_message(sender, **kwargs):
 				logger.debug(logMessage.format(c=component))
 
 
+class Category(models.Model):
+	name = models.CharField(max_length=EMAIL_MESSAGE_CATEGORY_MAX_LENGTH)
+
+	class Meta:
+		verbose_name = _("Category")
+		verbose_name_plural = _("Categories")
+
+	def __unicode__(self):
+		return self.name
+
+
+# class Parameter(models.Model):
+# 	key = models.CharField(max_length=255)
+# 	value = models.CharField(max_length=255)
+
+# 	class Meta:
+# 		verbose_name = _("Parameter")
+# 		verbose_name_plural = _("Parameters")
+
+# 	def __unicode__(self):
+# 		return "{key}: {value}".format(key=self.key, value=self.value)
+
+
 class EmailMessage(models.Model):
 	message_id = models.CharField(unique=True, max_length=36, editable=False, blank=True, null=True, help_text="UUID")
 	# user = models.ForeignKey(User, null=True) # TODO
@@ -97,6 +120,7 @@ class EmailMessage(models.Model):
 	response = models.IntegerField(blank=True, null=True, help_text="Response received from SendGrid after sending")
 	creation_time = models.DateTimeField(auto_now_add=True)
 	last_modified_time = models.DateTimeField(auto_now=True)
+	categories = models.ManyToManyField(Category)
 
 	class Meta:
 		verbose_name = _("EmailMessage")
@@ -228,3 +252,4 @@ class EmailMessageToData(models.Model):
 
 	def __unicode__(self):
 		return "{0}".format(self.email_message)
+
