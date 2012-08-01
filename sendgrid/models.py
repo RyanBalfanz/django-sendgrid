@@ -38,6 +38,12 @@ if SENDGRID_USER_MIXIN_ENABLED:
 
 logger = logging.getLogger(__name__)
 
+def gen_infinite_sequence(start):
+	i = start
+	while True:
+		yield i
+		i = i + 1
+
 @receiver(sendgrid_email_sent)
 def save_email_message(sender, **kwargs):
 	message = kwargs.get("message", None)
@@ -59,7 +65,9 @@ def save_email_message(sender, **kwargs):
 		fromEmail = getattr(message, "from_email", None)
 		recipients = getattr(message, "to", None)
 		toEmail = recipients[0]
-		category = message.sendgrid_headers.data.get("category", None)
+		# TODO: Handle multiple categories
+		categories = message.sendgrid_headers.data.get("category", None)
+		category = categories[0] if categories else None
 
 		emailMessage = EmailMessage.objects.create(
 			message_id=messageId,
