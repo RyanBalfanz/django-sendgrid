@@ -60,8 +60,13 @@ def save_email_message(sender, **kwargs):
 		recipients = getattr(message, "to", None)
 		toEmail = recipients[0]
 		# TODO: Handle multiple categories
-		categories = message.sendgrid_headers.data.get("category", None)
-		category = categories[0] if categories else None
+		categoryData = message.sendgrid_headers.data.get("category", None)
+		if isinstance(categoryData, basestring):
+			category = categoryData
+			categories = [category]
+		else:
+			categories = categoryData
+			category = categories[0] if categories else None
 
 		emailMessage = EmailMessage.objects.create(
 			message_id=messageId,
@@ -70,6 +75,12 @@ def save_email_message(sender, **kwargs):
 			category=category,
 			response=response,
 		)
+
+		for categoryName in categories:
+			category, created = Category.objects.get_or_create(name=categoryName)
+			if created:
+				logger.debug("Category {c} was created".format(c=category))
+			emailMessage.categories.add(category)
 
 		for component, componentModel in COMPONENT_DATA_MODEL_MAP.iteritems():
 			if component in SENDGRID_EMAIL_TRACKING_COMPONENTS:
@@ -91,7 +102,9 @@ def save_email_message(sender, **kwargs):
 
 
 class Category(models.Model):
-	name = models.CharField(max_length=EMAIL_MESSAGE_CATEGORY_MAX_LENGTH)
+	name = models.CharField(unique=True, max_length=EMAIL_MESSAGE_CATEGORY_MAX_LENGTH)
+	creation_time = models.DateTimeField(auto_now_add=True)
+	last_modified_time = models.DateTimeField(auto_now=True)
 
 	class Meta:
 		verbose_name = _("Category")
