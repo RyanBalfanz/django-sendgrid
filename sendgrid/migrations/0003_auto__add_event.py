@@ -1,17 +1,17 @@
-# encoding: utf-8
+# -*- coding: utf-8 -*-
 import datetime
 from south.db import db
 from south.v2 import SchemaMigration
 from django.db import models
 
+
 class Migration(SchemaMigration):
 
     def forwards(self, orm):
-        
         # Adding model 'Event'
         db.create_table('sendgrid_event', (
             ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
-            ('email_message', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['sendgrid.EmailMessage'], null=True, blank=True)),
+            ('email_message', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['sendgrid.EmailMessage'])),
             ('email', self.gf('django.db.models.fields.EmailField')(max_length=75)),
             ('type', self.gf('django.db.models.fields.IntegerField')(default=0, null=True, blank=True)),
             ('creation_time', self.gf('django.db.models.fields.DateTimeField')(auto_now_add=True, blank=True)),
@@ -21,7 +21,6 @@ class Migration(SchemaMigration):
 
 
     def backwards(self, orm):
-        
         # Deleting model 'Event'
         db.delete_table('sendgrid_event')
 
@@ -82,7 +81,7 @@ class Migration(SchemaMigration):
             'Meta': {'object_name': 'Event'},
             'creation_time': ('django.db.models.fields.DateTimeField', [], {'auto_now_add': 'True', 'blank': 'True'}),
             'email': ('django.db.models.fields.EmailField', [], {'max_length': '75'}),
-            'email_message': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['sendgrid.EmailMessage']", 'null': 'True', 'blank': 'True'}),
+            'email_message': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['sendgrid.EmailMessage']"}),
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'last_modified_time': ('django.db.models.fields.DateTimeField', [], {'auto_now': 'True', 'blank': 'True'}),
             'type': ('django.db.models.fields.IntegerField', [], {'default': '0', 'null': 'True', 'blank': 'True'})
