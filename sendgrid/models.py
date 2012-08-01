@@ -38,12 +38,6 @@ if SENDGRID_USER_MIXIN_ENABLED:
 
 logger = logging.getLogger(__name__)
 
-def gen_infinite_sequence(start):
-	i = start
-	while True:
-		yield i
-		i = i + 1
-
 @receiver(sendgrid_email_sent)
 def save_email_message(sender, **kwargs):
 	message = kwargs.get("message", None)
