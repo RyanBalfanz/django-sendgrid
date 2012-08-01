@@ -8,7 +8,6 @@ from django.db import models
 from django.dispatch import receiver
 from django.utils.translation import ugettext_lazy as _
 
-from .constants import EVENT_TYPES_MAP
 from .signals import sendgrid_email_sent
 from .signals import sendgrid_event_recieved
 
@@ -259,33 +258,13 @@ class EmailMessageToData(models.Model):
 	def __unicode__(self):
 		return "{0}".format(self.email_message)
 
+class EventType(models.Model):
+	type = models.CharField(max_length=128,unique=True)
 
 class Event(models.Model):
-	SENDGRID_EVENT_UNKNOWN_TYPE = EVENT_TYPES_MAP["UNKNOWN"]
-	SENDGRID_EVENT_DEFERRED_TYPE = EVENT_TYPES_MAP["DEFERRED"]
-	SENDGRID_EVENT_PROCESSED_TYPE = EVENT_TYPES_MAP["PROCESSED"]
-	SENDGRID_EVENT_DROPPED_TYPE = EVENT_TYPES_MAP["DROPPED"]
-	SENDGRID_EVENT_DELIVERED_TYPE = EVENT_TYPES_MAP["DELIVERED"]
-	SENDGRID_EVENT_BOUNCE_TYPE = EVENT_TYPES_MAP["BOUNCE"]
-	SENDGRID_EVENT_OPEN_TYPE = EVENT_TYPES_MAP["OPEN"]
-	SENDGRID_EVENT_CLICK_TYPE = EVENT_TYPES_MAP["CLICK"]
-	SENDGRID_EVENT_SPAM_REPORT_TYPE = EVENT_TYPES_MAP["SPAMREPORT"]
-	SENDGRID_EVENT_UNSUBSCRIBE_TYPE = EVENT_TYPES_MAP["UNSUBSCRIBE"]
-	SENDGRID_EVENT_TYPES = (
-		(SENDGRID_EVENT_UNKNOWN_TYPE, "Unknown"),
-		(SENDGRID_EVENT_DEFERRED_TYPE, "Deferred"),
-		(SENDGRID_EVENT_PROCESSED_TYPE, "Processed"),
-		(SENDGRID_EVENT_DROPPED_TYPE, "Dropped"),
-		(SENDGRID_EVENT_DELIVERED_TYPE, "Delivered"),
-		(SENDGRID_EVENT_BOUNCE_TYPE, "Bounce"),
-		(SENDGRID_EVENT_OPEN_TYPE, "Open"),
-		(SENDGRID_EVENT_CLICK_TYPE, "Click"),
-		(SENDGRID_EVENT_SPAM_REPORT_TYPE, "Spam Report"),
-		(SENDGRID_EVENT_UNSUBSCRIBE_TYPE, "Unsubscribe"),
-	)
-	email_message = models.ForeignKey(EmailMessage, blank=True, null=True)
+	email_message = models.ForeignKey(EmailMessage)
 	email = models.EmailField()
-	type = models.IntegerField(blank=True, null=True, choices=SENDGRID_EVENT_TYPES, default=SENDGRID_EVENT_UNKNOWN_TYPE)
+	type = models.ForeignKey(EventType, blank=True, null=True)
 	creation_time = models.DateTimeField(auto_now_add=True)
 	last_modified_time = models.DateTimeField(auto_now=True)
 
@@ -295,4 +274,3 @@ class Event(models.Model):
 
 	def __unicode__(self):
 		return u"{0} - {1}".format(self.email_message, self.get_type_display())
-
