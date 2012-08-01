@@ -59,7 +59,9 @@ def save_email_message(sender, **kwargs):
 		fromEmail = getattr(message, "from_email", None)
 		recipients = getattr(message, "to", None)
 		toEmail = recipients[0]
-		category = message.sendgrid_headers.data.get("category", None)
+		# TODO: Handle multiple categories
+		categories = message.sendgrid_headers.data.get("category", None)
+		category = categories[0] if categories else None
 
 		emailMessage = EmailMessage.objects.create(
 			message_id=messageId,
