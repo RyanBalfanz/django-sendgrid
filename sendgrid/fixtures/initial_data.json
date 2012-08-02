@@ -3,70 +3,70 @@
     "pk": 1, 
     "model": "sendgrid.eventtype", 
     "fields": {
-      "type" : "UNKNOWN"
+      "name" : "UNKNOWN"
     }
   },
   {
     "pk": 2, 
     "model": "sendgrid.eventtype", 
     "fields": {
-      "type" : "DEFERRED"
+      "name" : "DEFERRED"
     }
   },
   {
     "pk": 3, 
     "model": "sendgrid.eventtype", 
     "fields": {
-      "type" : "PROCESSED"
+      "name" : "PROCESSED"
     }
   },
   {
     "pk": 4, 
     "model": "sendgrid.eventtype", 
     "fields": {
-      "type" : "DROPPED"
+      "name" : "DROPPED"
     }
   },
   {
     "pk": 5, 
     "model": "sendgrid.eventtype", 
     "fields": {
-      "type" : "DELIVERED"
+      "name" : "DELIVERED"
     }
   },
   {
     "pk": 6, 
     "model": "sendgrid.eventtype", 
     "fields": {
-      "type" : "BOUNCE"
+      "name" : "BOUNCE"
     }
   },
   {
     "pk": 7, 
     "model": "sendgrid.eventtype", 
     "fields": {
-      "type" : "OPEN"
+      "name" : "OPEN"
     }
   },
   {
     "pk": 8, 
     "model": "sendgrid.eventtype", 
     "fields": {
-      "type" : "CLICK"
+      "name" : "CLICK"
     }
   },
   {
     "pk": 9, 
     "model": "sendgrid.eventtype", 
     "fields": {
-      "type" : "SPAMREPORT"
+      "name" : "SPAMREPORT"
     }
   },
   {
     "pk": 10, 
     "model": "sendgrid.eventtype", 
     "fields": {
-      "type" : "UNSUBSCRIBE"
+      "name" : "UNSUBSCRIBE"
     }
   }
 ]

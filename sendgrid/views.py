@@ -42,7 +42,7 @@ def handle_single_event_request(request):
 			eventObj = Event.objects.create(
 				email_message=emailMessage,
 				email=email,
-				type=EventType(type=event.upper()),
+				type=EventType(name=event.upper()),
 			)
 
 			response = HttpResponse()

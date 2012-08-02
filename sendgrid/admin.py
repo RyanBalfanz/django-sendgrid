@@ -114,10 +114,10 @@ class EmailMessageAdmin(admin.ModelAdmin):
 		return False
 
 	def first_event_type(self, emailMessage):
-		return emailMessage.first_event.get_type_display()
+		return emailMessage.first_event.type
 
 	def latest_event_type(self, emailMessage):
-		return emailMessage.latest_event.get_type_display()
+		return emailMessage.latest_event.type
 
 
 class EventAdmin(admin.ModelAdmin):

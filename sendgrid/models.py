@@ -292,7 +292,10 @@ class EmailMessageToData(models.Model):
 		return "{0}".format(self.email_message)
 
 class EventType(models.Model):
-	type = models.CharField(max_length=128,unique=True)
+	name = models.CharField(max_length=128,unique=True)
+
+	def __unicode__(self):
+		return self.name
 
 class Event(models.Model):
 	email_message = models.ForeignKey(EmailMessage)
@@ -306,4 +309,4 @@ class Event(models.Model):
 		verbose_name_plural = _("Events")
 
 	def __unicode__(self):
-		return u"{0} - {1}".format(self.email_message, self.get_type_display())
+		return u"{0} - {1}".format(self.email_message, self.type)
