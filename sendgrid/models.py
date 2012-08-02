@@ -120,18 +120,6 @@ class Category(models.Model):
 		return self.name
 
 
-# class Parameter(models.Model):
-# 	key = models.CharField(max_length=255)
-# 	value = models.CharField(max_length=255)
-
-# 	class Meta:
-# 		verbose_name = _("Parameter")
-# 		verbose_name_plural = _("Parameters")
-
-# 	def __unicode__(self):
-# 		return "{key}: {value}".format(key=self.key, value=self.value)
-
-
 class EmailMessage(models.Model):
 	message_id = models.CharField(unique=True, max_length=36, editable=False, blank=True, null=True, help_text="UUID")
 	# user = models.ForeignKey(User, null=True) # TODO
