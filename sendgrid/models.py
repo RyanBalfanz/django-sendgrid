@@ -96,7 +96,6 @@ def save_email_message(sender, **kwargs):
 			emailMessage.categories.add(category)
 
 		uniqueArgsData = message.sendgrid_headers.data.get("unique_args", None)
-		# raise Exception(uniqueArgsData)
 		if uniqueArgsData:
 			for k, v in uniqueArgsData.iteritems():
 				argument, argumentCreated = Argument.objects.get_or_create(key=k)
