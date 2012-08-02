@@ -10,7 +10,15 @@ from django.utils.translation import ugettext_lazy as _
 
 from .signals import sendgrid_email_sent
 from .signals import sendgrid_event_recieved
-
+from sendgrid.constants import (
+	ARGUMENT_DATA_TYPE_UNKNOWN,
+	ARGUMENT_DATA_TYPE_BOOLEAN,
+	ARGUMENT_DATA_TYPE_INTEGER,
+	ARGUMENT_DATA_TYPE_FLOAT,
+	ARGUMENT_DATA_TYPE_COMPLEX,
+	ARGUMENT_DATA_TYPE_STRING,
+)
+from sendgrid.signals import sendgrid_email_sent
 
 MAX_CATEGORIES_PER_EMAIL_MESSAGE = 10
 
@@ -65,7 +73,6 @@ def save_email_message(sender, **kwargs):
 		fromEmail = getattr(message, "from_email", None)
 		recipients = getattr(message, "to", None)
 		toEmail = recipients[0]
-		# TODO: Handle multiple categories
 		categoryData = message.sendgrid_headers.data.get("category", None)
 		if isinstance(categoryData, basestring):
 			category = categoryData
@@ -74,7 +81,7 @@ def save_email_message(sender, **kwargs):
 			categories = categoryData
 			category = categories[0] if categories else None
 
-		if len(categories) > MAX_CATEGORIES_PER_EMAIL_MESSAGE:
+		if categories and len(categories) > MAX_CATEGORIES_PER_EMAIL_MESSAGE:
 			msg = "The message has {n} categories which exceeds the maximum of {m}"
 			logger.warn(msg.format(n=len(categories), m=MAX_CATEGORIES_PER_EMAIL_MESSAGE))
 
@@ -86,11 +93,24 @@ def save_email_message(sender, **kwargs):
 			response=response,
 		)
 
-		for categoryName in categories:
-			category, created = Category.objects.get_or_create(name=categoryName)
-			if created:
-				logger.debug("Category {c} was created".format(c=category))
-			emailMessage.categories.add(category)
+		if categories:
+			for categoryName in categories:
+				category, created = Category.objects.get_or_create(name=categoryName)
+				if created:
+					logger.debug("Category {c} was created".format(c=category))
+				emailMessage.categories.add(category)
+
+		uniqueArgsData = message.sendgrid_headers.data.get("unique_args", None)
+		if uniqueArgsData:
+			for k, v in uniqueArgsData.iteritems():
+				argument, argumentCreated = Argument.objects.get_or_create(key=k)
+				if argumentCreated:
+					logger.debug("Argument {a} was created".format(a=argument))
+				uniqueArg = UniqueArgument.objects.create(
+					argument=argument,
+					email_message=emailMessage,
+					data=v,
+				)
 
 		for component, componentModel in COMPONENT_DATA_MODEL_MAP.iteritems():
 			if component in SENDGRID_EMAIL_TRACKING_COMPONENTS:
@@ -129,6 +149,34 @@ class Category(models.Model):
 		return self.name
 
 
+class Argument(models.Model):
+	ARGUMENT_DATA_TYPE_UNKNOWN = ARGUMENT_DATA_TYPE_UNKNOWN
+	ARGUMENT_DATA_TYPE_BOOLEAN = ARGUMENT_DATA_TYPE_BOOLEAN
+	ARGUMENT_DATA_TYPE_INTEGER = ARGUMENT_DATA_TYPE_INTEGER
+	ARGUMENT_DATA_TYPE_FLOAT = ARGUMENT_DATA_TYPE_FLOAT
+	ARGUMENT_DATA_TYPE_COMPLEX = ARGUMENT_DATA_TYPE_COMPLEX
+	ARGUMENT_DATA_TYPE_STRING = ARGUMENT_DATA_TYPE_STRING
+	ARGUMENT_DATA_TYPES = (
+		(ARGUMENT_DATA_TYPE_UNKNOWN, _("Unknown")),
+		(ARGUMENT_DATA_TYPE_BOOLEAN, _("Boolean")),
+		(ARGUMENT_DATA_TYPE_INTEGER, _("Integer")),
+		(ARGUMENT_DATA_TYPE_FLOAT, _("Float")),
+		(ARGUMENT_DATA_TYPE_COMPLEX, _("Complex")),
+		(ARGUMENT_DATA_TYPE_STRING, _("String")),
+	)
+	key = models.CharField(max_length=255)
+	data_type = models.IntegerField(_("Data Type"), choices=ARGUMENT_DATA_TYPES, default=ARGUMENT_DATA_TYPE_UNKNOWN)
+	creation_time = models.DateTimeField(auto_now_add=True)
+	last_modified_time = models.DateTimeField(auto_now=True)
+
+	class Meta:
+		verbose_name = _("Argument")
+		verbose_name_plural = _("Arguments")
+
+	def __unicode__(self):
+		return self.key
+
+
 class EmailMessage(models.Model):
 	message_id = models.CharField(unique=True, max_length=36, editable=False, blank=True, null=True, help_text="UUID")
 	# user = models.ForeignKey(User, null=True) # TODO
@@ -139,6 +187,7 @@ class EmailMessage(models.Model):
 	creation_time = models.DateTimeField(auto_now_add=True)
 	last_modified_time = models.DateTimeField(auto_now=True)
 	categories = models.ManyToManyField(Category)
+	arguments = models.ManyToManyField(Argument, through="UniqueArgument")
 
 	class Meta:
 		verbose_name = _("Email Message")
@@ -194,6 +243,38 @@ class EmailMessage(models.Model):
 		# you can leave off the field_name argument to latest()
 		return self.event_set.latest("creation_time")
 	latest_event = property(get_latest_event)
+
+
+class UniqueArgument(models.Model):
+	argument = models.ForeignKey(Argument)
+	email_message = models.ForeignKey(EmailMessage)
+	data = models.CharField(max_length=255)
+	creation_time = models.DateTimeField(auto_now_add=True)
+	last_modified_time = models.DateTimeField(auto_now=True)
+
+	class Meta:
+		verbose_name = _("Unique Argument")
+		verbose_name_plural = _("Unique Arguments")
+
+	def __unicode__(self):
+		return "{key}: {value}".format(key=self.argument.key, value=self.value)
+
+	def get_value(self):
+		"""
+		Returns data cast as the correct type.
+		"""
+		func_map = {
+			ARGUMENT_DATA_TYPE_UNKNOWN: None,
+			ARGUMENT_DATA_TYPE_BOOLEAN: bool,
+			ARGUMENT_DATA_TYPE_INTEGER: int,
+			ARGUMENT_DATA_TYPE_FLOAT: float,
+			ARGUMENT_DATA_TYPE_COMPLEX: complex,
+			ARGUMENT_DATA_TYPE_STRING: str,
+		}
+		f = func_map[self.argument.data_type]
+		value = f(self.data) if f else self.data
+		return value
+	value = property(get_value)
 
 
 class EmailMessageSubjectData(models.Model):

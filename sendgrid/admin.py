@@ -3,6 +3,7 @@ from __future__ import absolute_import
 from django.conf import settings
 from django.contrib import admin
 
+from .models import Argument
 from .models import Category
 from .models import EmailMessage
 from .models import EmailMessageAttachmentsData
@@ -14,6 +15,7 @@ from .models import EmailMessageSendGridHeadersData
 from .models import EmailMessageSubjectData
 from .models import EmailMessageToData
 from .models import Event
+from .models import UniqueArgument
 
 
 DEBUG_SHOW_DATA_ADMIN_MODELS = settings.DEBUG
@@ -81,6 +83,16 @@ class EventInline(admin.TabularInline):
 	verbose_name_plural = "Events"
 
 
+class UniqueArgumentsInLine(admin.TabularInline):
+	model = UniqueArgument
+	readonly_fields = ("data", "value",)
+	extra = 0
+	can_delete = False
+
+	def has_add_permission(self, request):
+		return False
+
+
 class EmailMessageAdmin(admin.ModelAdmin):
 	date_hierarchy = "creation_time"
 	list_display = (
@@ -96,8 +108,17 @@ class EmailMessageAdmin(admin.ModelAdmin):
 		"first_event_type",
 		"latest_event_type",
 	)
+	list_display = (
+		"message_id",
+		"from_email",
+		"to_email",
+		"category",
+		"subject_data",
+		"response",
+		"unique_argument_count"
+	)
 	list_filter = ("from_email", "subject__data", "category", "response")
-	readonly_fields = ("message_id", "from_email", "to_email", "category", "response", "categories")
+	readonly_fields = ("message_id", "from_email", "to_email", "category", "response", "categories", "arguments", "unique_argument_count")
 	inlines = (
 		EmailMessageToDataInline,
 		EmailMessageCcInline,
@@ -108,6 +129,7 @@ class EmailMessageAdmin(admin.ModelAdmin):
 		EmailMessageExtraHeadersDataInline,
 		EmailMessageAttachmentsDataInline,
 		EventInline,
+		UniqueArgumentsInLine,
 	)
 
 	def has_add_permission(self, request):
@@ -115,32 +137,8 @@ class EmailMessageAdmin(admin.ModelAdmin):
 
 	def first_event_type(self, emailMessage):
 		return emailMessage.first_event.type
-
-	def latest_event_type(self, emailMessage):
-		return emailMessage.latest_event.type
-
-
-class EventAdmin(admin.ModelAdmin):
-	date_hierarchy = "creation_time"
-	list_display = (
-		"email_message",
-		"type",
-		"email",
-		"creation_time",
-		"last_modified_time",
-	)
-	list_filter = ("type",)
-	search_fields = ("email_message__message_id",)
-	readonly_fields = (
-		"email_message",
-		"type",
-		"email",
-		"creation_time",
-		"last_modified_time",
-	)
-
-	def has_add_permission(self, request):
-		return False
+	def unique_argument_count(self, emailMessage):
+		return emailMessage.uniqueargument_set.count()
 
 
 class EmailMessageGenericDataAdmin(admin.ModelAdmin):
@@ -150,6 +148,8 @@ class EmailMessageGenericDataAdmin(admin.ModelAdmin):
 	def has_add_permission(self, request):
 		return False
 
+admin.site.register(Argument)
+admin.site.register(UniqueArgument)
 admin.site.register(EmailMessage, EmailMessageAdmin)
 admin.site.register(Event, EventAdmin)
 admin.site.register(Category, CategoryAdmin)
