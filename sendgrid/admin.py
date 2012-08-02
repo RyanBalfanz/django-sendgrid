@@ -2,6 +2,7 @@ from __future__ import absolute_import
 
 from django.contrib import admin
 
+from .models import Argument
 from .models import Category
 from .models import EmailMessage
 from .models import EmailMessageAttachmentsData
@@ -12,6 +13,7 @@ from .models import EmailMessageExtraHeadersData
 from .models import EmailMessageSendGridHeadersData
 from .models import EmailMessageSubjectData
 from .models import EmailMessageToData
+from .models import UniqueArgument
 
 
 DEBUG_SHOW_DATA_ADMIN_MODELS = False
@@ -71,11 +73,21 @@ class EmailMessageToDataInline(EmailMessageGenericDataInline):
 	model = EmailMessageToData
 
 
+class UniqueArgumentsInLine(admin.TabularInline):
+	model = UniqueArgument
+	readonly_fields = ("data", "value",)
+	extra = 0
+	can_delete = False
+
+	def has_add_permission(self, request):
+		return False
+
+
 class EmailMessageAdmin(admin.ModelAdmin):
 	date_hierarchy = "creation_time"
-	list_display = ("message_id", "from_email", "to_email", "category", "subject_data", "response")
+	list_display = ("message_id", "from_email", "to_email", "category", "subject_data", "response", "unique_argument_count")
 	list_filter = ("from_email", "subject__data", "category", "response")
-	readonly_fields = ("message_id", "from_email", "to_email", "category", "response", "categories")
+	readonly_fields = ("message_id", "from_email", "to_email", "category", "response", "categories", "arguments", "unique_argument_count")
 	inlines = (
 		EmailMessageToDataInline,
 		EmailMessageCcInline,
@@ -85,16 +97,22 @@ class EmailMessageAdmin(admin.ModelAdmin):
 		EmailMessageSendGridDataInline,
 		EmailMessageExtraHeadersDataInline,
 		EmailMessageAttachmentsDataInline,
+		UniqueArgumentsInLine,
 	)
 
 	def has_add_permission(self, request):
 		return False
+
+	def unique_argument_count(self, emailMessage):
+		return emailMessage.uniqueargument_set.count()
 
 
 class EmailMessageGenericDataAdmin(admin.ModelAdmin):
 	list_display = ("email_message", "data")
 
 
+admin.site.register(Argument)
+admin.site.register(UniqueArgument)
 admin.site.register(EmailMessage, EmailMessageAdmin)
 admin.site.register(Category, CategoryAdmin)
 
