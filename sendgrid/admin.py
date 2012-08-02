@@ -73,11 +73,21 @@ class EmailMessageToDataInline(EmailMessageGenericDataInline):
 	model = EmailMessageToData
 
 
+class UniqueArgumentsInLine(admin.TabularInline):
+	model = UniqueArgument
+	readonly_fields = ("data", "value",)
+	extra = 0
+	can_delete = False
+
+	def has_add_permission(self, request):
+		return False
+
+
 class EmailMessageAdmin(admin.ModelAdmin):
 	date_hierarchy = "creation_time"
-	list_display = ("message_id", "from_email", "to_email", "category", "subject_data", "response")
+	list_display = ("message_id", "from_email", "to_email", "category", "subject_data", "response", "unique_argument_count")
 	list_filter = ("from_email", "subject__data", "category", "response")
-	readonly_fields = ("message_id", "from_email", "to_email", "category", "response", "categories", "arguments")
+	readonly_fields = ("message_id", "from_email", "to_email", "category", "response", "categories", "arguments", "unique_argument_count")
 	inlines = (
 		EmailMessageToDataInline,
 		EmailMessageCcInline,
@@ -87,10 +97,14 @@ class EmailMessageAdmin(admin.ModelAdmin):
 		EmailMessageSendGridDataInline,
 		EmailMessageExtraHeadersDataInline,
 		EmailMessageAttachmentsDataInline,
+		UniqueArgumentsInLine,
 	)
 
 	def has_add_permission(self, request):
 		return False
+
+	def unique_argument_count(self, emailMessage):
+		return emailMessage.uniqueargument_set.count()
 
 
 class EmailMessageGenericDataAdmin(admin.ModelAdmin):
