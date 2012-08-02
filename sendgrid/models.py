@@ -8,6 +8,8 @@ from django.utils.translation import ugettext_lazy as _
 from sendgrid.signals import sendgrid_email_sent
 
 
+MAX_CATEGORIES_PER_EMAIL_MESSAGE = 10
+
 DEFAULT_SENDGRID_EMAIL_TRACKING_COMPONENTS = (
 	"to",
 	"cc",
@@ -67,6 +69,10 @@ def save_email_message(sender, **kwargs):
 		else:
 			categories = categoryData
 			category = categories[0] if categories else None
+
+		if len(categories) > MAX_CATEGORIES_PER_EMAIL_MESSAGE:
+			msg = "The message has {n} categories which exceeds the maximum of {m}"
+			logger.warn(msg.format(n=len(categories), m=MAX_CATEGORIES_PER_EMAIL_MESSAGE))
 
 		emailMessage = EmailMessage.objects.create(
 			message_id=messageId,
