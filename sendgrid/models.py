@@ -68,7 +68,6 @@ def save_email_message(sender, **kwargs):
 		fromEmail = getattr(message, "from_email", None)
 		recipients = getattr(message, "to", None)
 		toEmail = recipients[0]
-		# TODO: Handle multiple categories
 		categoryData = message.sendgrid_headers.data.get("category", None)
 		if isinstance(categoryData, basestring):
 			category = categoryData
@@ -77,7 +76,7 @@ def save_email_message(sender, **kwargs):
 			categories = categoryData
 			category = categories[0] if categories else None
 
-		if len(categories) > MAX_CATEGORIES_PER_EMAIL_MESSAGE:
+		if categories and len(categories) > MAX_CATEGORIES_PER_EMAIL_MESSAGE:
 			msg = "The message has {n} categories which exceeds the maximum of {m}"
 			logger.warn(msg.format(n=len(categories), m=MAX_CATEGORIES_PER_EMAIL_MESSAGE))
 
@@ -89,11 +88,12 @@ def save_email_message(sender, **kwargs):
 			response=response,
 		)
 
-		for categoryName in categories:
-			category, created = Category.objects.get_or_create(name=categoryName)
-			if created:
-				logger.debug("Category {c} was created".format(c=category))
-			emailMessage.categories.add(category)
+		if categories:
+			for categoryName in categories:
+				category, created = Category.objects.get_or_create(name=categoryName)
+				if created:
+					logger.debug("Category {c} was created".format(c=category))
+				emailMessage.categories.add(category)
 
 		uniqueArgsData = message.sendgrid_headers.data.get("unique_args", None)
 		if uniqueArgsData:
