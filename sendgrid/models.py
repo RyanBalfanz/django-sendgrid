@@ -95,7 +95,18 @@ def save_email_message(sender, **kwargs):
 				logger.debug("Category {c} was created".format(c=category))
 			emailMessage.categories.add(category)
 
-		# TODO: UniqueArgs
+		uniqueArgsData = message.sendgrid_headers.data.get("unique_args", None)
+		# raise Exception(uniqueArgsData)
+		if uniqueArgsData:
+			for k, v in uniqueArgsData.iteritems():
+				argument, argumentCreated = Argument.objects.get_or_create(key=k)
+				if argumentCreated:
+					logger.debug("Argument {a} was created".format(a=argument))
+				uniqueArg = UniqueArgument.objects.create(
+					argument=argument,
+					email_message=emailMessage,
+					data=v,
+				)
 
 		for component, componentModel in COMPONENT_DATA_MODEL_MAP.iteritems():
 			if component in SENDGRID_EMAIL_TRACKING_COMPONENTS:
