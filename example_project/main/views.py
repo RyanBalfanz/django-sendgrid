@@ -15,8 +15,12 @@ from sendgrid.utils import filterutils
 # example_project
 from .forms import EmailForm
 
+DEFAULT_CSV_SEPARATOR = ","
 
 logger = logging.getLogger(__name__)
+
+def parse_csv_string(s, separator=DEFAULT_CSV_SEPARATOR):
+	return [field.strip() for field in s.split(separator) if field]
 
 def send_simple_email(request):
 	if request.method == 'POST':
@@ -27,13 +31,14 @@ def send_simple_email(request):
 			from_email = request.POST["sender"]
 			recipient_list = request.POST["to"]
 			recipient_list = [r.strip() for r in recipient_list.split(",")]
-			category = request.POST["category"]
+			categoryData = request.POST["category"]
+			categories = parse_csv_string(categoryData)
 			# https://docs.djangoproject.com/en/dev/ref/forms/fields/#booleanfield
 			html = getattr(request.POST, "html", False)
 			enable_gravatar = getattr(request.POST, "enable_gravatar", False)
 			enable_click_tracking = getattr(request.POST, "enable_click_tracking", False)
 			add_unsubscribe_link = getattr(request.POST, "add_unsubscribe_link", False)
-			
+
 			sendGridEmail = SendGridEmailMessage(
 				subject,
 				message,
@@ -43,9 +48,13 @@ def send_simple_email(request):
 			if html:
 				sendGridEmail.content_subtype = "html"
 				
-			if category:
-				logger.debug("Category {c} was given".format(c=category))
-				sendGridEmail.sendgrid_headers.setCategory(category)
+			if categories:
+				logger.debug("Categories {c} were given".format(c=categories))
+				# The SendGrid Event API will POST different data for single/multiple category messages.
+				if len(categories) == 1:
+					sendGridEmail.sendgrid_headers.setCategory(categories[0])
+				elif len(categories) > 1:
+					sendGridEmail.sendgrid_headers.setCategory(categories)
 				sendGridEmail.update_headers()
 				
 			filterSpec = {}

@@ -3,6 +3,7 @@ from __future__ import absolute_import
 from django.conf import settings
 from django.contrib import admin
 
+from .models import Category
 from .models import EmailMessage
 from .models import EmailMessageAttachmentsData
 from .models import EmailMessageBodyData
@@ -17,6 +18,18 @@ from .models import Event
 
 DEBUG_SHOW_DATA_ADMIN_MODELS = settings.DEBUG
 
+
+class CategoryAdmin(admin.ModelAdmin):
+	date_hierarchy = "creation_time"
+	list_display = ("name", "creation_time", "last_modified_time", "email_message_count")
+	readonly_fields = ("name", "email_message_count")
+	search_fields = ("name",)
+
+	def has_add_permission(self, request):
+		return False
+
+	def email_message_count(self, category):
+		return category.emailmessage_set.count()
 
 class EmailMessageGenericDataInline(admin.TabularInline):
 	model = None
@@ -84,19 +97,7 @@ class EmailMessageAdmin(admin.ModelAdmin):
 		"latest_event_type",
 	)
 	list_filter = ("from_email", "subject__data", "category", "response")
-	readonly_fields = (
-		"message_id",
-		"from_email",
-		"to_email",
-		"category",
-		"response",
-		"creation_time",
-		"last_modified_time",
-		"event_count",
-		"first_event_type",
-		"latest_event_type",
-	)
-	search_fields = ("message_id",)
+	readonly_fields = ("message_id", "from_email", "to_email", "category", "response", "categories")
 	inlines = (
 		EmailMessageToDataInline,
 		EmailMessageCcInline,
@@ -150,7 +151,11 @@ class EmailMessageGenericDataAdmin(admin.ModelAdmin):
 		return False
 
 admin.site.register(EmailMessage, EmailMessageAdmin)
+<<<<<<< HEAD
 admin.site.register(Event, EventAdmin)
+=======
+admin.site.register(Category, CategoryAdmin)
+>>>>>>> upstream/develop
 
 if DEBUG_SHOW_DATA_ADMIN_MODELS:
 	admin.site.register(EmailMessageAttachmentsData, EmailMessageGenericDataAdmin)
