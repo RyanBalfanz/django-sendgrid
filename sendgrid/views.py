@@ -11,8 +11,7 @@ from django.views.decorators.csrf import csrf_exempt
 
 from .signals import sendgrid_event_recieved
 
-from sendgrid.models import EmailMessage, Event
-from .constants import EVENT_TYPES_MAP
+from sendgrid.models import EmailMessage, Event, EventType
 
 
 POST_EVENTS_RESPONSE_STATUS_CODE = getattr(settings, "POST_EVENT_HANDLER_RESPONSE_STATUS_CODE", 200)
@@ -29,10 +28,10 @@ def handle_single_event_request(request):
 	email = eventData.get("email", None)
 	event = eventData.get("event", None)
 
-	messageId = eventData.get("message_id", None)
-	if messageId:
+	message_id = eventData.get("message_id", None)
+	if message_id:
 		try:
-			emailMessage = EmailMessage.objects.get(message_id=messageId)
+			emailMessage = EmailMessage.objects.get(message_id=message_id)
 		except EmailMessage.DoesNotExist:
 			msg = "EmailMessage with message_id {m} does not exist"
 			logger.exception(msg.format(m=message_id))
@@ -43,19 +42,13 @@ def handle_single_event_request(request):
 			eventObj = Event.objects.create(
 				email_message=emailMessage,
 				email=email,
-				type=EVENT_TYPES_MAP[event.upper()],
+				type=EventType(name=event.upper()),
 			)
 
 			response = HttpResponse()
 	else:
 		msg = "Expected 'message_id' was not found in event data"
-		logger.info(msg)
-
-		eventObj = Event.objects.create(
-			emailMessage=None,
-			email=email,
-			type=EVENT_TYPES_MAP[event.upper()],
-		)
+		logger.exception(msg)
 
 		response = HttpResponseBadRequest()
 		response.write(msg + "\n")

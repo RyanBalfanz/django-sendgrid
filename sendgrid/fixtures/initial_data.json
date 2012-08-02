@@ -1,0 +1,72 @@
+[
+  {
+    "pk": 1, 
+    "model": "sendgrid.eventtype", 
+    "fields": {
+      "name" : "UNKNOWN"
+    }
+  },
+  {
+    "pk": 2, 
+    "model": "sendgrid.eventtype", 
+    "fields": {
+      "name" : "DEFERRED"
+    }
+  },
+  {
+    "pk": 3, 
+    "model": "sendgrid.eventtype", 
+    "fields": {
+      "name" : "PROCESSED"
+    }
+  },
+  {
+    "pk": 4, 
+    "model": "sendgrid.eventtype", 
+    "fields": {
+      "name" : "DROPPED"
+    }
+  },
+  {
+    "pk": 5, 
+    "model": "sendgrid.eventtype", 
+    "fields": {
+      "name" : "DELIVERED"
+    }
+  },
+  {
+    "pk": 6, 
+    "model": "sendgrid.eventtype", 
+    "fields": {
+      "name" : "BOUNCE"
+    }
+  },
+  {
+    "pk": 7, 
+    "model": "sendgrid.eventtype", 
+    "fields": {
+      "name" : "OPEN"
+    }
+  },
+  {
+    "pk": 8, 
+    "model": "sendgrid.eventtype", 
+    "fields": {
+      "name" : "CLICK"
+    }
+  },
+  {
+    "pk": 9, 
+    "model": "sendgrid.eventtype", 
+    "fields": {
+      "name" : "SPAMREPORT"
+    }
+  },
+  {
+    "pk": 10, 
+    "model": "sendgrid.eventtype", 
+    "fields": {
+      "name" : "UNSUBSCRIBE"
+    }
+  }
+]
