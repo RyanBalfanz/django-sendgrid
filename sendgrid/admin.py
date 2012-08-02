@@ -137,8 +137,32 @@ class EmailMessageAdmin(admin.ModelAdmin):
 
 	def first_event_type(self, emailMessage):
 		return emailMessage.first_event.type
+
 	def unique_argument_count(self, emailMessage):
 		return emailMessage.uniqueargument_set.count()
+
+
+class EventAdmin(admin.ModelAdmin):
+	date_hierarchy = "creation_time"
+	list_display = (
+		"email_message",
+		"type",
+		"email",
+		"creation_time",
+		"last_modified_time",
+	)
+	list_filter = ("type",)
+	search_fields = ("email_message__message_id",)
+	readonly_fields = (
+		"email_message",
+		"type",
+		"email",
+		"creation_time",
+		"last_modified_time",
+	)
+
+	def has_add_permission(self, request):
+		return False
 
 
 class EmailMessageGenericDataAdmin(admin.ModelAdmin):
