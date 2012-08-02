@@ -151,11 +151,8 @@ class EmailMessageGenericDataAdmin(admin.ModelAdmin):
 		return False
 
 admin.site.register(EmailMessage, EmailMessageAdmin)
-<<<<<<< HEAD
 admin.site.register(Event, EventAdmin)
-=======
 admin.site.register(Category, CategoryAdmin)
->>>>>>> upstream/develop
 
 if DEBUG_SHOW_DATA_ADMIN_MODELS:
 	admin.site.register(EmailMessageAttachmentsData, EmailMessageGenericDataAdmin)
