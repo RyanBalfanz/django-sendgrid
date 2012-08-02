@@ -8,10 +8,11 @@ from django.db import models
 from django.dispatch import receiver
 from django.utils.translation import ugettext_lazy as _
 
-from .constants import EVENT_TYPES_MAP
 from .signals import sendgrid_email_sent
 from .signals import sendgrid_event_recieved
 
+
+MAX_CATEGORIES_PER_EMAIL_MESSAGE = 10
 
 DEFAULT_SENDGRID_EMAIL_TRACKING_COMPONENTS = (
 	"to",
@@ -64,7 +65,18 @@ def save_email_message(sender, **kwargs):
 		fromEmail = getattr(message, "from_email", None)
 		recipients = getattr(message, "to", None)
 		toEmail = recipients[0]
-		category = message.sendgrid_headers.data.get("category", None)
+		# TODO: Handle multiple categories
+		categoryData = message.sendgrid_headers.data.get("category", None)
+		if isinstance(categoryData, basestring):
+			category = categoryData
+			categories = [category]
+		else:
+			categories = categoryData
+			category = categories[0] if categories else None
+
+		if len(categories) > MAX_CATEGORIES_PER_EMAIL_MESSAGE:
+			msg = "The message has {n} categories which exceeds the maximum of {m}"
+			logger.warn(msg.format(n=len(categories), m=MAX_CATEGORIES_PER_EMAIL_MESSAGE))
 
 		emailMessage = EmailMessage.objects.create(
 			message_id=messageId,
@@ -73,6 +85,12 @@ def save_email_message(sender, **kwargs):
 			category=category,
 			response=response,
 		)
+
+		for categoryName in categories:
+			category, created = Category.objects.get_or_create(name=categoryName)
+			if created:
+				logger.debug("Category {c} was created".format(c=category))
+			emailMessage.categories.add(category)
 
 		for component, componentModel in COMPONENT_DATA_MODEL_MAP.iteritems():
 			if component in SENDGRID_EMAIL_TRACKING_COMPONENTS:
@@ -98,6 +116,19 @@ def log_event_recieved(sender, request, **kwargs):
 		logger.debug("Recieved event request: {request}".format(request=request))
 
 
+class Category(models.Model):
+	name = models.CharField(unique=True, max_length=EMAIL_MESSAGE_CATEGORY_MAX_LENGTH)
+	creation_time = models.DateTimeField(auto_now_add=True)
+	last_modified_time = models.DateTimeField(auto_now=True)
+
+	class Meta:
+		verbose_name = _("Category")
+		verbose_name_plural = _("Categories")
+
+	def __unicode__(self):
+		return self.name
+
+
 class EmailMessage(models.Model):
 	message_id = models.CharField(unique=True, max_length=36, editable=False, blank=True, null=True, help_text="UUID")
 	# user = models.ForeignKey(User, null=True) # TODO
@@ -107,6 +138,7 @@ class EmailMessage(models.Model):
 	response = models.IntegerField(blank=True, null=True, help_text="Response received from SendGrid after sending")
 	creation_time = models.DateTimeField(auto_now_add=True)
 	last_modified_time = models.DateTimeField(auto_now=True)
+	categories = models.ManyToManyField(Category)
 
 	class Meta:
 		verbose_name = _("Email Message")
@@ -259,33 +291,16 @@ class EmailMessageToData(models.Model):
 	def __unicode__(self):
 		return "{0}".format(self.email_message)
 
+class EventType(models.Model):
+	name = models.CharField(max_length=128,unique=True)
+
+	def __unicode__(self):
+		return self.name
 
 class Event(models.Model):
-	SENDGRID_EVENT_UNKNOWN_TYPE = EVENT_TYPES_MAP["UNKNOWN"]
-	SENDGRID_EVENT_DEFERRED_TYPE = EVENT_TYPES_MAP["DEFERRED"]
-	SENDGRID_EVENT_PROCESSED_TYPE = EVENT_TYPES_MAP["PROCESSED"]
-	SENDGRID_EVENT_DROPPED_TYPE = EVENT_TYPES_MAP["DROPPED"]
-	SENDGRID_EVENT_DELIVERED_TYPE = EVENT_TYPES_MAP["DELIVERED"]
-	SENDGRID_EVENT_BOUNCE_TYPE = EVENT_TYPES_MAP["BOUNCE"]
-	SENDGRID_EVENT_OPEN_TYPE = EVENT_TYPES_MAP["OPEN"]
-	SENDGRID_EVENT_CLICK_TYPE = EVENT_TYPES_MAP["CLICK"]
-	SENDGRID_EVENT_SPAM_REPORT_TYPE = EVENT_TYPES_MAP["SPAMREPORT"]
-	SENDGRID_EVENT_UNSUBSCRIBE_TYPE = EVENT_TYPES_MAP["UNSUBSCRIBE"]
-	SENDGRID_EVENT_TYPES = (
-		(SENDGRID_EVENT_UNKNOWN_TYPE, "Unknown"),
-		(SENDGRID_EVENT_DEFERRED_TYPE, "Deferred"),
-		(SENDGRID_EVENT_PROCESSED_TYPE, "Processed"),
-		(SENDGRID_EVENT_DROPPED_TYPE, "Dropped"),
-		(SENDGRID_EVENT_DELIVERED_TYPE, "Delivered"),
-		(SENDGRID_EVENT_BOUNCE_TYPE, "Bounce"),
-		(SENDGRID_EVENT_OPEN_TYPE, "Open"),
-		(SENDGRID_EVENT_CLICK_TYPE, "Click"),
-		(SENDGRID_EVENT_SPAM_REPORT_TYPE, "Spam Report"),
-		(SENDGRID_EVENT_UNSUBSCRIBE_TYPE, "Unsubscribe"),
-	)
-	email_message = models.ForeignKey(EmailMessage, blank=True, null=True)
+	email_message = models.ForeignKey(EmailMessage)
 	email = models.EmailField()
-	type = models.IntegerField(blank=True, null=True, choices=SENDGRID_EVENT_TYPES, default=SENDGRID_EVENT_UNKNOWN_TYPE)
+	type = models.ForeignKey(EventType, blank=True, null=True)
 	creation_time = models.DateTimeField(auto_now_add=True)
 	last_modified_time = models.DateTimeField(auto_now=True)
 
@@ -294,5 +309,4 @@ class Event(models.Model):
 		verbose_name_plural = _("Events")
 
 	def __unicode__(self):
-		return u"{0} - {1}".format(self.email_message, self.get_type_display())
-
+		return u"{0} - {1}".format(self.email_message, self.type)

@@ -14,6 +14,11 @@ from .signals import sendgrid_email_sent
 from .utils import filterutils
 # from .utils import get_email_message
 from .utils import in_test_environment
+from .utils.requestfactory import RequestFactory 
+
+from .views import handle_single_event_request
+
+from .models import Event, EmailMessage as EmailMessageModel
 
 
 TEST_SENDER_EMAIL = "ryan@example.com"
@@ -23,6 +28,54 @@ validate_filter_setting_value = filterutils.validate_filter_setting_value
 validate_filter_specification = filterutils.validate_filter_specification
 update_filters = filterutils.update_filters
 
+class SendGridEventTest(TestCase):
+	def setUp(self):
+		self.email = SendGridEmailMessage(to=TEST_RECIPIENTS, from_email=TEST_SENDER_EMAIL)
+		self.email.send()
+		self.rf = RequestFactory()
+
+	def test_event_email_exists(self):
+		event_count = Event.objects.count()
+		post_data = {
+			"message_id": self.email.message_id, 
+			"email" : self.email.from_email,
+			"event" : "OPEN",
+			}
+		request = self.rf.post('/sendgrid/events',post_data)
+		handle_single_event_request(request)
+		#Event created
+		self.assertEqual(Event.objects.count(),event_count+1)
+		#Email matches original message_id
+		self.assertEqual(Event.objects.get().email_message.message_id, self.email.message_id.__str__())
+
+	def test_event_email_doesnt_exist(self):
+		event_count = Event.objects.count()
+		email_count = EmailMessageModel.objects.count()
+		post_data = {
+			"message_id": 'a5df', 
+			"email" : self.email.from_email,
+			"event" : "OPEN",
+			}
+		request = self.rf.post('/sendgrid/events',post_data)
+		handle_single_event_request(request)
+		#no event created
+		self.assertEqual(Event.objects.count(),event_count)
+		#no email created
+		self.assertEqual(EmailMessageModel.objects.count(),email_count)
+
+	def test_event_no_message_id(self):
+		event_count = Event.objects.count()
+		email_count = EmailMessageModel.objects.count()
+		post_data = {
+			"email" : self.email.from_email,
+			"event" : "OPEN",
+			}
+		request = self.rf.post('/sendgrid/events',post_data)
+		response = handle_single_event_request(request)
+		#no event created
+		self.assertEqual(Event.objects.count(),event_count)
+		#no email created
+		self.assertEqual(EmailMessageModel.objects.count(),email_count)
 
 class SendGridEmailTest(TestCase):
 	"""docstring for SendGridEmailTest"""
