@@ -8,6 +8,8 @@ from django.utils.translation import ugettext_lazy as _
 from sendgrid.signals import sendgrid_email_sent
 
 
+MAX_CATEGORIES_PER_EMAIL_MESSAGE = 10
+
 DEFAULT_SENDGRID_EMAIL_TRACKING_COMPONENTS = (
 	"to",
 	"cc",
@@ -60,8 +62,17 @@ def save_email_message(sender, **kwargs):
 		recipients = getattr(message, "to", None)
 		toEmail = recipients[0]
 		# TODO: Handle multiple categories
-		categories = message.sendgrid_headers.data.get("category", None)
-		category = categories[0] if categories else None
+		categoryData = message.sendgrid_headers.data.get("category", None)
+		if isinstance(categoryData, basestring):
+			category = categoryData
+			categories = [category]
+		else:
+			categories = categoryData
+			category = categories[0] if categories else None
+
+		if len(categories) > MAX_CATEGORIES_PER_EMAIL_MESSAGE:
+			msg = "The message has {n} categories which exceeds the maximum of {m}"
+			logger.warn(msg.format(n=len(categories), m=MAX_CATEGORIES_PER_EMAIL_MESSAGE))
 
 		emailMessage = EmailMessage.objects.create(
 			message_id=messageId,
@@ -70,6 +81,12 @@ def save_email_message(sender, **kwargs):
 			category=category,
 			response=response,
 		)
+
+		for categoryName in categories:
+			category, created = Category.objects.get_or_create(name=categoryName)
+			if created:
+				logger.debug("Category {c} was created".format(c=category))
+			emailMessage.categories.add(category)
 
 		for component, componentModel in COMPONENT_DATA_MODEL_MAP.iteritems():
 			if component in SENDGRID_EMAIL_TRACKING_COMPONENTS:
@@ -90,6 +107,19 @@ def save_email_message(sender, **kwargs):
 				logger.debug(logMessage.format(c=component))
 
 
+class Category(models.Model):
+	name = models.CharField(unique=True, max_length=EMAIL_MESSAGE_CATEGORY_MAX_LENGTH)
+	creation_time = models.DateTimeField(auto_now_add=True)
+	last_modified_time = models.DateTimeField(auto_now=True)
+
+	class Meta:
+		verbose_name = _("Category")
+		verbose_name_plural = _("Categories")
+
+	def __unicode__(self):
+		return self.name
+
+
 class EmailMessage(models.Model):
 	message_id = models.CharField(unique=True, max_length=36, editable=False, blank=True, null=True, help_text="UUID")
 	# user = models.ForeignKey(User, null=True) # TODO
@@ -99,6 +129,7 @@ class EmailMessage(models.Model):
 	response = models.IntegerField(blank=True, null=True, help_text="Response received from SendGrid after sending")
 	creation_time = models.DateTimeField(auto_now_add=True)
 	last_modified_time = models.DateTimeField(auto_now=True)
+	categories = models.ManyToManyField(Category)
 
 	class Meta:
 		verbose_name = _("EmailMessage")
@@ -230,3 +261,4 @@ class EmailMessageToData(models.Model):
 
 	def __unicode__(self):
 		return "{0}".format(self.email_message)
+
