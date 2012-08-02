@@ -36,6 +36,14 @@ class Migration(SchemaMigration):
 
 
     models = {
+        'sendgrid.argument': {
+            'Meta': {'object_name': 'Argument'},
+            'creation_time': ('django.db.models.fields.DateTimeField', [], {'auto_now_add': 'True', 'blank': 'True'}),
+            'data_type': ('django.db.models.fields.IntegerField', [], {'default': '0'}),
+            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'key': ('django.db.models.fields.CharField', [], {'max_length': '255'}),
+            'last_modified_time': ('django.db.models.fields.DateTimeField', [], {'auto_now': 'True', 'blank': 'True'})
+        },
         'sendgrid.category': {
             'Meta': {'object_name': 'Category'},
             'creation_time': ('django.db.models.fields.DateTimeField', [], {'auto_now_add': 'True', 'blank': 'True'}),
@@ -45,6 +53,7 @@ class Migration(SchemaMigration):
         },
         'sendgrid.emailmessage': {
             'Meta': {'object_name': 'EmailMessage'},
+            'arguments': ('django.db.models.fields.related.ManyToManyField', [], {'to': "orm['sendgrid.Argument']", 'through': "orm['sendgrid.UniqueArgument']", 'symmetrical': 'False'}),
             'categories': ('django.db.models.fields.related.ManyToManyField', [], {'to': "orm['sendgrid.Category']", 'symmetrical': 'False'}),
             'category': ('django.db.models.fields.CharField', [], {'max_length': '150', 'null': 'True', 'blank': 'True'}),
             'creation_time': ('django.db.models.fields.DateTimeField', [], {'auto_now_add': 'True', 'blank': 'True'}),
@@ -108,6 +117,15 @@ class Migration(SchemaMigration):
             'Meta': {'object_name': 'EventType'},
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'name': ('django.db.models.fields.CharField', [], {'unique': 'True', 'max_length': '128'})
+        },
+        'sendgrid.uniqueargument': {
+            'Meta': {'object_name': 'UniqueArgument'},
+            'argument': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['sendgrid.Argument']"}),
+            'creation_time': ('django.db.models.fields.DateTimeField', [], {'auto_now_add': 'True', 'blank': 'True'}),
+            'data': ('django.db.models.fields.CharField', [], {'max_length': '255'}),
+            'email_message': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['sendgrid.EmailMessage']"}),
+            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
+            'last_modified_time': ('django.db.models.fields.DateTimeField', [], {'auto_now': 'True', 'blank': 'True'})
         }
     }
 
