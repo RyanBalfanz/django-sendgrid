@@ -85,7 +85,15 @@ class UniqueArgumentsInLine(admin.TabularInline):
 
 class EmailMessageAdmin(admin.ModelAdmin):
 	date_hierarchy = "creation_time"
-	list_display = ("message_id", "from_email", "to_email", "category", "subject_data", "response", "unique_argument_count")
+	list_display = (
+		"message_id",
+		"from_email",
+		"to_email",
+		"category",
+		"subject_data",
+		"response",
+		"unique_argument_count"
+	)
 	list_filter = ("from_email", "subject__data", "category", "response")
 	readonly_fields = ("message_id", "from_email", "to_email", "category", "response", "categories", "arguments", "unique_argument_count")
 	inlines = (
