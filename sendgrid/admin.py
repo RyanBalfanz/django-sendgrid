@@ -184,7 +184,7 @@ class EmailMessageGenericDataAdmin(admin.ModelAdmin):
 
 class UniqueArgumentAdmin(admin.ModelAdmin):
 	date_hierarchy = "creation_time"
-	list_display = ("argument", "data", "creation_time", "last_modified_time")
+	list_display = ("email_message", "argument", "data", "creation_time", "last_modified_time")
 	list_filter = ("argument",)
 	readonly_fields = ("email_message", "argument", "data",)
 	search_fields = ("argument__key", "data")
