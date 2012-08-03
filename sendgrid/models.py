@@ -38,6 +38,7 @@ SENDGRID_EMAIL_TRACKING_COMPONENTS = getattr(settings, "SENDGRID_USER_MIXIN_ENAB
 SENDGRID_USER_MIXIN_ENABLED = getattr(settings, "SENDGRID_USER_MIXIN_ENABLED", True)
 
 EMAIL_MESSAGE_CATEGORY_MAX_LENGTH = 150
+EVENT_NAME_MAX_LENGTH = 128
 
 # To store all possible valid email addresses, a max_length of 254 is required.
 # See RFC3696/5321
@@ -372,11 +373,13 @@ class EmailMessageToData(models.Model):
 	def __unicode__(self):
 		return "{0}".format(self.email_message)
 
+
 class EventType(models.Model):
-	name = models.CharField(max_length=128,unique=True)
+	name = models.CharField(unique=True, max_length=EVENT_NAME_MAX_LENGTH)
 
 	def __unicode__(self):
 		return self.name
+
 
 class Event(models.Model):
 	email_message = models.ForeignKey(EmailMessage)
