@@ -21,6 +21,22 @@ from .models import UniqueArgument
 DEBUG_SHOW_DATA_ADMIN_MODELS = settings.DEBUG
 
 
+class ArgumentAdmin(admin.ModelAdmin):
+	date_hierarchy = "creation_time"
+	list_display = ("key", "creation_time", "last_modified_time", "email_message_count", "unique_arguments_count")
+	readonly_fields = ("key", "email_message_count", "unique_arguments_count")
+	search_fields = ("name",)
+
+	def has_add_permission(self, request):
+		return False
+
+	def email_message_count(self, argument):
+		return argument.emailmessage_set.count()
+
+	def unique_arguments_count(self, argument):
+		return argument.uniqueargument_set.count()
+
+
 class CategoryAdmin(admin.ModelAdmin):
 	date_hierarchy = "creation_time"
 	list_display = ("name", "creation_time", "last_modified_time", "email_message_count")
@@ -88,6 +104,8 @@ class UniqueArgumentsInLine(admin.TabularInline):
 	can_delete = False
 	readonly_fields = ("argument", "data", "value",)
 
+	def has_add_permission(self, request):
+		return False
 
 class EmailMessageAdmin(admin.ModelAdmin):
 	date_hierarchy = "creation_time"
@@ -163,8 +181,20 @@ class EmailMessageGenericDataAdmin(admin.ModelAdmin):
 	def has_add_permission(self, request):
 		return False
 
-admin.site.register(Argument)
-admin.site.register(UniqueArgument)
+
+class UniqueArgumentAdmin(admin.ModelAdmin):
+	date_hierarchy = "creation_time"
+	list_display = ("argument", "data", "creation_time", "last_modified_time")
+	list_filter = ("argument",)
+	readonly_fields = ("email_message", "argument", "data",)
+	search_fields = ("argument__key", "data")
+
+	def has_add_permission(self, request):
+		return False
+
+
+admin.site.register(Argument, ArgumentAdmin)
+admin.site.register(UniqueArgument, UniqueArgumentAdmin)
 admin.site.register(EmailMessage, EmailMessageAdmin)
 admin.site.register(Event, EventAdmin)
 admin.site.register(Category, CategoryAdmin)
