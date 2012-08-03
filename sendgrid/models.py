@@ -40,6 +40,7 @@ SENDGRID_USER_MIXIN_ENABLED = getattr(settings, "SENDGRID_USER_MIXIN_ENABLED", T
 ARGUMENT_KEY_MAX_LENGTH = 255
 EMAIL_MESSAGE_CATEGORY_MAX_LENGTH = 150
 EVENT_NAME_MAX_LENGTH = 128
+UNIQUE_ARGUMENT_DATA_MAX_LENGTH = 255
 
 # To store all possible valid email addresses, a max_length of 254 is required.
 # See RFC3696/5321
@@ -250,7 +251,7 @@ class EmailMessage(models.Model):
 class UniqueArgument(models.Model):
 	argument = models.ForeignKey(Argument)
 	email_message = models.ForeignKey(EmailMessage)
-	data = models.CharField(max_length=255)
+	data = models.CharField(max_length=UNIQUE_ARGUMENT_DATA_MAX_LENGTH)
 	creation_time = models.DateTimeField(auto_now_add=True)
 	last_modified_time = models.DateTimeField(auto_now=True)
 
