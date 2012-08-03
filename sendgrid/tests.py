@@ -10,15 +10,13 @@ from .mail import get_sendgrid_connection
 from .mail import send_sendgrid_mail
 from .message import SendGridEmailMessage
 from .message import SendGridEmailMultiAlternatives
+from .models import Event, EmailMessage as EmailMessageModel
 from .signals import sendgrid_email_sent
 from .utils import filterutils
 # from .utils import get_email_message
 from .utils import in_test_environment
 from .utils.requestfactory import RequestFactory 
-
 from .views import handle_single_event_request
-
-from .models import Event, EmailMessage as EmailMessageModel
 
 
 TEST_SENDER_EMAIL = "ryan@example.com"
@@ -27,6 +25,7 @@ TEST_RECIPIENTS = ["ryan@example.com"]
 validate_filter_setting_value = filterutils.validate_filter_setting_value
 validate_filter_specification = filterutils.validate_filter_specification
 update_filters = filterutils.update_filters
+
 
 class SendGridEventTest(TestCase):
 	def setUp(self):
@@ -76,6 +75,7 @@ class SendGridEventTest(TestCase):
 		self.assertEqual(Event.objects.count(),event_count)
 		#no email created
 		self.assertEqual(EmailMessageModel.objects.count(),email_count)
+
 
 class SendGridEmailTest(TestCase):
 	"""docstring for SendGridEmailTest"""
