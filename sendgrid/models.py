@@ -37,6 +37,7 @@ SENDGRID_EMAIL_TRACKING = getattr(settings, "SENDGRID_USER_MIXIN_ENABLED", True)
 SENDGRID_EMAIL_TRACKING_COMPONENTS = getattr(settings, "SENDGRID_USER_MIXIN_ENABLED", DEFAULT_SENDGRID_EMAIL_TRACKING_COMPONENTS)
 SENDGRID_USER_MIXIN_ENABLED = getattr(settings, "SENDGRID_USER_MIXIN_ENABLED", True)
 
+ARGUMENT_KEY_MAX_LENGTH = 255
 EMAIL_MESSAGE_CATEGORY_MAX_LENGTH = 150
 EVENT_NAME_MAX_LENGTH = 128
 
@@ -165,7 +166,7 @@ class Argument(models.Model):
 		(ARGUMENT_DATA_TYPE_COMPLEX, _("Complex")),
 		(ARGUMENT_DATA_TYPE_STRING, _("String")),
 	)
-	key = models.CharField(max_length=255)
+	key = models.CharField(max_length=ARGUMENT_KEY_MAX_LENGTH)
 	data_type = models.IntegerField(_("Data Type"), choices=ARGUMENT_DATA_TYPES, default=ARGUMENT_DATA_TYPE_UNKNOWN)
 	creation_time = models.DateTimeField(auto_now_add=True)
 	last_modified_time = models.DateTimeField(auto_now=True)
