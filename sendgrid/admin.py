@@ -107,14 +107,6 @@ class EmailMessageAdmin(admin.ModelAdmin):
 		"event_count",
 		"first_event_type",
 		"latest_event_type",
-	)
-	list_display = (
-		"message_id",
-		"from_email",
-		"to_email",
-		"category",
-		"subject_data",
-		"response",
 		"unique_argument_count"
 	)
 	list_filter = ("from_email", "subject__data", "category", "response")
@@ -137,6 +129,9 @@ class EmailMessageAdmin(admin.ModelAdmin):
 
 	def first_event_type(self, emailMessage):
 		return emailMessage.first_event.type
+
+	def latest_event_type(self, emailMessage):
+		return emailMessage.latest_event.type
 
 	def unique_argument_count(self, emailMessage):
 		return emailMessage.uniqueargument_set.count()
