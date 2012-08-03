@@ -81,6 +81,7 @@ class EventInline(admin.TabularInline):
 	extra = 0
 	verbose_name = "Event"
 	verbose_name_plural = "Events"
+	readonly_fields = ("email", "type")
 
 
 class UniqueArgumentsInLine(admin.TabularInline):
