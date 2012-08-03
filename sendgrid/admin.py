@@ -130,6 +130,7 @@ class EmailMessageAdmin(admin.ModelAdmin):
 		"response",
 		"creation_time",
 		"last_modified_time",
+		"category_count",
 		"event_count",
 		"first_event_type",
 		"latest_event_type",
@@ -143,6 +144,7 @@ class EmailMessageAdmin(admin.ModelAdmin):
 		"category",
 		"response",
 		"categories",
+		"category_count",
 		"arguments",
 		"unique_argument_count"
 	)
@@ -162,6 +164,9 @@ class EmailMessageAdmin(admin.ModelAdmin):
 
 	def has_add_permission(self, request):
 		return False
+
+	def category_count(self, emailMessage):
+		return emailMessage.categories.count()
 
 	def first_event_type(self, emailMessage):
 		return emailMessage.first_event.type.name
