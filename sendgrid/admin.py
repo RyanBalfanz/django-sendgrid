@@ -79,19 +79,14 @@ class EventInline(admin.TabularInline):
 	model = Event
 	can_delete = False
 	extra = 0
-	verbose_name = "Event"
-	verbose_name_plural = "Events"
 	readonly_fields = ("email", "type")
 
 
 class UniqueArgumentsInLine(admin.TabularInline):
 	model = UniqueArgument
-	readonly_fields = ("argument", "data", "value",)
 	extra = 0
 	can_delete = False
-
-	def has_add_permission(self, request):
-		return False
+	readonly_fields = ("argument", "data", "value",)
 
 
 class EmailMessageAdmin(admin.ModelAdmin):
