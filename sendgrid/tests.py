@@ -13,6 +13,7 @@ from .message import SendGridEmailMultiAlternatives
 from .models import Argument
 from .models import Category
 from .models import Event, EmailMessage as EmailMessageModel
+from .models import EventType
 from .models import UniqueArgument
 from .signals import sendgrid_email_sent
 from .utils import filterutils
@@ -417,3 +418,28 @@ class UniqueArgumentTests(TestCase):
 		}
 		# uniqueArgument = self.assert_unique_argument_exists(**expectedUniqueArgKeyValue)
 		# self.assertTrue(uniqueArgument)
+
+
+class EventTypeExistsTests(TestCase):
+	fixtures = ["initial_data.json"]
+
+	def setUp(self):
+		self.expectedEventTypes = {
+			"UNKNOWN": 1,
+			"DEFERRED": 2,
+			"PROCESSED": 3,
+			"DROPPED": 4,
+			"DELIVERED": 5,
+			"BOUNCE": 6,
+			"OPEN": 7,
+			"CLICK": 8,
+			"SPAMREPORT": 9,
+			"UNSUBSCRIBE": 10,
+		}
+
+	def test_event_types_exists(self):
+		for name, primaryKey in self.expectedEventTypes.iteritems():
+			self.assertEqual(
+				EventType.objects.get(pk=primaryKey),
+				EventType.objects.get(name=name)
+			)
