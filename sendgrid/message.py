@@ -87,6 +87,10 @@ class SendGridEmailMessageMixin:
 		
 		self.update_headers()
 
+	def get_message_id(self):
+		return self._message_id
+	message_id = property(get_message_id)
+
 
 class SendGridEmailMessage(EmailMessage, SendGridEmailMessageMixin):
 	"""
