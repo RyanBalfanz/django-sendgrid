@@ -10,7 +10,10 @@ from .mail import get_sendgrid_connection
 from .mail import send_sendgrid_mail
 from .message import SendGridEmailMessage
 from .message import SendGridEmailMultiAlternatives
+from .models import Argument
+from .models import Category
 from .models import Event, EmailMessage as EmailMessageModel
+from .models import UniqueArgument
 from .signals import sendgrid_email_sent
 from .utils import filterutils
 # from .utils import get_email_message
@@ -319,4 +322,98 @@ class UpdateFiltersTests(TestCase):
 # 		original = SGEmailMessage.objects.create()
 # 		result = get_email_message(original.message_id)
 # 		self.assertEqual(original, result)
-		
+
+
+class CategoryTests(TestCase):
+	def setUp(self):
+		self.testCategoryNames = (
+			"Test Category 1",
+			"Test Category 2",
+		)
+
+	def assert_category_exists(self, categoryName):
+		category = Category.objects.get(name=categoryName)
+		return category
+
+	def test_send_with_single_category(self):
+		@receiver(sendgrid_email_sent)
+		def receive_sendgrid_email_sent(*args, **kwargs):
+			"""
+			Receives sendgrid_email_sent signals.
+			"""
+			emailMessage = kwargs["message"]
+			sendgridHeadersData = emailMessage.sendgrid_headers.data
+
+			expectedCategory = self.testCategoryNames[0]
+			self.assertEqual(sendgridHeadersData["category"], expectedCategory)
+
+		sendgridEmailMessage = SendGridEmailMessage(to=TEST_RECIPIENTS, from_email=TEST_SENDER_EMAIL)
+		sendgridEmailMessage.sendgrid_headers.setCategory(self.testCategoryNames[0])
+		sendgridEmailMessage.update_headers()
+		sendgridEmailMessage.send()
+
+		category = self.assert_category_exists(self.testCategoryNames[0])
+		self.assertTrue(category)
+
+	def test_send_with_multiple_categories(self):
+		@receiver(sendgrid_email_sent)
+		def receive_sendgrid_email_sent(*args, **kwargs):
+			"""
+			Receives sendgrid_email_sent signals.
+			"""
+			emailMessage = kwargs["message"]
+			sendgridHeadersData = emailMessage.sendgrid_headers.data
+
+			expectedCategories = self.testCategoryNames
+			self.assertEqual(sendgridHeadersData["category"], expectedCategories)
+
+		sendgridEmailMessage = SendGridEmailMessage(to=TEST_RECIPIENTS, from_email=TEST_SENDER_EMAIL)
+		sendgridEmailMessage.sendgrid_headers.setCategory(self.testCategoryNames)
+		sendgridEmailMessage.update_headers()
+		sendgridEmailMessage.send()
+
+		for category in self.testCategoryNames:
+			category = self.assert_category_exists(self.testCategoryNames[0])
+			self.assertTrue(category)
+
+
+class UniqueArgumentTests(TestCase):
+	def setUp(self):
+		pass
+
+	def assert_argument_exists(self, argumentName):
+		argument = Argument.objects.get(key=argumentName)
+		return argument
+
+	def assert_unique_argument_exists(self, key, value):
+		uniqueArgument = UniqueArgument.objects.get(
+			argument=key,
+			data=value
+		)
+		return uniqueArgument
+
+	def test_send_with_unique_arguments(self):
+		@receiver(sendgrid_email_sent)
+		def receive_sendgrid_email_sent(*args, **kwargs):
+			"""
+			Receives sendgrid_email_sent signals.
+			"""
+			emailMessage = kwargs["message"]
+			sendgridHeadersData = emailMessage.sendgrid_headers.data
+
+			self.assertTrue(sendgridHeadersData["unique_args"])
+
+		sendgridEmailMessage = SendGridEmailMessage(to=TEST_RECIPIENTS, from_email=TEST_SENDER_EMAIL)
+		# sendgridEmailMessage.sendgrid_headers.setCategory(self.testCategoryNames[0])
+		# sendgridEmailMessage.update_headers()
+		sendgridEmailMessage.send()
+
+		argument = self.assert_argument_exists("message_id")
+		self.assertTrue(argument)
+
+		expectedUniqueArgKeyValue = {
+			"key": "message_id",
+			"value": sendgridEmailMessage.message_id,
+		}
+		# uniqueArgument = self.assert_unique_argument_exists(**expectedUniqueArgKeyValue)
+		# self.assertTrue(uniqueArgument)
