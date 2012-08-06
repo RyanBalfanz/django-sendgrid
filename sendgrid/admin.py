@@ -15,6 +15,7 @@ from .models import EmailMessageSendGridHeadersData
 from .models import EmailMessageSubjectData
 from .models import EmailMessageToData
 from .models import Event
+from .models import EventType
 from .models import UniqueArgument
 
 
@@ -201,6 +202,21 @@ class EventAdmin(admin.ModelAdmin):
 		return False
 
 
+class EventTypeAdmin(admin.ModelAdmin):
+	# date_hierarchy = "creation_time"
+	list_display = ("name", "event_count")
+	readonly_fields = (
+		"name",
+		"event_count",
+	)
+
+	def has_add_permission(self, request):
+		return False
+
+	def event_count(self, eventType):
+		return eventType.event_set.count()
+
+
 class EmailMessageGenericDataAdmin(admin.ModelAdmin):
 	list_display = ("email_message", "data")
 
@@ -224,6 +240,7 @@ admin.site.register(Argument, ArgumentAdmin)
 admin.site.register(UniqueArgument, UniqueArgumentAdmin)
 admin.site.register(EmailMessage, EmailMessageAdmin)
 admin.site.register(Event, EventAdmin)
+admin.site.register(EventType, EventTypeAdmin)
 admin.site.register(Category, CategoryAdmin)
 
 if DEBUG_SHOW_DATA_ADMIN_MODELS:
