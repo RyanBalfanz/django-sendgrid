@@ -10,10 +10,17 @@ from .mail import get_sendgrid_connection
 from .mail import send_sendgrid_mail
 from .message import SendGridEmailMessage
 from .message import SendGridEmailMultiAlternatives
+from .models import Argument
+from .models import Category
+from .models import Event, EmailMessage as EmailMessageModel
+from .models import EventType
+from .models import UniqueArgument
 from .signals import sendgrid_email_sent
 from .utils import filterutils
 # from .utils import get_email_message
 from .utils import in_test_environment
+from .utils.requestfactory import RequestFactory 
+from .views import handle_single_event_request
 
 
 TEST_SENDER_EMAIL = "ryan@example.com"
@@ -22,6 +29,56 @@ TEST_RECIPIENTS = ["ryan@example.com"]
 validate_filter_setting_value = filterutils.validate_filter_setting_value
 validate_filter_specification = filterutils.validate_filter_specification
 update_filters = filterutils.update_filters
+
+
+class SendGridEventTest(TestCase):
+	def setUp(self):
+		self.email = SendGridEmailMessage(to=TEST_RECIPIENTS, from_email=TEST_SENDER_EMAIL)
+		self.email.send()
+		self.rf = RequestFactory()
+
+	def test_event_email_exists(self):
+		event_count = Event.objects.count()
+		post_data = {
+			"message_id": self.email.message_id, 
+			"email" : self.email.from_email,
+			"event" : "OPEN",
+			}
+		request = self.rf.post('/sendgrid/events',post_data)
+		handle_single_event_request(request)
+		#Event created
+		self.assertEqual(Event.objects.count(),event_count+1)
+		#Email matches original message_id
+		self.assertEqual(Event.objects.get().email_message.message_id, self.email.message_id.__str__())
+
+	def test_event_email_doesnt_exist(self):
+		event_count = Event.objects.count()
+		email_count = EmailMessageModel.objects.count()
+		post_data = {
+			"message_id": 'a5df', 
+			"email" : self.email.from_email,
+			"event" : "OPEN",
+			}
+		request = self.rf.post('/sendgrid/events',post_data)
+		handle_single_event_request(request)
+		#no event created
+		self.assertEqual(Event.objects.count(),event_count)
+		#no email created
+		self.assertEqual(EmailMessageModel.objects.count(),email_count)
+
+	def test_event_no_message_id(self):
+		event_count = Event.objects.count()
+		email_count = EmailMessageModel.objects.count()
+		post_data = {
+			"email" : self.email.from_email,
+			"event" : "OPEN",
+			}
+		request = self.rf.post('/sendgrid/events',post_data)
+		response = handle_single_event_request(request)
+		#no event created
+		self.assertEqual(Event.objects.count(),event_count)
+		#no email created
+		self.assertEqual(EmailMessageModel.objects.count(),email_count)
 
 
 class SendGridEmailTest(TestCase):
@@ -266,4 +323,123 @@ class UpdateFiltersTests(TestCase):
 # 		original = SGEmailMessage.objects.create()
 # 		result = get_email_message(original.message_id)
 # 		self.assertEqual(original, result)
-		
+
+
+class CategoryTests(TestCase):
+	def setUp(self):
+		self.testCategoryNames = (
+			"Test Category 1",
+			"Test Category 2",
+		)
+
+	def assert_category_exists(self, categoryName):
+		category = Category.objects.get(name=categoryName)
+		return category
+
+	def test_send_with_single_category(self):
+		@receiver(sendgrid_email_sent)
+		def receive_sendgrid_email_sent(*args, **kwargs):
+			"""
+			Receives sendgrid_email_sent signals.
+			"""
+			emailMessage = kwargs["message"]
+			sendgridHeadersData = emailMessage.sendgrid_headers.data
+
+			expectedCategory = self.testCategoryNames[0]
+			self.assertEqual(sendgridHeadersData["category"], expectedCategory)
+
+		sendgridEmailMessage = SendGridEmailMessage(to=TEST_RECIPIENTS, from_email=TEST_SENDER_EMAIL)
+		sendgridEmailMessage.sendgrid_headers.setCategory(self.testCategoryNames[0])
+		sendgridEmailMessage.update_headers()
+		sendgridEmailMessage.send()
+
+		category = self.assert_category_exists(self.testCategoryNames[0])
+		self.assertTrue(category)
+
+	def test_send_with_multiple_categories(self):
+		@receiver(sendgrid_email_sent)
+		def receive_sendgrid_email_sent(*args, **kwargs):
+			"""
+			Receives sendgrid_email_sent signals.
+			"""
+			emailMessage = kwargs["message"]
+			sendgridHeadersData = emailMessage.sendgrid_headers.data
+
+			expectedCategories = self.testCategoryNames
+			self.assertEqual(sendgridHeadersData["category"], expectedCategories)
+
+		sendgridEmailMessage = SendGridEmailMessage(to=TEST_RECIPIENTS, from_email=TEST_SENDER_EMAIL)
+		sendgridEmailMessage.sendgrid_headers.setCategory(self.testCategoryNames)
+		sendgridEmailMessage.update_headers()
+		sendgridEmailMessage.send()
+
+		for category in self.testCategoryNames:
+			category = self.assert_category_exists(self.testCategoryNames[0])
+			self.assertTrue(category)
+
+
+class UniqueArgumentTests(TestCase):
+	def setUp(self):
+		pass
+
+	def assert_argument_exists(self, argumentName):
+		argument = Argument.objects.get(key=argumentName)
+		return argument
+
+	def assert_unique_argument_exists(self, key, value):
+		uniqueArgument = UniqueArgument.objects.get(
+			argument=Argument.objects.get(key=key),
+			data=value
+		)
+		return uniqueArgument
+
+	def test_send_with_unique_arguments(self):
+		@receiver(sendgrid_email_sent)
+		def receive_sendgrid_email_sent(*args, **kwargs):
+			"""
+			Receives sendgrid_email_sent signals.
+			"""
+			emailMessage = kwargs["message"]
+			sendgridHeadersData = emailMessage.sendgrid_headers.data
+
+			self.assertTrue(sendgridHeadersData["unique_args"])
+
+		sendgridEmailMessage = SendGridEmailMessage(to=TEST_RECIPIENTS, from_email=TEST_SENDER_EMAIL)
+		# sendgridEmailMessage.sendgrid_headers.setCategory(self.testCategoryNames[0])
+		# sendgridEmailMessage.update_headers()
+		sendgridEmailMessage.send()
+
+		argument = self.assert_argument_exists("message_id")
+		self.assertTrue(argument)
+
+		expectedUniqueArgKeyValue = {
+			"key": "message_id",
+			"value": sendgridEmailMessage.message_id,
+		}
+		uniqueArgument = self.assert_unique_argument_exists(**expectedUniqueArgKeyValue)
+		self.assertTrue(uniqueArgument)
+
+
+class EventTypeFixtureTests(TestCase):
+	fixtures = ["initial_data.json"]
+
+	def setUp(self):
+		self.expectedEventTypes = {
+			"UNKNOWN": 1,
+			"DEFERRED": 2,
+			"PROCESSED": 3,
+			"DROPPED": 4,
+			"DELIVERED": 5,
+			"BOUNCE": 6,
+			"OPEN": 7,
+			"CLICK": 8,
+			"SPAMREPORT": 9,
+			"UNSUBSCRIBE": 10,
+		}
+
+	def test_event_types_exists(self):
+		for name, primaryKey in self.expectedEventTypes.iteritems():
+			self.assertEqual(
+				EventType.objects.get(pk=primaryKey),
+				EventType.objects.get(name=name)
+			)
