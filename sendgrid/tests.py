@@ -388,7 +388,7 @@ class UniqueArgumentTests(TestCase):
 
 	def assert_unique_argument_exists(self, key, value):
 		uniqueArgument = UniqueArgument.objects.get(
-			argument=key,
+			argument=Argument.objects.get(key=key),
 			data=value
 		)
 		return uniqueArgument
@@ -416,8 +416,8 @@ class UniqueArgumentTests(TestCase):
 			"key": "message_id",
 			"value": sendgridEmailMessage.message_id,
 		}
-		# uniqueArgument = self.assert_unique_argument_exists(**expectedUniqueArgKeyValue)
-		# self.assertTrue(uniqueArgument)
+		uniqueArgument = self.assert_unique_argument_exists(**expectedUniqueArgKeyValue)
+		self.assertTrue(uniqueArgument)
 
 
 class EventTypeExistsTests(TestCase):
