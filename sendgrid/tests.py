@@ -420,7 +420,7 @@ class UniqueArgumentTests(TestCase):
 		self.assertTrue(uniqueArgument)
 
 
-class EventTypeExistsTests(TestCase):
+class EventTypeFixtureTests(TestCase):
 	fixtures = ["initial_data.json"]
 
 	def setUp(self):
