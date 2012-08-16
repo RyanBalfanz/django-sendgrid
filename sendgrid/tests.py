@@ -175,17 +175,7 @@ class SendWithSendGridEmailMessageTest(TestCase):
 			from_email='welcome@example.com',
 			recipient_list=['ryan@example.com'],
 		)
-		
-	def test_send_two_messgages_with_headers(self):
-		"""
-		Should have headers be unique per instance
-		"""
-		message1 = SendGridEmailMessage()
-		message1.sendgrid_headers.addTo('foo@example.com')
-		self.assertNotIn('to', message1.sendgrid_headers.data)
-		message2 = SendGridEmailMessage()
-		self.assertNotIn('to', message2.sendgrid_headers.data)
-		
+
 
 class SendWithEmailMessageTest(TestCase):
 	"""docstring for SendWithEmailMessageTest"""
