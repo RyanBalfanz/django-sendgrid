@@ -92,7 +92,7 @@ class SendGridEmailMessageMixin:
 	message_id = property(get_message_id)
 
 
-class SendGridEmailMessage(EmailMessage, SendGridEmailMessageMixin):
+class SendGridEmailMessage(SendGridEmailMessageMixin, EmailMessage):
 	"""
 	Adapts Django's ``EmailMessage`` for use with SendGrid.
 	
@@ -127,7 +127,7 @@ class SendGridEmailMessage(EmailMessage, SendGridEmailMessageMixin):
 	message_id = property(get_message_id)
 
 
-class SendGridEmailMultiAlternatives(EmailMultiAlternatives, SendGridEmailMessageMixin):
+class SendGridEmailMultiAlternatives(SendGridEmailMessageMixin, EmailMultiAlternatives):
 	"""
 	Adapts Django's ``EmailMultiAlternatives`` for use with SendGrid.
 	"""
