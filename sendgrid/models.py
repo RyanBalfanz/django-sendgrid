@@ -396,3 +396,40 @@ class Event(models.Model):
 
 	def __unicode__(self):
 		return u"{0} - {1}".format(self.email_message, self.type)
+
+class ClickUrl(models.Model):
+	url = models.TextField()
+
+class ClickEvent(Event):
+	click_url = models.ForeignKey(ClickUrl)
+
+	class Meta:
+		verbose_name = ("Click Event")
+		verbose_name_plural = ("Click Events")
+
+	def __unicode__(self):
+		return u"{0} - {1}".format(super(self,ClickEvent).__unicode__(),url)
+
+	def get_url(self):
+		return self.click_url.url
+
+	def set_url(self,url):
+		self.click_url = ClickUrl.objects.get_or_create(url=url)[0]
+	url = property(get_url,set_url)
+
+class BounceReason(models.Model):
+	reason = models.TextField()
+
+class BounceType(models.Model):
+	type = models.CharField(max_length=32)
+
+class BounceEvent(Event):
+	status = models.CharField(max_length=16)
+	bounce_reason = models.ForeignKey(BounceReason)
+	bounce_type = models.ForeignKey(BounceType)
+	class Meta:
+		verbose_name = ("Bounce Event")
+		verbose_name_plural = ("Bounce Events")
+
+	def __unicode__(self):
+		return u"{0} - {1}".format(super(self,BounceEvent).__unicode__(),reason)
