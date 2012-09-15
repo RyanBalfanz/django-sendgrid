@@ -3,8 +3,11 @@ from __future__ import absolute_import
 from collections import defaultdict
 
 from django.core.mail import EmailMessage
+from django.core.urlresolvers import reverse
 from django.dispatch import receiver
 from django.test import TestCase
+from django.test.client import Client
+from django.utils.http import urlencode
 
 from .mail import get_sendgrid_connection
 from .mail import send_sendgrid_mail
@@ -12,7 +15,7 @@ from .message import SendGridEmailMessage
 from .message import SendGridEmailMultiAlternatives
 from .models import Argument
 from .models import Category
-from .models import Event, EmailMessage as EmailMessageModel
+from .models import Event, ClickEvent, EmailMessage as EmailMessageModel
 from .models import EventType
 from .models import UniqueArgument
 from .signals import sendgrid_email_sent
@@ -420,6 +423,28 @@ class UniqueArgumentTests(TestCase):
 		uniqueArgument = self.assert_unique_argument_exists(**expectedUniqueArgKeyValue)
 		self.assertTrue(uniqueArgument)
 
+class EventPostTests(TestCase):
+	fixtures = ["initial_data.json"]
+
+	def setUp(self):
+		self.client = Client()
+		self.email_message = EmailMessageModel.objects.create(to_email=TEST_RECIPIENTS[0], from_email=TEST_SENDER_EMAIL,message_id='123abc')
+
+	def test_click_event(self):
+		"""
+		Tests that a click event is received and stored with all the params
+		"""
+		event_data = {
+			"url": "http://www.sendgrid.com",
+			"event": "click",
+			"message_id": self.email_message.message_id,
+			"email": TEST_RECIPIENTS[0]
+		}
+
+		response = self.client.post(reverse("sendgrid_post_event",args=[]),data=urlencode(event_data),content_type="application/x-www-form-urlencoded; charset=utf-8")
+		self.assertEqual(ClickEvent.objects.count(),1)
+		click_event = ClickEvent.objects.all()[0]
+		self.assertEqual(click_event.url,event_data["url"])
 
 class EventTypeFixtureTests(TestCase):
 	fixtures = ["initial_data.json"]
