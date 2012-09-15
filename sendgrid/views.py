@@ -11,13 +11,15 @@ from django.views.decorators.csrf import csrf_exempt
 
 from .signals import sendgrid_event_recieved
 
-from sendgrid.models import EmailMessage, Event, EventType
-
+from sendgrid.models import EmailMessage, Event, ClickEvent, EventType
+from sendgrid.constants import EVENT_TYPES_EXTRA_FIELDS_MAP
 
 POST_EVENTS_RESPONSE_STATUS_CODE = getattr(settings, "POST_EVENT_HANDLER_RESPONSE_STATUS_CODE", 200)
 
 logger = logging.getLogger(__name__)
-
+EVENT_MODELS = {
+	"click": ClickEvent
+}
 def handle_single_event_request(request):
 	"""
 	Handles single event POST requests.
@@ -39,11 +41,19 @@ def handle_single_event_request(request):
 			response = HttpResponseNotFound()
 			response.write(msg.format(m=message_id) + "\n")
 		else:
-			eventObj = Event.objects.create(
-				email_message=emailMessage,
-				email=email,
-				type=EventType.objects.get(name=event.upper()),
-			)
+			event_params = {
+				"email_message": emailMessage,
+				"email": email,
+				"type":EventType.objects.get(name=event.upper()),
+			}
+			for key in EVENT_TYPES_EXTRA_FIELDS_MAP[event.upper()]:
+				value = eventData.get(key,None)
+				if value:
+					event_params[key] = value
+				else:
+					logger.debug("Expected post param {key} for Sendgrid Event {event} not found".format(key=key,event=event))
+			event_model = EVENT_MODELS[event] if event in EVENT_MODELS.keys() else Event
+			eventObj = event_model.objects.create(**event_params)
 
 			response = HttpResponse()
 	else:
