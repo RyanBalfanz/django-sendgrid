@@ -8,6 +8,10 @@ EVENT_SHORT_DESC_MAX_LENGTH = 32
 
 EVENT_FIELDS_MAP = ("event","category","email")
 
+EVENT_MODEL_NAMES = {
+	"click": "ClickEvent"
+}
+
 EVENT_TYPES_EXTRA_FIELDS_MAP = {
 	"UNKNOWN": None,
 	"DEFERRED": ("response", "attempt"),

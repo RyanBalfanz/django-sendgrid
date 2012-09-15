@@ -9,6 +9,7 @@ from django.test import TestCase
 from django.test.client import Client
 from django.utils.http import urlencode
 
+from .constants import EVENT_TYPES_EXTRA_FIELDS_MAP, EVENT_MODEL_NAMES
 from .mail import get_sendgrid_connection
 from .mail import send_sendgrid_mail
 from .message import SendGridEmailMessage
@@ -430,21 +431,26 @@ class EventPostTests(TestCase):
 		self.client = Client()
 		self.email_message = EmailMessageModel.objects.create(to_email=TEST_RECIPIENTS[0], from_email=TEST_SENDER_EMAIL,message_id='123abc')
 
-	def test_click_event(self):
+	def test_all_event_types(self):
 		"""
 		Tests that a click event is received and stored with all the params
 		"""
-		event_data = {
-			"url": "http://www.sendgrid.com",
-			"event": "click",
-			"message_id": self.email_message.message_id,
-			"email": TEST_RECIPIENTS[0]
-		}
+		for event_type, event_model_name in EVENT_MODEL_NAMES.items():
+			event_data = {
+				"event": event_type,
+				"message_id": self.email_message.message_id,
+				"email": TEST_RECIPIENTS[0]
+			}
 
-		response = self.client.post(reverse("sendgrid_post_event",args=[]),data=urlencode(event_data),content_type="application/x-www-form-urlencoded; charset=utf-8")
-		self.assertEqual(ClickEvent.objects.count(),1)
-		click_event = ClickEvent.objects.all()[0]
-		self.assertEqual(click_event.url,event_data["url"])
+			for key in EVENT_TYPES_EXTRA_FIELDS_MAP[event_type.upper()]:
+				event_data[key] = "test_param" + key			
+
+			response = self.client.post(reverse("sendgrid_post_event",args=[]),data=urlencode(event_data),content_type="application/x-www-form-urlencoded; charset=utf-8")
+			event_model = eval(EVENT_MODEL_NAMES[event_type]) if event_type in EVENT_MODEL_NAMES.keys() else Event
+			self.assertEqual(event_model.objects.count(),1)
+			click_event = event_model.objects.all()[0]
+			for key in EVENT_TYPES_EXTRA_FIELDS_MAP[event_type.upper()]:
+				self.assertEqual(click_event.__getattribute__(key),event_data[key])
 
 class EventTypeFixtureTests(TestCase):
 	fixtures = ["initial_data.json"]
