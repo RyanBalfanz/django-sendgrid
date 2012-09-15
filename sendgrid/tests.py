@@ -433,7 +433,8 @@ class EventPostTests(TestCase):
 
 	def test_all_event_types(self):
 		"""
-		Tests that a click event is received and stored with all the params
+		Tests all event types listed in EVENT_MODEL_NAMES
+		Checks that every EXTRA_FIELD is saved
 		"""
 		for event_type, event_model_name in EVENT_MODEL_NAMES.items():
 			event_data = {
