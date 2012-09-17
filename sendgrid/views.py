@@ -42,7 +42,7 @@ def handle_single_event_request(request):
 			event_params = {
 				"email_message": emailMessage,
 				"email": email,
-				"type":EventType.objects.get(name=event.upper()),
+				"event_type":EventType.objects.get(name=event.upper()),
 			}
 			for key in EVENT_TYPES_EXTRA_FIELDS_MAP[event.upper()]:
 				value = eventData.get(key,None)
