@@ -433,3 +433,10 @@ class BounceEvent(Event):
 
 	def __unicode__(self):
 		return u"{0} - {1}".format(super(self,BounceEvent).__unicode__(),reason)
+
+	def get_reason(self):
+		return self.bounce_reason.reason
+
+	def set_reason(self,reason):
+		self.bounce_reason = BounceUrl.objects.get_or_create(reason=reason)[0]
+	reason = property(get_reason,set_reason)
