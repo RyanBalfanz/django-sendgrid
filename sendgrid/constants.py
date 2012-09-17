@@ -6,10 +6,11 @@ ARGUMENT_DATA_TYPE_COMPLEX = 4
 ARGUMENT_DATA_TYPE_STRING = 5
 EVENT_SHORT_DESC_MAX_LENGTH = 32
 
-EVENT_FIELDS_MAP = ("event","category","email")
+EVENT_FIELDS = ("event","category","email")
 
 EVENT_MODEL_NAMES = {
-	"click": "ClickEvent"
+	"click": "ClickEvent",
+	"bounce": "BounceEvent"
 }
 
 EVENT_TYPES_EXTRA_FIELDS_MAP = {

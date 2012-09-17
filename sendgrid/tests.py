@@ -16,7 +16,7 @@ from .message import SendGridEmailMessage
 from .message import SendGridEmailMultiAlternatives
 from .models import Argument
 from .models import Category
-from .models import Event, ClickEvent, EmailMessage as EmailMessageModel
+from .models import Event, ClickEvent, BounceEvent, EmailMessage as EmailMessageModel
 from .models import EventType
 from .models import UniqueArgument
 from .signals import sendgrid_email_sent
