@@ -438,5 +438,5 @@ class BounceEvent(Event):
 		return self.bounce_reason.reason
 
 	def set_reason(self,reason):
-		self.bounce_reason = BounceUrl.objects.get_or_create(reason=reason)[0]
+		self.bounce_reason = BounceReason.objects.get_or_create(reason=reason)[0]
 	reason = property(get_reason,set_reason)
