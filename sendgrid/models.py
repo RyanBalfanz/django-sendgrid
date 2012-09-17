@@ -440,3 +440,10 @@ class BounceEvent(Event):
 	def set_reason(self,reason):
 		self.bounce_reason = BounceReason.objects.get_or_create(reason=reason)[0]
 	reason = property(get_reason,set_reason)
+
+	def get_type(self):
+		return self.bounce_type.type
+
+	def set_type(self,reason):
+		self.bounce_type = BounceType.objects.get_or_create(type=reason)[0]
+	type = property(get_type,set_type)
