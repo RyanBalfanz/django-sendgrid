@@ -10,15 +10,23 @@ EVENT_FIELDS = ("event","category","email")
 
 EVENT_MODEL_NAMES = {
 	"click": "ClickEvent",
-	"bounce": "BounceEvent"
+	"bounce": "BounceEvent",
+	"deferred":"DeferredEvent",
+	"dropped":"DroppedEvent",
+	"delivered":"DeliverredEvent",
+	"unknown":"Event",
+	"processed":"Event",
+	"open":"Event",
+	"unsubscribe":"Event",
+	"spamreport":"Event"
 }
 
 EVENT_TYPES_EXTRA_FIELDS_MAP = {
-	"UNKNOWN": None,
+	"UNKNOWN": (),
 	"DEFERRED": ("response", "attempt"),
 	"PROCESSED": (),
-	"DROPPED": ("reason"),
-	"DELIVERED": ("response"),
+	"DROPPED": ("reason",),
+	"DELIVERED": ("response",),
 	"BOUNCE": ("status", "reason", "type"),
 	"OPEN": (),
 	"CLICK": ("url", ),
