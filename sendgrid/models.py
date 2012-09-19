@@ -447,3 +447,13 @@ class BounceEvent(Event):
 	def set_type(self,reason):
 		self.bounce_type = BounceType.objects.get_or_create(type=reason)[0]
 	type = property(get_type,set_type)
+
+class DeferredEvent(Event):
+	response = models.TextField()
+	attempt = models.IntegerField()
+
+class DroppedEvent(Event):
+	reason = models.CharField(max_length=255)
+
+class DeliverredEvent(Event):
+	response = models.TextField()
