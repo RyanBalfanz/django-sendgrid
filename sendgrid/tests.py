@@ -16,7 +16,7 @@ from .message import SendGridEmailMessage
 from .message import SendGridEmailMultiAlternatives
 from .models import Argument
 from .models import Category
-from .models import Event, ClickEvent, BounceEvent, EmailMessage as EmailMessageModel
+from .models import Event, ClickEvent, BounceEvent, DeferredEvent, DroppedEvent, DeliverredEvent, EmailMessage as EmailMessageModel
 from .models import EventType
 from .models import UniqueArgument
 from .signals import sendgrid_email_sent
@@ -437,6 +437,7 @@ class EventPostTests(TestCase):
 		Checks that every EXTRA_FIELD is saved
 		"""
 		for event_type, event_model_name in EVENT_MODEL_NAMES.items():
+			print "Testing {0} event".format(event_type)
 			event_data = {
 				"event": event_type,
 				"message_id": self.email_message.message_id,
@@ -444,11 +445,15 @@ class EventPostTests(TestCase):
 			}
 
 			for key in EVENT_TYPES_EXTRA_FIELDS_MAP[event_type.upper()]:
-				event_data[key] = "test_param" + key			
-
-			response = self.client.post(reverse("sendgrid_post_event",args=[]),data=urlencode(event_data),content_type="application/x-www-form-urlencoded; charset=utf-8")
+				print "Adding Extra Field {0}".format(key)
+				if key == "attempt":
+					event_data[key] = 3
+				else:
+					event_data[key] = "test_param" + key
 			event_model = eval(EVENT_MODEL_NAMES[event_type]) if event_type in EVENT_MODEL_NAMES.keys() else Event
-			self.assertEqual(event_model.objects.count(),1)
+			event_count_before = event_model.objects.count()
+			response = self.client.post(reverse("sendgrid_post_event",args=[]),data=urlencode(event_data),content_type="application/x-www-form-urlencoded; charset=utf-8")
+			self.assertEqual(event_model.objects.count(),event_count_before+1)
 			click_event = event_model.objects.all()[0]
 			for key in EVENT_TYPES_EXTRA_FIELDS_MAP[event_type.upper()]:
 				self.assertEqual(click_event.__getattribute__(key),event_data[key])
