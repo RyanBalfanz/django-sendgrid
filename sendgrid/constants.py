@@ -9,16 +9,15 @@ EVENT_SHORT_DESC_MAX_LENGTH = 32
 EVENT_FIELDS = ("event","category","email")
 
 EVENT_MODEL_NAMES = {
-	"click": "ClickEvent",
-	"bounce": "BounceEvent",
-	"deferred":"DeferredEvent",
-	"dropped":"DroppedEvent",
-	"delivered":"DeliverredEvent",
-	"unknown":"Event",
-	"processed":"Event",
-	"open":"Event",
-	"unsubscribe":"Event",
-	"spamreport":"Event"
+	"CLICK": "ClickEvent",
+	"BOUNCE": "BounceEvent",
+	"DEFERRED":"DeferredEvent",
+	"DELIVERED":"DeliverredEvent",
+	"UNKNOWN":"Event",
+	"PROCESSED":"Event",
+	"OPEN":"Event",
+	"UNSUBSCRIBE":"Event",
+	"SPAMREPORT":"Event"
 }
 
 EVENT_TYPES_EXTRA_FIELDS_MAP = {

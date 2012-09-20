@@ -26,7 +26,7 @@ def handle_single_event_request(request):
 
 	# Parameters that are always passed with each event
 	email = eventData.get("email", None)
-	event = eventData.get("event", None)
+	event = eventData.get("event", None).upper()
 
 	message_id = eventData.get("message_id", None)
 	if message_id:
