@@ -50,4 +50,10 @@ Additional Information
 Preview
 -------
 
-.. image:: https://s3.amazonaws.com/django-sendgrid/change-email-message.png
+List View
+
+.. image:: https://s3.amazonaws.com/django-sendgrid/email_message_list.png
+
+Detail View
+
+.. image:: https://s3.amazonaws.com/django-sendgrid/email_message_detail.png
