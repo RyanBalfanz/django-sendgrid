@@ -170,10 +170,10 @@ class EmailMessageAdmin(admin.ModelAdmin):
 		return emailMessage.categories.count()
 
 	def first_event_type(self, emailMessage):
-		return emailMessage.first_event.type.name
+		return emailMessage.first_event.event_type.name
 
 	def latest_event_type(self, emailMessage):
-		return emailMessage.latest_event.type.name
+		return emailMessage.latest_event.event_type.name
 
 	def unique_argument_count(self, emailMessage):
 		return emailMessage.uniqueargument_set.count()
