@@ -107,7 +107,7 @@ class EventInline(admin.TabularInline):
 	model = Event
 	can_delete = False
 	extra = 0
-	readonly_fields = ("email", "type")
+	readonly_fields = ("email", "event_type")
 
 
 class UniqueArgumentsInLine(admin.TabularInline):
@@ -183,16 +183,16 @@ class EventAdmin(admin.ModelAdmin):
 	date_hierarchy = "creation_time"
 	list_display = (
 		"email_message",
-		"type",
+		"event_type",
 		"email",
 		"creation_time",
 		"last_modified_time",
 	)
-	list_filter = ("type",)
+	list_filter = ("event_type",)
 	search_fields = ("email_message__message_id",)
 	readonly_fields = (
 		"email_message",
-		"type",
+		"event_type",
 		"email",
 		"creation_time",
 		"last_modified_time",

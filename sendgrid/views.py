@@ -11,8 +11,8 @@ from django.views.decorators.csrf import csrf_exempt
 
 from .signals import sendgrid_event_recieved
 
-from sendgrid.models import EmailMessage, Event, EventType
-
+from sendgrid.models import EmailMessage, Event, ClickEvent, DeferredEvent, DroppedEvent, DeliverredEvent, BounceEvent, EventType
+from sendgrid.constants import EVENT_TYPES_EXTRA_FIELDS_MAP, EVENT_MODEL_NAMES
 
 POST_EVENTS_RESPONSE_STATUS_CODE = getattr(settings, "POST_EVENT_HANDLER_RESPONSE_STATUS_CODE", 200)
 
@@ -26,7 +26,7 @@ def handle_single_event_request(request):
 
 	# Parameters that are always passed with each event
 	email = eventData.get("email", None)
-	event = eventData.get("event", None)
+	event = eventData.get("event", None).upper()
 
 	message_id = eventData.get("message_id", None)
 	if message_id:
@@ -39,11 +39,19 @@ def handle_single_event_request(request):
 			response = HttpResponseNotFound()
 			response.write(msg.format(m=message_id) + "\n")
 		else:
-			eventObj = Event.objects.create(
-				email_message=emailMessage,
-				email=email,
-				type=EventType.objects.get(name=event.upper()),
-			)
+			event_params = {
+				"email_message": emailMessage,
+				"email": email,
+				"event_type":EventType.objects.get(name=event.upper()),
+			}
+			for key in EVENT_TYPES_EXTRA_FIELDS_MAP[event.upper()]:
+				value = eventData.get(key,None)
+				if value:
+					event_params[key] = value
+				else:
+					logger.debug("Expected post param {key} for Sendgrid Event {event} not found".format(key=key,event=event))
+			event_model = eval(EVENT_MODEL_NAMES[event]) if event in EVENT_MODEL_NAMES.keys() else Event
+			eventObj = event_model.objects.create(**event_params)
 
 			response = HttpResponse()
 	else:
