@@ -46,3 +46,8 @@ Additional Information
  - http://ryanbalfanz.github.com/django-sendgrid/
  - http://pypi.python.org/pypi/django-sendgrid
  - http://djangopackages.com/packages/p/django-sendgrid/
+
+Preview
+-------
+
+.. image:: https://s3.amazonaws.com/django-sendgrid/change-email-message.png
