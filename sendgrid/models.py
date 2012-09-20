@@ -395,7 +395,7 @@ class Event(models.Model):
 		verbose_name_plural = _("Events")
 
 	def __unicode__(self):
-		return u"{0} - {1}".format(self.email_message, self.type)
+		return u"{0} - {1}".format(self.email_message, self.event_type)
 
 class ClickUrl(models.Model):
 	url = models.TextField()
