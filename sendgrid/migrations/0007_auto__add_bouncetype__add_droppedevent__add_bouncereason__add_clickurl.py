@@ -25,14 +25,14 @@ class Migration(SchemaMigration):
         # Adding model 'BounceReason'
         db.create_table('sendgrid_bouncereason', (
             ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
-            ('reason', self.gf('django.db.models.fields.TextField')(unique=True)),
+            ('reason', self.gf('django.db.models.fields.TextField')()),
         ))
         db.send_create_signal('sendgrid', ['BounceReason'])
 
         # Adding model 'ClickUrl'
         db.create_table('sendgrid_clickurl', (
             ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
-            ('url', self.gf('django.db.models.fields.TextField')(unique=True)),
+            ('url', self.gf('django.db.models.fields.TextField')()),
         ))
         db.send_create_signal('sendgrid', ['ClickUrl'])
 
@@ -113,7 +113,7 @@ class Migration(SchemaMigration):
         'sendgrid.bouncereason': {
             'Meta': {'object_name': 'BounceReason'},
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'reason': ('django.db.models.fields.TextField', [], {'unique': 'True'})
+            'reason': ('django.db.models.fields.TextField', [], {})
         },
         'sendgrid.bouncetype': {
             'Meta': {'object_name': 'BounceType'},
@@ -135,7 +135,7 @@ class Migration(SchemaMigration):
         'sendgrid.clickurl': {
             'Meta': {'object_name': 'ClickUrl'},
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'url': ('django.db.models.fields.TextField', [], {'unique': 'True'})
+            'url': ('django.db.models.fields.TextField', [], {})
         },
         'sendgrid.deferredevent': {
             'Meta': {'object_name': 'DeferredEvent', '_ormbases': ['sendgrid.Event']},

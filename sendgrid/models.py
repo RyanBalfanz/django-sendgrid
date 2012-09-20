@@ -398,7 +398,7 @@ class Event(models.Model):
 		return u"{0} - {1}".format(self.email_message, self.type)
 
 class ClickUrl(models.Model):
-	url = models.TextField(unique=True)
+	url = models.TextField()
 
 class ClickEvent(Event):
 	click_url = models.ForeignKey(ClickUrl)
@@ -418,7 +418,7 @@ class ClickEvent(Event):
 	url = property(get_url,set_url)
 
 class BounceReason(models.Model):
-	reason = models.TextField(unique=True)
+	reason = models.TextField()
 
 class BounceType(models.Model):
 	type = models.CharField(max_length=32,unique=True)
