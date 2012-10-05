@@ -418,7 +418,7 @@ class ClickEvent(Event):
 		try:
 			self.click_url = ClickUrl.objects.get_or_create(url=url)[0]
 		except MultipleObjectsReturned:
-			self.click_url = ClickUrl.objects.filter(url=url)[0]
+			self.click_url = ClickUrl.objects.filter(url=url).order_by('id')[0]
 	url = property(get_url,set_url)
 
 class BounceReason(models.Model):
