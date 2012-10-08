@@ -13,6 +13,7 @@ EVENT_MODEL_NAMES = {
 	"BOUNCE": "BounceEvent",
 	"DEFERRED":"DeferredEvent",
 	"DELIVERED":"DeliverredEvent",
+	"DROPPED":"DroppedEvent",
 	"UNKNOWN":"Event",
 	"PROCESSED":"Event",
 	"OPEN":"Event",
