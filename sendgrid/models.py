@@ -4,6 +4,7 @@ import datetime
 import logging
 
 from django.conf import settings
+from django.core.exceptions import MultipleObjectsReturned
 from django.db import models
 from django.dispatch import receiver
 from django.utils.translation import ugettext_lazy as _
@@ -408,13 +409,16 @@ class ClickEvent(Event):
 		verbose_name_plural = ("Click Events")
 
 	def __unicode__(self):
-		return u"{0} - {1}".format(super(self,ClickEvent).__unicode__(),url)
+		return u"{0} - {1}".format(super(ClickEvent,self).__unicode__(),self.url)
 
 	def get_url(self):
 		return self.click_url.url
 
 	def set_url(self,url):
-		self.click_url = ClickUrl.objects.get_or_create(url=url)[0]
+		try:
+			self.click_url = ClickUrl.objects.get_or_create(url=url)[0]
+		except MultipleObjectsReturned:
+			self.click_url = ClickUrl.objects.filter(url=url).order_by('id')[0]
 	url = property(get_url,set_url)
 
 class BounceReason(models.Model):
