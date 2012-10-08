@@ -424,6 +424,7 @@ class UniqueArgumentTests(TestCase):
 		uniqueArgument = self.assert_unique_argument_exists(**expectedUniqueArgKeyValue)
 		self.assertTrue(uniqueArgument)
 
+from .utils.testutils import post_test_event
 class EventPostTests(TestCase):
 	fixtures = ["initial_data.json"]
 
@@ -438,25 +439,13 @@ class EventPostTests(TestCase):
 		"""
 		for event_type, event_model_name in EVENT_MODEL_NAMES.items():
 			print "Testing {0} event".format(event_type)
-			event_data = {
-				"event": event_type,
-				"message_id": self.email_message.message_id,
-				"email": TEST_RECIPIENTS[0]
-			}
-
-			for key in EVENT_TYPES_EXTRA_FIELDS_MAP[event_type.upper()]:
-				print "Adding Extra Field {0}".format(key)
-				if key == "attempt":
-					event_data[key] = 3
-				else:
-					event_data[key] = "test_param" + key
 			event_model = eval(EVENT_MODEL_NAMES[event_type]) if event_type in EVENT_MODEL_NAMES.keys() else Event
 			event_count_before = event_model.objects.count()
-			response = self.client.post(reverse("sendgrid_post_event",args=[]),data=urlencode(event_data),content_type="application/x-www-form-urlencoded; charset=utf-8")
+			response = post_test_event(event_type,event_model_name,self.email_message)
 			self.assertEqual(event_model.objects.count(),event_count_before+1)
-			click_event = event_model.objects.all()[0]
+			event = event_model.objects.filter(event_type__name=event_type)[0]
 			for key in EVENT_TYPES_EXTRA_FIELDS_MAP[event_type.upper()]:
-				self.assertEqual(click_event.__getattribute__(key),event_data[key])
+				self.assertNotEqual(event.__getattribute__(key),None)
 
 class EventTypeFixtureTests(TestCase):
 	fixtures = ["initial_data.json"]
