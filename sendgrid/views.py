@@ -1,7 +1,7 @@
 from __future__ import absolute_import
 
 import logging
-
+from datetime import datetime
 from django.conf import settings
 from django.http import HttpResponse
 from django.http import HttpResponseBadRequest
@@ -45,8 +45,12 @@ def handle_single_event_request(request):
 				"event_type":EventType.objects.get(name=event.upper()),
 			}
 			timestamp = eventData.get("timestamp",None)
+
 			if timestamp:
-				event_params["creation_time"] = timestamp
+				event_params["creation_time"] = datetime.utcfromtimestamp(float(timestamp))
+			else:
+				event_params["creation_time"] = datetime.utcnow()
+
 			for key in EVENT_TYPES_EXTRA_FIELDS_MAP[event.upper()]:
 				value = eventData.get(key,None)
 				if value:
