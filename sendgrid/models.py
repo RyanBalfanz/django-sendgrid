@@ -388,7 +388,7 @@ class Event(models.Model):
 	email_message = models.ForeignKey(EmailMessage)
 	email = models.EmailField()
 	event_type = models.ForeignKey(EventType)
-	creation_time = models.DateTimeField(unique=True)
+	creation_time = models.DateTimeField()
 	last_modified_time = models.DateTimeField(auto_now=True)
 
 	class Meta:
