@@ -8,14 +8,14 @@ from django.db import models
 class Migration(SchemaMigration):
 
     def forwards(self, orm):
-
+        #commented out the db part of this migration because it didn't actually make any changes but took forever. The purpose of this migration is for consitency in the models below
         # Changing field 'Event.creation_time'
-        db.alter_column('sendgrid_event', 'creation_time', self.gf('django.db.models.fields.DateTimeField')())
+        #db.alter_column('sendgrid_event', 'creation_time', self.gf('django.db.models.fields.DateTimeField')())
 
     def backwards(self, orm):
 
         # Changing field 'Event.creation_time'
-        db.alter_column('sendgrid_event', 'creation_time', self.gf('django.db.models.fields.DateTimeField')(auto_now_add=True))
+        #db.alter_column('sendgrid_event', 'creation_time', self.gf('django.db.models.fields.DateTimeField')(auto_now_add=True))
 
     models = {
         'sendgrid.argument': {
