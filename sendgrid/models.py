@@ -394,7 +394,6 @@ class Event(models.Model):
 	class Meta:
 		verbose_name = _("Event")
 		verbose_name_plural = _("Events")
-		unique_together = (('creation_time','event_type','email_message'))
 
 	def __unicode__(self):
 		return u"{0} - {1}".format(self.email_message, self.event_type)

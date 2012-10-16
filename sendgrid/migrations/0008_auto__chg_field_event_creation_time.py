@@ -11,14 +11,8 @@ class Migration(SchemaMigration):
 
         # Changing field 'Event.creation_time'
         db.alter_column('sendgrid_event', 'creation_time', self.gf('django.db.models.fields.DateTimeField')())
-        # Adding unique constraint on 'Event', fields ['email_message', 'creation_time', 'event_type']
-        db.create_unique('sendgrid_event', ['email_message_id', 'creation_time', 'event_type_id'])
-
 
     def backwards(self, orm):
-        # Removing unique constraint on 'Event', fields ['email_message', 'creation_time', 'event_type']
-        db.delete_unique('sendgrid_event', ['email_message_id', 'creation_time', 'event_type_id'])
-
 
         # Changing field 'Event.creation_time'
         db.alter_column('sendgrid_event', 'creation_time', self.gf('django.db.models.fields.DateTimeField')(auto_now_add=True))
@@ -136,7 +130,7 @@ class Migration(SchemaMigration):
             'email_message': ('django.db.models.fields.related.OneToOneField', [], {'related_name': "'to'", 'unique': 'True', 'primary_key': 'True', 'to': "orm['sendgrid.EmailMessage']"})
         },
         'sendgrid.event': {
-            'Meta': {'unique_together': "(('creation_time', 'event_type', 'email_message'),)", 'object_name': 'Event'},
+            'Meta': {'object_name': 'Event'},
             'creation_time': ('django.db.models.fields.DateTimeField', [], {}),
             'email': ('django.db.models.fields.EmailField', [], {'max_length': '75'}),
             'email_message': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['sendgrid.EmailMessage']"}),
