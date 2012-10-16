@@ -44,6 +44,9 @@ def handle_single_event_request(request):
 				"email": email,
 				"event_type":EventType.objects.get(name=event.upper()),
 			}
+			timestamp = eventData.get("timestamp",None)
+			if timestamp:
+				event_params["creation_time"] = timestamp
 			for key in EVENT_TYPES_EXTRA_FIELDS_MAP[event.upper()]:
 				value = eventData.get(key,None)
 				if value:
