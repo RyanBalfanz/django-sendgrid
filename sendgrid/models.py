@@ -429,8 +429,8 @@ class BounceType(models.Model):
 
 class BounceEvent(Event):
 	status = models.CharField(max_length=16)
-	bounce_reason = models.ForeignKey(BounceReason)
-	bounce_type = models.ForeignKey(BounceType)
+	bounce_reason = models.ForeignKey(BounceReason,null=True)
+	bounce_type = models.ForeignKey(BounceType,null=True)
 	class Meta:
 		verbose_name = ("Bounce Event")
 		verbose_name_plural = ("Bounce Events")
