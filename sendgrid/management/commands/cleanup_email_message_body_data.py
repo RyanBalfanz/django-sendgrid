@@ -39,7 +39,6 @@ class Command(BaseCommand):
 
 	def handle(self, *args, **kwargs):
 		nowUTC = now_utc()
-		todayUTC = nowUTC.date()
 
 		if all([kwargs["days"], kwargs["weeks"]]):
 			raise CommandError("Ambiguous arguments given")
