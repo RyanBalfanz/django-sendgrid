@@ -121,6 +121,7 @@ INSTALLED_APPS = (
 	# Uncomment the next line to enable admin documentation:
 	# 'django.contrib.admindocs',
 	'south',
+	'django_nose',
 	'sendgrid',
 	'main',
 )
@@ -170,6 +171,8 @@ SENDGRID_EMAIL_HOST = "smtp.sendgrid.net"
 SENDGRID_EMAIL_PORT = 587
 SENDGRID_EMAIL_USERNAME = os.getenv("SENDGRID_EMAIL_USERNAME")
 SENDGRID_EMAIL_PASSWORD = os.getenv("SENDGRID_EMAIL_PASSWORD")
+
+TEST_RUNNER = "django_nose.NoseTestSuiteRunner"
 
 try:
 	from settings_local import *
