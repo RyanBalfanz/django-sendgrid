@@ -11,11 +11,6 @@ from sendgrid.models import EmailMessageBodyData
 ONE_DAY = datetime.timedelta(days=1)
 ONE_WEEK = datetime.timedelta(weeks=1)
 
-def filter_email_messages_created_before(start):
-	return EmailMessage.objects.filter(
-		creation_time__lt=start,
-	)
-
 
 class Command(BaseCommand):
 	help = "Purges old EmailMessageBodyData objects"
@@ -62,7 +57,9 @@ class Command(BaseCommand):
 		if kwargs["as_date"] == True:
 			purgeDate = purgeDate.date()
 
-		emailMessages = filter_email_messages_created_before(purgeDate)
+		emailMessages = EmailMessage.objects.filter(
+			creation_time__lt=purgeDate,
+		)
 		numEmailMessages = emailMessages.count()
 
 		prompt = "Delete {m} objects created before {date} ({n} {t} ago)?"
