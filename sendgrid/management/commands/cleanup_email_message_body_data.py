@@ -6,7 +6,8 @@ from django.utils.timezone import now as now_utc
 
 from sendgrid.models import EmailMessage
 from sendgrid.models import EmailMessageBodyData
-
+from sendgrid.utils.cleanup import cleanup_email_message_body_data
+from sendgrid.utils.cleanup import delete_email_message_body_data
 
 ONE_DAY = datetime.timedelta(days=1)
 ONE_WEEK = datetime.timedelta(weeks=1)
@@ -19,11 +20,6 @@ class Command(BaseCommand):
 		default=False,
 		action="store_true",
 		help="Sets the number of days"
-		),
-	make_option("--fake",
-		default=False,
-		action="store_true",
-		help="Fakes the operation"
 		),
 	make_option("--days",
 		default=0,
@@ -38,48 +34,6 @@ class Command(BaseCommand):
 	)
 
 	def handle(self, *args, **kwargs):
-		nowUTC = now_utc()
-
-		if all([kwargs["days"], kwargs["weeks"]]):
-			raise CommandError("Ambiguous arguments given")
-
-		if "days" in kwargs:
-			delta = kwargs["days"]*ONE_DAY
-			deltaType = "days"
-		elif "weeks" in kwargs:
-			delta = kwargs["weeks"]*ONE_WEEK
-			deltaType = "weeks"
-		else:
-			raise CommandError
-
-		purgeDate = nowUTC - delta
-		if kwargs["as_date"] == True:
-			purgeDate = purgeDate.date()
-
-		emailMessages = EmailMessage.objects.filter(
-			creation_time__lt=purgeDate,
-		)
-		numEmailMessages = emailMessages.count()
-
-		prompt = "Delete {m} objects created before {date} ({n} {t} ago)?"
-		print prompt.format(
-			m=numEmailMessages,
-			date=purgeDate,
-			n=kwargs["days"] if deltaType == "days" else kwargs["weeks"],
-			t=deltaType,
-		)
-
-		fake = kwargs["fake"]
-		for emailMessage in emailMessages:
-			try:
-				bodyDataObject = emailMessage.body
-			except EmailMessageBodyData.DoesNotExist:
-				print "EmailMessage {em} has no EmailMessageBodyData".format(em=emailMessage)
-				continue
-
-			if not fake:
-				bodyDataObject.delete()
-			print "{prefix}Deleted body data for {em}".format(
-				em=emailMessage,
-				prefix="(FAKE) " if fake else ""
-			)
+		days = kwargs.get("days", None)
+		weeks = kwargs.get("weeks", None)
+		return cleanup_email_message_body_data(days=days, weeks=weeks)
