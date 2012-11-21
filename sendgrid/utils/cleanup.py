@@ -52,6 +52,7 @@ def cleanup_email_message_body_data(*args, **kwargs):
 	0
 	"""
 	if all(kwargs.values()):
+		# datetime.timedelta will actually handle multiple keyword args just fine
 		raise Exception("Ambiguous arguments given")
 
 	start = now_utc()
