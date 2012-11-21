@@ -187,7 +187,7 @@ class EmailMessage(models.Model):
 	to_email = models.CharField(max_length=EMAIL_MESSAGE_TO_EMAIL_MAX_LENGTH, db_index=True, help_text="Primiary recipient's e-mail")
 	category = models.CharField(max_length=EMAIL_MESSAGE_CATEGORY_MAX_LENGTH, blank=True, null=True, help_text="Primary SendGrid category")
 	response = models.IntegerField(blank=True, null=True, help_text="Response received from SendGrid after sending")
-	creation_time = models.DateTimeField(auto_now_add=True)
+	creation_time = models.DateTimeField(auto_now_add=True, db_index=True)
 	last_modified_time = models.DateTimeField(auto_now=True)
 	categories = models.ManyToManyField(Category)
 	arguments = models.ManyToManyField(Argument, through="UniqueArgument")
