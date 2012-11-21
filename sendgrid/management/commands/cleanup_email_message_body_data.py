@@ -16,25 +16,6 @@ def filter_email_messages_created_before(start):
 		creation_time__lt=start,
 	)
 
-# def filter_email_messages_in_range(start, end):
-# 	return EmailMessage.objects.filter(
-# 		creation_time__gte=start,
-# 		creation_time__lte=end
-# 	)
-
-# def filter_email_message_body_data_objects_created_in_range(start, end):
-# 	return EmailMessageBodyData.filter(
-# 		creation_time__gte=start,
-# 		creation_time__lte=end)
-
-# def filter_email_message_body_data_objects_created_since(start):
-# 	filteredObjects = EmailMessageBodyData.filter(**filters)
-
-# 	return baseObjects.filter(creation_time__gte=start)
-
-# def filter_email_message_body_data_objects(**filters):
-# 	filteredObjects = EmailMessageBodyData.filter(**filters)
-
 
 class Command(BaseCommand):
 	help = "Purges old EmailMessageBodyData objects"
