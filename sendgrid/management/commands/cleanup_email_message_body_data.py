@@ -20,22 +20,22 @@ def filter_email_messages_created_before(start):
 class Command(BaseCommand):
 	help = "Purges old EmailMessageBodyData objects"
 	option_list = BaseCommand.option_list + (
-	make_option('--as-date',
+	make_option("--as-date",
 		default=False,
 		action="store_true",
 		help="Sets the number of days"
 		),
-	make_option('--fake',
+	make_option("--fake",
 		default=False,
 		action="store_true",
 		help="Fakes the operation"
 		),
-	make_option('--days',
+	make_option("--days",
 		default=0,
 		type="int",
 		help="Sets the number of days"
 		),
-	make_option('--weeks',
+	make_option("--weeks",
 		default=0,
 		type="int",
 		help="Sets the number of weeks"
