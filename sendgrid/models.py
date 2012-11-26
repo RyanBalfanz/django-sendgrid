@@ -198,37 +198,24 @@ class EmailMessage(models.Model):
 		verbose_name_plural = _("Email Messages")
 
 	@classmethod
-	def from_event(self, event):
+	def from_event(self, event_dict):
 		"""
-		Returns a new EmailMessage instance derived from an Event.
-		>>> event = Event()
-		>>> emailMessage = EmailMessage.from_event(event)
+		Returns a new EmailMessage instance derived from an Event Dictionary.
 		"""
-		if not isinstance(event, Event):
-			raise TypeError
-
-
 
 		emailMessageSpec = {
-			message_id=eventDict.get("message_id", None),
-			from_email=""
-			to_email=eventDict["email"][0],
-			# category=eventDict.get("message_id", None),
-			response=None
+			"message_id": event_dict.get("message_id", None),
+			"from_email": "",
+			"to_email": event_dict["email"][0],
+			"category": event_dict.get("category", None),
+			"response": None
 		}
-		emailMessage = EmailMessage(**emailMessageSpec)
+		emailMessage = EmailMessage.objects.create(**emailMessageSpec)
 
-		for c, categoryItem in enumerate(eventDict["category"]):
-			if c == 0:
-				emailMessageSpec["category"] = categoryItem
-			category = Category.objects.get_or_create(
-				name=categoryItem
-			)
-			emailMessage.categories.create(
-				category=category
-			)
+		for c, categoryItem in enumerate(event_dict.getlist("category")):
+			emailMessage.categories.get_or_create(name=categoryItem)
 
-		# for argName, argValue in eventDict["unique_args"].iteritems():
+		# for argName, argValue in event_dict["unique_args"].iteritems():
 		# 	argument = Argument.objects.get_or_create(
 		# 		key=argName
 		# 	)
@@ -237,8 +224,6 @@ class EmailMessage(models.Model):
 		# 		email_message=self,
 		# 		data=argValue
 		# 	)
-
-		emailMessage = EmailMessage(**emailMessageSpec)
 
 		return emailMessage
 
