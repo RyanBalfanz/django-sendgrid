@@ -27,46 +27,39 @@ def handle_single_event_request(request):
 	# Parameters that are always passed with each event
 	email = eventData.get("email", None)
 	event = eventData.get("event", None).upper()
-
+	category = eventData.get("category", None)
 	message_id = eventData.get("message_id", None)
 	if message_id:
-		try:
-			emailMessage = EmailMessage.objects.get(message_id=message_id)
-		except EmailMessage.DoesNotExist:
-			msg = "EmailMessage with message_id {m} does not exist"
-			logger.exception(msg.format(m=message_id))
+		emailMessage, created = EmailMessage.objects.get_or_create(message_id=message_id, category=category)
 
-			response = HttpResponseNotFound()
-			response.write(msg.format(m=message_id) + "\n")
+		event_type = EventType.objects.get(name=event.upper())
+		event_params = {
+			"email_message": emailMessage,
+			"email": email,
+			"event_type":event_type,
+		}
+		timestamp = eventData.get("timestamp",None)
+
+		if timestamp:
+			event_params["creation_time"] = datetime.utcfromtimestamp(float(timestamp))
 		else:
-			event_type = EventType.objects.get(name=event.upper())
-			event_params = {
-				"email_message": emailMessage,
-				"email": email,
-				"event_type":event_type,
-			}
-			timestamp = eventData.get("timestamp",None)
+			event_params["creation_time"] = datetime.utcnow()
 
-			if timestamp:
-				event_params["creation_time"] = datetime.utcfromtimestamp(float(timestamp))
-			else:
-				event_params["creation_time"] = datetime.utcnow()
+		#enforce unique constraint on email_message,event_type,creation_time
+		#this should be done at the db level but since it was added later it would have needed a data migration that either deleted or updated duplicate events
+		#this also might need a combined index, but django orm doesn't have this feature yet: https://code.djangoproject.com/ticket/5805
+		existing_events = Event.objects.filter(email_message=emailMessage,event_type=event_type,creation_time=event_params["creation_time"])
+		if existing_events.count() == 0:
+			for key in EVENT_TYPES_EXTRA_FIELDS_MAP[event.upper()]:
+				value = eventData.get(key,None)
+				if value:
+					event_params[key] = value
+				else:
+					logger.debug("Expected post param {key} for Sendgrid Event {event} not found".format(key=key,event=event))
+			event_model = eval(EVENT_MODEL_NAMES[event]) if event in EVENT_MODEL_NAMES.keys() else Event
+			eventObj = event_model.objects.create(**event_params)
 
-			#enforce unique constraint on email_message,event_type,creation_time
-			#this should be done at the db level but since it was added later it would have needed a data migration that either deleted or updated duplicate events
-			#this also might need a combined index, but django orm doesn't have this feature yet: https://code.djangoproject.com/ticket/5805
-			existing_events = Event.objects.filter(email_message=emailMessage,event_type=event_type,creation_time=event_params["creation_time"])
-			if existing_events.count() == 0:
-				for key in EVENT_TYPES_EXTRA_FIELDS_MAP[event.upper()]:
-					value = eventData.get(key,None)
-					if value:
-						event_params[key] = value
-					else:
-						logger.debug("Expected post param {key} for Sendgrid Event {event} not found".format(key=key,event=event))
-				event_model = eval(EVENT_MODEL_NAMES[event]) if event in EVENT_MODEL_NAMES.keys() else Event
-				eventObj = event_model.objects.create(**event_params)
-
-			response = HttpResponse()
+		response = HttpResponse()
 	else:
 		msg = "Expected 'message_id' was not found in event data"
 		logger.exception(msg)

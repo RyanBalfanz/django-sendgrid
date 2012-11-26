@@ -1,4 +1,4 @@
-Django==1.4.1
+Django==1.4.2
 South==0.7.5
 distribute==0.6.24
 virtualenv==1.6.4
