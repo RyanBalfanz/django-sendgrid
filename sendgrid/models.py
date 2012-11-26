@@ -197,6 +197,51 @@ class EmailMessage(models.Model):
 		verbose_name = _("Email Message")
 		verbose_name_plural = _("Email Messages")
 
+	@classmethod
+	def from_event(self, event):
+		"""
+		Returns a new EmailMessage instance derived from an Event.
+		>>> event = Event()
+		>>> emailMessage = EmailMessage.from_event(event)
+		"""
+		if not isinstance(event, Event):
+			raise TypeError
+
+
+
+		emailMessageSpec = {
+			message_id=eventDict.get("message_id", None),
+			from_email=""
+			to_email=eventDict["email"][0],
+			# category=eventDict.get("message_id", None),
+			response=None
+		}
+		emailMessage = EmailMessage(**emailMessageSpec)
+
+		for c, categoryItem in enumerate(eventDict["category"]):
+			if c == 0:
+				emailMessageSpec["category"] = categoryItem
+			category = Category.objects.get_or_create(
+				name=categoryItem
+			)
+			emailMessage.categories.create(
+				category=category
+			)
+
+		# for argName, argValue in eventDict["unique_args"].iteritems():
+		# 	argument = Argument.objects.get_or_create(
+		# 		key=argName
+		# 	)
+		# 	uniqueArg = UniqueArgument.objecs.create(
+		# 		argument=argument,
+		# 		email_message=self,
+		# 		data=argValue
+		# 	)
+
+		emailMessage = EmailMessage(**emailMessageSpec)
+
+		return emailMessage
+
 	def __unicode__(self):
 		return "{0}".format(self.message_id)
 
