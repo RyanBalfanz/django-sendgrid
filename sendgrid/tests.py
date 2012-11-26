@@ -62,6 +62,7 @@ class SendGridEventTest(TestCase):
 			"message_id": 'a5df', 
 			"email" : self.email.from_email,
 			"event" : "OPEN",
+			"category": ["test_category", "another_test_category"]
 			}
 		request = self.rf.post('/sendgrid/events',post_data)
 		handle_single_event_request(request)
@@ -76,6 +77,7 @@ class SendGridEventTest(TestCase):
 		post_data = {
 			"email" : self.email.from_email,
 			"event" : "OPEN",
+			"category": "test_category"
 			}
 		request = self.rf.post('/sendgrid/events',post_data)
 		response = handle_single_event_request(request)
