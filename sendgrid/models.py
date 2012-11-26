@@ -204,10 +204,8 @@ class EmailMessage(models.Model):
 		>>> event = Event()
 		>>> emailMessage = EmailMessage.from_event(event)
 		"""
-		if not isinstance(event, Event):
+		if not isinstance(event, dict):
 			raise TypeError
-
-
 
 		emailMessageSpec = {
 			message_id=eventDict.get("message_id", None),
