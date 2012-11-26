@@ -202,18 +202,19 @@ class EmailMessage(models.Model):
 		"""
 		Returns a new EmailMessage instance derived from an Event Dictionary.
 		"""
-
+		categories = [value for key,value in event_dict.items() if 'category' in key]
 		emailMessageSpec = {
 			"message_id": event_dict.get("message_id", None),
 			"from_email": "",
 			"to_email": event_dict["email"][0],
-			"category": event_dict.get("category", None),
+			"category": categories[0],
 			"response": None
 		}
 		emailMessage = EmailMessage.objects.create(**emailMessageSpec)
-
-		for c, categoryItem in enumerate(event_dict.getlist("category")):
-			emailMessage.categories.get_or_create(name=categoryItem)
+		
+		for category in categories:
+			categoryObj,created = Category.objects.get_or_create(name=category)
+			emailMessage.categories.add(categoryObj)
 
 		# for argName, argValue in event_dict["unique_args"].iteritems():
 		# 	argument = Argument.objects.get_or_create(
@@ -224,7 +225,7 @@ class EmailMessage(models.Model):
 		# 		email_message=self,
 		# 		data=argValue
 		# 	)
-
+		
 		return emailMessage
 
 	def __unicode__(self):
