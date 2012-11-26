@@ -62,6 +62,7 @@ class SendGridEventTest(TestCase):
 			"message_id": 'a5df', 
 			"email" : self.email.from_email,
 			"event" : "OPEN",
+			"category": ["test_category", "another_test_category"]
 			}
 		request = self.rf.post('/sendgrid/events',post_data)
 		handle_single_event_request(request)
@@ -76,13 +77,14 @@ class SendGridEventTest(TestCase):
 		post_data = {
 			"email" : self.email.from_email,
 			"event" : "OPEN",
+			"category": "test_category"
 			}
 		request = self.rf.post('/sendgrid/events',post_data)
 		response = handle_single_event_request(request)
-		#no event created
-		self.assertEqual(Event.objects.count(),event_count)
-		#no email created
-		self.assertEqual(EmailMessageModel.objects.count(),email_count)
+		#event created
+		self.assertEqual(Event.objects.count(),event_count + 1)
+		#email created
+		self.assertEqual(EmailMessageModel.objects.count(),email_count + 1)
 
 
 class SendGridEmailTest(TestCase):

@@ -30,29 +30,32 @@ def handle_single_event_request(request):
 	category = eventData.get("category", None)
 	message_id = eventData.get("message_id", None)
 	if message_id:
-		emailMessage, created = EmailMessage.objects.get_or_create(message_id=message_id, category=category)
-
-		event_params = {
-			"email_message": emailMessage,
-			"email": email,
-			"event_type":EventType.objects.get(name=event.upper()),
-		}
-		for key in EVENT_TYPES_EXTRA_FIELDS_MAP[event.upper()]:
-			value = eventData.get(key,None)
-			if value:
-				event_params[key] = value
-			else:
-				logger.debug("Expected post param {key} for Sendgrid Event {event} not found".format(key=key,event=event))
-		event_model = eval(EVENT_MODEL_NAMES[event]) if event in EVENT_MODEL_NAMES.keys() else Event
-		eventObj = event_model.objects.create(**event_params)
-
-		response = HttpResponse()
+		try:
+			emailMessage = EmailMessage.objects.get(message_id=message_id)
+		except EmailMessage.DoesNotExist:
+			emailMessage = EmailMessage.from_event(eventData)
 	else:
 		msg = "Expected 'message_id' was not found in event data"
-		logger.exception(msg)
+		logger.debug(msg)
+		emailMessage = EmailMessage.from_event(eventData)
 
-		response = HttpResponseBadRequest()
-		response.write(msg + "\n")
+
+	event_params = {
+		"email_message": emailMessage,
+		"email": email,
+		"event_type":EventType.objects.get(name=event.upper()),
+	}
+	for key in EVENT_TYPES_EXTRA_FIELDS_MAP[event.upper()]:
+		value = eventData.get(key,None)
+		if value:
+			event_params[key] = value
+		else:
+			logger.debug("Expected post param {key} for Sendgrid Event {event} not found".format(key=key,event=event))
+	event_model = eval(EVENT_MODEL_NAMES[event]) if event in EVENT_MODEL_NAMES.keys() else Event
+	eventObj = event_model.objects.create(**event_params)
+
+	response = HttpResponse()
+	
 
 	return response
 
