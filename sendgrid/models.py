@@ -213,7 +213,6 @@ class EmailMessage(models.Model):
 			message_id=eventDict.get("message_id", None),
 			from_email=""
 			to_email=eventDict["email"][0],
-			# category=eventDict.get("message_id", None),
 			response=None
 		}
 		emailMessage = EmailMessage(**emailMessageSpec)
@@ -228,17 +227,7 @@ class EmailMessage(models.Model):
 				category=category
 			)
 
-		# for argName, argValue in eventDict["unique_args"].iteritems():
-		# 	argument = Argument.objects.get_or_create(
-		# 		key=argName
-		# 	)
-		# 	uniqueArg = UniqueArgument.objecs.create(
-		# 		argument=argument,
-		# 		email_message=self,
-		# 		data=argValue
-		# 	)
-
-		emailMessage = EmailMessage(**emailMessageSpec)
+		# TODO: Add unique args
 
 		return emailMessage
 
