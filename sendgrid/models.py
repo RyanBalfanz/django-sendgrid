@@ -18,6 +18,7 @@ from sendgrid.constants import (
 	ARGUMENT_DATA_TYPE_FLOAT,
 	ARGUMENT_DATA_TYPE_COMPLEX,
 	ARGUMENT_DATA_TYPE_STRING,
+	UNIQUE_ARGS_STORED_FOR_EVENTS_WITHOUT_MESSAGE_ID,
 )
 from sendgrid.signals import sendgrid_email_sent
 
@@ -216,15 +217,19 @@ class EmailMessage(models.Model):
 			categoryObj,created = Category.objects.get_or_create(name=category)
 			emailMessage.categories.add(categoryObj)
 
-		# for argName, argValue in event_dict["unique_args"].iteritems():
-		# 	argument = Argument.objects.get_or_create(
-		# 		key=argName
-		# 	)
-		# 	uniqueArg = UniqueArgument.objecs.create(
-		# 		argument=argument,
-		# 		email_message=self,
-		# 		data=argValue
-		# 	)
+		uniqueArgs = {}
+		for key in UNIQUE_ARGS_STORED_FOR_EVENTS_WITHOUT_MESSAGE_ID:
+			uniqueArgs[key] = event_dict.get(key)
+
+		for argName, argValue in uniqueArgs.items():
+			argument,_ = Argument.objects.get_or_create(
+				key=argName
+			)
+			uniqueArg = UniqueArgument.objects.create(
+				argument=argument,
+				email_message=emailMessage,
+				data=argValue
+			)
 		
 		return emailMessage
 

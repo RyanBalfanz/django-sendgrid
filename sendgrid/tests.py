@@ -9,7 +9,7 @@ from django.test import TestCase
 from django.test.client import Client
 from django.utils.http import urlencode
 
-from .constants import EVENT_TYPES_EXTRA_FIELDS_MAP, EVENT_MODEL_NAMES
+from .constants import EVENT_TYPES_EXTRA_FIELDS_MAP, EVENT_MODEL_NAMES, UNIQUE_ARGS_STORED_FOR_EVENTS_WITHOUT_MESSAGE_ID
 from .mail import get_sendgrid_connection
 from .mail import send_sendgrid_mail
 from .message import SendGridEmailMessage
@@ -62,8 +62,11 @@ class SendGridEventTest(TestCase):
 			"message_id": 'a5df', 
 			"email" : self.email.to[0],
 			"event" : "OPEN",
-			"category": ["test_category", "another_test_category"]
-			}
+			"category": ["test_category", "another_test_category"],
+		}
+		for key in UNIQUE_ARGS_STORED_FOR_EVENTS_WITHOUT_MESSAGE_ID:
+			post_data[key] = key+"_value"
+
 		request = self.rf.post('/sendgrid/events',post_data)
 		handle_single_event_request(request)
 		#event created
@@ -72,8 +75,14 @@ class SendGridEventTest(TestCase):
 		self.assertEqual(EmailMessageModel.objects.count(),email_count + 1)
 
 		event = Event.objects.get(email=post_data['email'])
+		emailMessage = event.email_message
+
 		#check to_email
 		self.assertEqual(event.email_message.to_email, event.email)
+
+		#check unique args
+		for key in UNIQUE_ARGS_STORED_FOR_EVENTS_WITHOUT_MESSAGE_ID:
+			self.assertEqual(post_data[key],emailMessage.uniqueargument_set.get(argument__key=key).data)
 
 	def test_event_no_message_id(self):
 		event_count = Event.objects.count()
@@ -81,18 +90,27 @@ class SendGridEventTest(TestCase):
 		post_data = {
 			"email" : self.email.to[0],
 			"event" : "OPEN",
-			"category": "test_category"
-			}
+			"category": "test_category",
+		}
+		for key in UNIQUE_ARGS_STORED_FOR_EVENTS_WITHOUT_MESSAGE_ID:
+			post_data[key] = key+"_value"
+
 		request = self.rf.post('/sendgrid/events',post_data)
 		response = handle_single_event_request(request)
 		#event created
 		self.assertEqual(Event.objects.count(),event_count + 1)
 		#email created
 		self.assertEqual(EmailMessageModel.objects.count(),email_count + 1)
-		
+
 		event = Event.objects.get(email=post_data['email'])
+		emailMessage = event.email_message
+
 		#check to_email
 		self.assertEqual(event.email_message.to_email, event.email)
+
+		#check unique args
+		for key in UNIQUE_ARGS_STORED_FOR_EVENTS_WITHOUT_MESSAGE_ID:
+			self.assertEqual(post_data[key],emailMessage.uniqueargument_set.get(argument__key=key).data)
 
 
 class SendGridEmailTest(TestCase):
