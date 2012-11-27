@@ -112,6 +112,13 @@ class SendGridEventTest(TestCase):
 		for key in UNIQUE_ARGS_STORED_FOR_EVENTS_WITHOUT_MESSAGE_ID:
 			self.assertEqual(post_data[key],emailMessage.uniqueargument_set.get(argument__key=key).data)
 
+		#post another event
+		request = self.rf.post('/sendgrid/events',post_data)
+		response = handle_single_event_request(request)
+
+		#should be same email_count
+		self.assertEqual(EmailMessageModel.objects.count(),email_count + 1)
+
 
 class SendGridEmailTest(TestCase):
 	"""docstring for SendGridEmailTest"""
