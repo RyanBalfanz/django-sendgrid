@@ -131,3 +131,38 @@ def listener(request, statusCode=POST_EVENTS_RESPONSE_STATUS_CODE):
 		response.status_code = 405
 
 	return clean_response(response)
+
+def download_attachments(request, email_message_id):
+	"""
+	Returns an HttpResponse containing the zipped attachments.
+	"""
+	import zipfile
+	from contextlib import closing
+	from django.shortcuts import get_object_or_404
+	from django.utils import simplejson as json
+
+	from sendgrid.utils import zip_files
+
+	emailMessage = get_object_or_404(EmailMessage, message_id=email_message_id)
+
+	emailMessageDataString = emailMessage.attachments_data
+	# TODO: This is a little hacky
+	emailMessageDataStringJSONSafe = (emailMessageDataString
+		.replace('(', '[')
+		.replace(')', ']')
+		.replace("'", '"')
+		.replace("None", '"text/plain"')
+	)
+	obj = json.loads(emailMessageDataStringJSONSafe)
+
+	files = {}
+	for name, content, contentType in obj:
+		files[name] = content
+
+	response = HttpResponse(mimetype="application/x-zip")
+	response["Content-Disposition"] = "attachment; filename={filename}".format(filename="attachment.zip")
+	with closing(zip_files(files)) as zio:
+		response.write(zio.getvalue())
+
+	return response
+

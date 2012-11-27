@@ -4,6 +4,11 @@ import logging
 import time
 import urllib
 import urllib2
+try:
+	import cStringIO as StringIO
+except ImportError:
+	import StringIO
+
 
 from django.conf import settings
 from django.core import mail
@@ -137,3 +142,22 @@ def delete_unsubscribes(email, start_date=None, end_date=None):
 	content = response.read()
 
 	return content
+
+def zip_files(files):
+	"""
+	Returns a zipped file-like object containing the given files.
+	>>> csv1 = "a,b,c"
+	>>> csv2 = "a,b,c"
+	>>> files = { "1.csv": csv1, "2.csv": csv2 }
+	>>> zip = zip_files(files)
+	"""
+	import zipfile
+	from contextlib import closing
+
+	buffer = StringIO.StringIO()
+	with zipfile.ZipFile(buffer, "w", zipfile.ZIP_DEFLATED) as zio:
+		for name, content in files.iteritems():
+			zio.writestr(name, content)
+		buffer.flush()
+
+	return buffer
