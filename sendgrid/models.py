@@ -206,7 +206,7 @@ class EmailMessage(models.Model):
 		emailMessageSpec = {
 			"message_id": event_dict.get("message_id", None),
 			"from_email": "",
-			"to_email": event_dict["email"][0],
+			"to_email": event_dict.get("email"),
 			"category": categories[0],
 			"response": None
 		}

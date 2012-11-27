@@ -60,7 +60,7 @@ class SendGridEventTest(TestCase):
 		email_count = EmailMessageModel.objects.count()
 		post_data = {
 			"message_id": 'a5df', 
-			"email" : self.email.from_email,
+			"email" : self.email.to[0],
 			"event" : "OPEN",
 			"category": ["test_category", "another_test_category"]
 			}
@@ -71,11 +71,15 @@ class SendGridEventTest(TestCase):
 		#email created
 		self.assertEqual(EmailMessageModel.objects.count(),email_count + 1)
 
+		event = Event.objects.get(email=post_data['email'])
+		#check to_email
+		self.assertEqual(event.email_message.to_email, event.email)
+
 	def test_event_no_message_id(self):
 		event_count = Event.objects.count()
 		email_count = EmailMessageModel.objects.count()
 		post_data = {
-			"email" : self.email.from_email,
+			"email" : self.email.to[0],
 			"event" : "OPEN",
 			"category": "test_category"
 			}
@@ -85,6 +89,10 @@ class SendGridEventTest(TestCase):
 		self.assertEqual(Event.objects.count(),event_count + 1)
 		#email created
 		self.assertEqual(EmailMessageModel.objects.count(),email_count + 1)
+		
+		event = Event.objects.get(email=post_data['email'])
+		#check to_email
+		self.assertEqual(event.email_message.to_email, event.email)
 
 
 class SendGridEmailTest(TestCase):
