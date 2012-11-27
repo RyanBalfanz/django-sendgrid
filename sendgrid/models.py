@@ -18,6 +18,7 @@ from sendgrid.constants import (
 	ARGUMENT_DATA_TYPE_FLOAT,
 	ARGUMENT_DATA_TYPE_COMPLEX,
 	ARGUMENT_DATA_TYPE_STRING,
+	UNIQUE_ARGS_STORED_FOR_EVENTS_WITHOUT_MESSAGE_ID,
 )
 from sendgrid.signals import sendgrid_email_sent
 
@@ -196,6 +197,46 @@ class EmailMessage(models.Model):
 	class Meta:
 		verbose_name = _("Email Message")
 		verbose_name_plural = _("Email Messages")
+
+	@classmethod
+	def from_event(self, event_dict):
+		"""
+		Returns a new EmailMessage instance derived from an Event Dictionary.
+		"""
+		newsletter_id = event_dict.get("newsletter[newsletter_id]")
+		to_email = event_dict.get("email")
+		try:
+			emailMessage = UniqueArgument.objects.get(data=newsletter_id, argument__key="newsletter[newsletter_id]", email_message__to_email=to_email).email_message
+		except UniqueArgument.DoesNotExist:
+			categories = [value for key,value in event_dict.items() if 'category' in key]
+			emailMessageSpec = {
+				"message_id": event_dict.get("message_id", None),
+				"from_email": "",
+				"to_email": to_email,
+				"category": categories[0],
+				"response": None
+			}
+			emailMessage = EmailMessage.objects.create(**emailMessageSpec)
+			
+			for category in categories:
+				categoryObj,created = Category.objects.get_or_create(name=category)
+				emailMessage.categories.add(categoryObj)
+
+			uniqueArgs = {}
+			for key in UNIQUE_ARGS_STORED_FOR_EVENTS_WITHOUT_MESSAGE_ID:
+				uniqueArgs[key] = event_dict.get(key)
+
+			for argName, argValue in uniqueArgs.items():
+				argument,_ = Argument.objects.get_or_create(
+					key=argName
+				)
+				uniqueArg = UniqueArgument.objects.create(
+					argument=argument,
+					email_message=emailMessage,
+					data=argValue
+				)
+		
+		return emailMessage
 
 	def __unicode__(self):
 		return "{0}".format(self.message_id)
