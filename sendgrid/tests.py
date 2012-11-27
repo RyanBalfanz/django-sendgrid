@@ -2,6 +2,7 @@ from __future__ import absolute_import
 
 from collections import defaultdict
 
+from django.conf import settings
 from django.core.mail import EmailMessage
 from django.core.urlresolvers import reverse
 from django.dispatch import receiver
@@ -19,6 +20,7 @@ from .models import Category
 from .models import Event, ClickEvent, BounceEvent, DeferredEvent, DroppedEvent, DeliverredEvent, EmailMessage as EmailMessageModel
 from .models import EventType
 from .models import UniqueArgument
+from .settings import SENDGRID_CREATE_MISSING_EMAIL_MESSAGES
 from .signals import sendgrid_email_sent
 from .utils import filterutils
 # from .utils import get_email_message
@@ -66,14 +68,21 @@ class SendGridEventTest(TestCase):
 			}
 		request = self.rf.post('/sendgrid/events',post_data)
 		handle_single_event_request(request)
-		#event created
-		self.assertEqual(Event.objects.count(),event_count + 1)
-		#email created
-		self.assertEqual(EmailMessageModel.objects.count(),email_count + 1)
 
-		event = Event.objects.get(email=post_data['email'])
-		#check to_email
-		self.assertEqual(event.email_message.to_email, event.email)
+		if SENDGRID_CREATE_MISSING_EMAIL_MESSAGES:
+			delta = 1
+		else:
+			delta = 0
+
+		#event created
+		self.assertEqual(Event.objects.count(), event_count + delta)
+		#email created
+		self.assertEqual(EmailMessageModel.objects.count(), email_count + delta)
+
+		if SENDGRID_CREATE_MISSING_EMAIL_MESSAGES:
+			event = Event.objects.get(email=post_data['email'])
+			#check to_email
+			self.assertEqual(event.email_message.to_email, event.email)
 
 	def test_event_no_message_id(self):
 		event_count = Event.objects.count()
@@ -85,14 +94,21 @@ class SendGridEventTest(TestCase):
 			}
 		request = self.rf.post('/sendgrid/events',post_data)
 		response = handle_single_event_request(request)
+
+		if SENDGRID_CREATE_MISSING_EMAIL_MESSAGES:
+			delta = 1
+		else:
+			delta = 0
+
 		#event created
-		self.assertEqual(Event.objects.count(),event_count + 1)
+		self.assertEqual(Event.objects.count(),event_count + delta)
 		#email created
-		self.assertEqual(EmailMessageModel.objects.count(),email_count + 1)
+		self.assertEqual(EmailMessageModel.objects.count(),email_count + delta)
 		
-		event = Event.objects.get(email=post_data['email'])
-		#check to_email
-		self.assertEqual(event.email_message.to_email, event.email)
+		if SENDGRID_CREATE_MISSING_EMAIL_MESSAGES:
+			event = Event.objects.get(email=post_data['email'])
+			#check to_email
+			self.assertEqual(event.email_message.to_email, event.email)
 
 
 class SendGridEmailTest(TestCase):
