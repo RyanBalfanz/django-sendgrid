@@ -132,19 +132,16 @@ def listener(request, statusCode=POST_EVENTS_RESPONSE_STATUS_CODE):
 
 	return clean_response(response)
 
-def download_attachment(request, email_message_id):
+def download_attachments(request, email_message_id):
 	"""
-	Returns an HttpResponse containing the attachment.
+	Returns an HttpResponse containing the zipped attachments.
 	"""
-	try:
-		import cStringIO as StringIO
-	except ImportError:
-		import StringIO
-	from collections import namedtuple
-	from django.core.servers.basehttp import FileWrapper
+	import zipfile
+	from contextlib import closing
 	from django.shortcuts import get_object_or_404
 	from django.utils import simplejson as json
-	from django.utils.encoding import smart_str
+
+	from sendgrid.utils import zip_files
 
 	emailMessage = get_object_or_404(EmailMessage, message_id=email_message_id)
 
@@ -157,16 +154,15 @@ def download_attachment(request, email_message_id):
 		.replace("None", '"text/plain"')
 	)
 	obj = json.loads(emailMessageDataStringJSONSafe)
-	for item in obj:
-		name, content, contentType = item
-		sio = StringIO.StringIO()
-		sio.write(content)
-		response = HttpResponse(FileWrapper(sio), content_type=contentType)
-		response["Content-Disposition"] = "attachment; filename={filename}".format(filename=name)
-		response["Content-Length"] = len(sio.getvalue())
 
-		# response = HttpResponse(mimetype="application/force-download")
-		# response["Content-Disposition"] = "attachment; filename={fname}".format(fname=name)
-		# response["X-Sendfile"] = smart_str(path_to_file)
+	files = {}
+	for name, content, contentType in obj:
+		files[name] = content
+
+	response = HttpResponse(mimetype="application/x-zip")
+	response["Content-Disposition"] = "attachment; filename={filename}".format(filename="attachment.zip")
+	with closing(zip_files(files)) as zio:
+		response.write(zio.getvalue())
+
 	return response
 

@@ -4,6 +4,11 @@ import logging
 import time
 import urllib
 import urllib2
+try:
+	import cStringIO as StringIO
+except ImportError:
+	import StringIO
+
 
 from django.conf import settings
 from django.core import mail
@@ -138,25 +143,21 @@ def delete_unsubscribes(email, start_date=None, end_date=None):
 
 	return content
 
-def archive_files(files):
+def zip_files(files):
 	"""
-	Returns a tar archive as string buffer containing the given files.
+	Returns a zipped file-like object containing the given files.
 	>>> csv1 = "a,b,c"
 	>>> csv2 = "a,b,c"
 	>>> files = { "1.csv": csv1, "2.csv": csv2 }
-	>>> tarball = archive_files(files)
+	>>> zip = zip_files(files)
 	"""
-	import tarfile
+	import zipfile
 	from contextlib import closing
 
-	tarball = StringIO.StringIO()
-	with closing(tarfile.TarFile(fileobj=tarball, mode="w")) as t:
-		for k, v in files.iteritems():
-			buf = StringIO.StringIO()
-			buf.write(v)
-			buf.seek(0)
-			info = tarfile.TarInfo(name=k)
-			info.size=len(v)
-			t.addfile(tarinfo=info, fileobj=buf)
+	buffer = StringIO.StringIO()
+	with zipfile.ZipFile(buffer, "w", zipfile.ZIP_DEFLATED) as zio:
+		for name, content in files.iteritems():
+			zio.writestr(name, content)
+		buffer.flush()
 
-	return tarball.getvalue()
+	return buffer
