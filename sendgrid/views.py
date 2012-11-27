@@ -13,6 +13,8 @@ from .signals import sendgrid_event_recieved
 
 from sendgrid.models import EmailMessage, Event, ClickEvent, DeferredEvent, DroppedEvent, DeliverredEvent, BounceEvent, EventType
 from sendgrid.constants import EVENT_TYPES_EXTRA_FIELDS_MAP, EVENT_MODEL_NAMES
+from sendgrid.settings import SENDGRID_CREATE_MISSING_EMAIL_MESSAGES
+
 
 POST_EVENTS_RESPONSE_STATUS_CODE = getattr(settings, "POST_EVENT_HANDLER_RESPONSE_STATUS_CODE", 200)
 
@@ -29,30 +31,39 @@ def handle_single_event_request(request):
 	event = eventData.get("event", None).upper()
 	category = eventData.get("category", None)
 	message_id = eventData.get("message_id", None)
+
+	emailMessage = None
 	if message_id:
-		emailMessage, created = EmailMessage.objects.get_or_create(message_id=message_id, category=category)
-
-		event_params = {
-			"email_message": emailMessage,
-			"email": email,
-			"event_type":EventType.objects.get(name=event.upper()),
-		}
-		for key in EVENT_TYPES_EXTRA_FIELDS_MAP[event.upper()]:
-			value = eventData.get(key,None)
-			if value:
-				event_params[key] = value
-			else:
-				logger.debug("Expected post param {key} for Sendgrid Event {event} not found".format(key=key,event=event))
-		event_model = eval(EVENT_MODEL_NAMES[event]) if event in EVENT_MODEL_NAMES.keys() else Event
-		eventObj = event_model.objects.create(**event_params)
-
-		response = HttpResponse()
+		try:
+			emailMessage = EmailMessage.objects.get(message_id=message_id)
+		except EmailMessage.DoesNotExist:
+			msg = "EmailMessage with message_id {id} not found"
+			logger.debug(msg.format(id=message_id))
 	else:
 		msg = "Expected 'message_id' was not found in event data"
-		logger.exception(msg)
+		logger.debug(msg)
 
-		response = HttpResponseBadRequest()
-		response.write(msg + "\n")
+	if not emailMessage and SENDGRID_CREATE_MISSING_EMAIL_MESSAGES:
+		logger.debug("Creating missing EmailMessage from event data")
+		emailMessage = EmailMessage.from_event(eventData)
+	elif not emailMessage and not SENDGRID_CREATE_MISSING_EMAIL_MESSAGES:
+		return HttpResponse()
+
+	event_params = {
+		"email_message": emailMessage,
+		"email": email,
+		"event_type":EventType.objects.get(name=event.upper()),
+	}
+	for key in EVENT_TYPES_EXTRA_FIELDS_MAP[event.upper()]:
+		value = eventData.get(key,None)
+		if value:
+			event_params[key] = value
+		else:
+			logger.debug("Expected post param {key} for Sendgrid Event {event} not found".format(key=key,event=event))
+	event_model = eval(EVENT_MODEL_NAMES[event]) if event in EVENT_MODEL_NAMES.keys() else Event
+	eventObj = event_model.objects.create(**event_params)
+
+	response = HttpResponse()
 
 	return response
 
