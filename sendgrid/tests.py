@@ -18,6 +18,7 @@ from .message import SendGridEmailMultiAlternatives
 from .models import Argument
 from .models import Category
 from .models import Event, ClickEvent, BounceEvent, DeferredEvent, DroppedEvent, DeliverredEvent, EmailMessage as EmailMessageModel
+from .models import EmailMessageAttachmentsData
 from .models import EventType
 from .models import UniqueArgument
 from .settings import SENDGRID_CREATE_MISSING_EMAIL_MESSAGES
@@ -519,3 +520,34 @@ class EventTypeFixtureTests(TestCase):
 				EventType.objects.get(pk=primaryKey),
 				EventType.objects.get(name=name)
 			)
+
+
+class DownloadAttachmentTestCase(TestCase):
+	def setUp(self):
+
+		self.attachments = {
+			"file1.csv": "name,age\r\nryan,28",
+			# "file2.csv": "name,age\r\nryan,28"
+		}
+
+		emailMessage = SendGridEmailMessage(
+			to=TEST_RECIPIENTS,
+			from_email=TEST_SENDER_EMAIL)
+		for name, contents in self.attachments.iteritems():
+			emailMessage.attach(name, contents)
+
+		response = emailMessage.send()
+		self.assertEqual(response, 1)
+		self.assertEqual(EmailMessageModel.objects.count(), 1)
+		self.assertEqual(EmailMessageAttachmentsData.objects.count(), 1)
+
+	def test_attachments_exist_for_email_message(self):
+		# import ipdb; ipdb.set_trace()
+		em = EmailMessageModel.objects.get(id=1)
+		emailMessageAttachments = em.attachments
+		self.assertEqual(len(eval(emailMessageAttachments.data)), len(self.attachments))
+
+	def test_download_attachments(self):
+		em = EmailMessageModel.objects.get(id=1)
+		reverse("sendgrid_download_attachment", args=(em.id,))
+
