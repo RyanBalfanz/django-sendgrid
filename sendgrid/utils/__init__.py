@@ -137,3 +137,26 @@ def delete_unsubscribes(email, start_date=None, end_date=None):
 	content = response.read()
 
 	return content
+
+def archive_files(files):
+	"""
+	Returns a tar archive as string buffer containing the given files.
+	>>> csv1 = "a,b,c"
+	>>> csv2 = "a,b,c"
+	>>> files = { "1.csv": csv1, "2.csv": csv2 }
+	>>> tarball = archive_files(files)
+	"""
+	import tarfile
+	from contextlib import closing
+
+	tarball = StringIO.StringIO()
+	with closing(tarfile.TarFile(fileobj=tarball, mode="w")) as t:
+		for k, v in files.iteritems():
+			buf = StringIO.StringIO()
+			buf.write(v)
+			buf.seek(0)
+			info = tarfile.TarInfo(name=k)
+			info.size=len(v)
+			t.addfile(tarinfo=info, fileobj=buf)
+
+	return tarball.getvalue()
