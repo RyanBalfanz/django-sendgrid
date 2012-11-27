@@ -13,6 +13,8 @@ from .signals import sendgrid_event_recieved
 
 from sendgrid.models import EmailMessage, Event, ClickEvent, DeferredEvent, DroppedEvent, DeliverredEvent, BounceEvent, EventType
 from sendgrid.constants import EVENT_TYPES_EXTRA_FIELDS_MAP, EVENT_MODEL_NAMES
+from sendgrid.settings import SENDGRID_CREATE_MISSING_EMAIL_MESSAGES
+
 
 POST_EVENTS_RESPONSE_STATUS_CODE = getattr(settings, "POST_EVENT_HANDLER_RESPONSE_STATUS_CODE", 200)
 
@@ -29,16 +31,23 @@ def handle_single_event_request(request):
 	event = eventData.get("event", None).upper()
 	category = eventData.get("category", None)
 	message_id = eventData.get("message_id", None)
+
+	emailMessage = None
 	if message_id:
 		try:
 			emailMessage = EmailMessage.objects.get(message_id=message_id)
 		except EmailMessage.DoesNotExist:
-			emailMessage = EmailMessage.from_event(eventData)
+			msg = "EmailMessage with message_id {id} not found"
+			logger.debug(msg.format(id=message_id))
 	else:
 		msg = "Expected 'message_id' was not found in event data"
 		logger.debug(msg)
-		emailMessage = EmailMessage.from_event(eventData)
 
+	if not emailMessage and SENDGRID_CREATE_MISSING_EMAIL_MESSAGES:
+		logger.debug("Creating missing EmailMessage from event data")
+		emailMessage = EmailMessage.from_event(eventData)
+	elif not emailMessage and not SENDGRID_CREATE_MISSING_EMAIL_MESSAGES:
+		return HttpResponse()
 
 	event_params = {
 		"email_message": emailMessage,
@@ -55,7 +64,6 @@ def handle_single_event_request(request):
 	eventObj = event_model.objects.create(**event_params)
 
 	response = HttpResponse()
-	
 
 	return response
 
