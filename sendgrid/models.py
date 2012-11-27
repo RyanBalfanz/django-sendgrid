@@ -225,7 +225,7 @@ class EmailMessage(models.Model):
 	extra_headers_data = property(get_extra_headers_data)
 
 	def get_attachments_data(self):
-		return self.headers.data
+		return self.attachments.data
 	attachments_data = property(get_attachments_data)
 
 	def get_event_count(self):
