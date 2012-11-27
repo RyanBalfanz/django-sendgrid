@@ -120,3 +120,42 @@ def listener(request, statusCode=POST_EVENTS_RESPONSE_STATUS_CODE):
 		response.status_code = 405
 
 	return clean_response(response)
+
+def download_attachment(request, email_message_id):
+	"""
+	Returns an HttpResponse containing the attachment.
+	"""
+	try:
+		import cStringIO as StringIO
+	except ImportError:
+		import StringIO
+	from collections import namedtuple
+	from django.core.servers.basehttp import FileWrapper
+	from django.shortcuts import get_object_or_404
+	from django.utils import simplejson as json
+	from django.utils.encoding import smart_str
+
+	emailMessage = get_object_or_404(EmailMessage, message_id=email_message_id)
+
+	emailMessageDataString = emailMessage.attachments_data
+	# TODO: This is a little hacky
+	emailMessageDataStringJSONSafe = (emailMessageDataString
+		.replace('(', '[')
+		.replace(')', ']')
+		.replace("'", '"')
+		.replace("None", '"text/plain"')
+	)
+	obj = json.loads(emailMessageDataStringJSONSafe)
+	for item in obj:
+		name, content, contentType = item
+		sio = StringIO.StringIO()
+		sio.write(content)
+		response = HttpResponse(FileWrapper(sio), content_type=contentType)
+		response["Content-Disposition"] = "attachment; filename={filename}".format(filename=name)
+		response["Content-Length"] = len(sio.getvalue())
+
+		# response = HttpResponse(mimetype="application/force-download")
+		# response["Content-Disposition"] = "attachment; filename={fname}".format(fname=name)
+		# response["X-Sendfile"] = smart_str(path_to_file)
+	return response
+
