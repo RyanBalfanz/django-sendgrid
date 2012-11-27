@@ -33,3 +33,9 @@ EVENT_TYPES_EXTRA_FIELDS_MAP = {
 	"UNSUBSCRIBE": (),
 	"SPAMREPORT": (),
 }
+
+UNIQUE_ARGS_STORED_FOR_EVENTS_WITHOUT_MESSAGE_ID = (
+	"newsletter[newsletter_id]",
+	"newsletter[newsletter_send_id]",
+	"newsletter[newsletter_user_list_id]",
+)
