@@ -2,6 +2,7 @@ from __future__ import absolute_import
 
 import logging
 
+from django.contrib import messages
 from django.core.context_processors import csrf
 from django.core.urlresolvers import reverse
 from django.http import HttpResponseRedirect
@@ -84,6 +85,16 @@ def send_simple_email(request):
 			logger.debug("Sending SendGrid email {e}".format(e=sendGridEmail))
 			response = sendGridEmail.send()
 			logger.debug("Response {r}".format(r=response))
+
+			if response == 1:
+				msg = "Your message was sent"
+				msgType = messages.SUCCESS
+			else:
+				msg = "The was en error sending your message"
+				msgType = messages.ERROR
+			import ipdb; ipdb.set_trace()
+			messages.add_message(request, msgType, msg)
+
 			return HttpResponseRedirect("/")
 	else:
 		form = EmailForm()

@@ -34,10 +34,25 @@
 		</div>
 	</div>
 	<div class="container">
+		{% block messages %}
+		{% if messages %}
+		<div id="messages-containter">
+		{% for message in messages %}
+			<div class="alert">
+				<button type="button" class="close" data-dismiss="alert">×</button>
+				<strong>{{ message.tags }}</strong> {{ message }}
+			</div>
+		{% endfor %}
+		</div>
+		{% endif %}
+		{% endblock messages %}
+
+		{% block send_email_form %}
 		<form action="/" method="post">{% csrf_token %}
 			{{ form.as_p }}
 			<input type="submit" value="Send" />
 		</form>
+		{% endblock send_email_form %}
 	</div>
 </body>
 </html>
