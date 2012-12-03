@@ -429,7 +429,7 @@ class Event(models.Model):
 	email_message = models.ForeignKey(EmailMessage)
 	email = models.EmailField()
 	event_type = models.ForeignKey(EventType)
-	creation_time = models.DateTimeField(auto_now_add=True)
+	creation_time = models.DateTimeField()
 	last_modified_time = models.DateTimeField(auto_now=True)
 
 	class Meta:
@@ -470,8 +470,8 @@ class BounceType(models.Model):
 
 class BounceEvent(Event):
 	status = models.CharField(max_length=16)
-	bounce_reason = models.ForeignKey(BounceReason)
-	bounce_type = models.ForeignKey(BounceType)
+	bounce_reason = models.ForeignKey(BounceReason,null=True)
+	bounce_type = models.ForeignKey(BounceType,null=True)
 	class Meta:
 		verbose_name = ("Bounce Event")
 		verbose_name_plural = ("Bounce Events")
