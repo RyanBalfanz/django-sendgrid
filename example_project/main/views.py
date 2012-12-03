@@ -94,7 +94,6 @@ def send_simple_email(request):
 			else:
 				msg = "The was en error sending your message"
 				msgType = messages.ERROR
-			import ipdb; ipdb.set_trace()
 			messages.add_message(request, msgType, msg)
 
 			return HttpResponseRedirect("/")
