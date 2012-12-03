@@ -53,19 +53,21 @@ def handle_single_event_request(request):
 	event_params = {
 		"email_message": emailMessage,
 		"email": email,
-		"event_type":event_type,
+		"event_type":event_type
 	}
 	timestamp = eventData.get("timestamp",None)
-
 	if timestamp:
-		event_params["creation_time"] = datetime.utcfromtimestamp(float(timestamp))
+		event_params["timestamp"] = datetime.utcfromtimestamp(float(timestamp))
+
+		#enforce unique constraint on email_message,event_type,creation_time
+		#this should be done at the db level but since it was added later it would have needed a data migration that either deleted or updated duplicate events
+		#this also might need a combined index, but django orm doesn't have this feature yet: https://code.djangoproject.com/ticket/5805
+		existingEvents = Event.objects.filter(email_message=emailMessage,event_type=event_type,timestamp=event_params["timestamp"])
+		unique = existingEvents.count() == 0
 	else:
-		event_params["creation_time"] = datetime.utcnow()
-	#enforce unique constraint on email_message,event_type,creation_time
-	#this should be done at the db level but since it was added later it would have needed a data migration that either deleted or updated duplicate events
-	#this also might need a combined index, but django orm doesn't have this feature yet: https://code.djangoproject.com/ticket/5805
-	existing_events = Event.objects.filter(email_message=emailMessage,event_type=event_type,creation_time=event_params["creation_time"])
-	if existing_events.count() == 0:
+		#no timestamp provided. therefore we cannot enforce any kind of uniqueness
+		unique = True
+	if unique:
 		for key in EVENT_TYPES_EXTRA_FIELDS_MAP[event.upper()]:
 			value = eventData.get(key,None)
 			if value:

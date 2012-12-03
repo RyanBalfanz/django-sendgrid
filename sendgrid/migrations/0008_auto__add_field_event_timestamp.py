@@ -8,15 +8,16 @@ from django.db import models
 class Migration(SchemaMigration):
 
     def forwards(self, orm):
-        pass
-        #commented out the db part of this migration because it didn't actually make any changes but took forever. The purpose of this migration is for consitency in the models below
-        # Changing field 'Event.creation_time'
-        #db.alter_column('sendgrid_event', 'creation_time', self.gf('django.db.models.fields.DateTimeField')())
+        # Adding field 'Event.timestamp'
+        db.add_column('sendgrid_event', 'timestamp',
+                      self.gf('django.db.models.fields.DateTimeField')(null=True),
+                      keep_default=False)
+
 
     def backwards(self, orm):
-        pass
-        # Changing field 'Event.creation_time'
-        #db.alter_column('sendgrid_event', 'creation_time', self.gf('django.db.models.fields.DateTimeField')(auto_now_add=True))
+        # Deleting field 'Event.timestamp'
+        db.delete_column('sendgrid_event', 'timestamp')
+
 
     models = {
         'sendgrid.argument': {
@@ -132,12 +133,13 @@ class Migration(SchemaMigration):
         },
         'sendgrid.event': {
             'Meta': {'object_name': 'Event'},
-            'creation_time': ('django.db.models.fields.DateTimeField', [], {}),
+            'creation_time': ('django.db.models.fields.DateTimeField', [], {'auto_now_add': 'True', 'blank': 'True'}),
             'email': ('django.db.models.fields.EmailField', [], {'max_length': '75'}),
             'email_message': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['sendgrid.EmailMessage']"}),
             'event_type': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['sendgrid.EventType']"}),
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'last_modified_time': ('django.db.models.fields.DateTimeField', [], {'auto_now': 'True', 'blank': 'True'})
+            'last_modified_time': ('django.db.models.fields.DateTimeField', [], {'auto_now': 'True', 'blank': 'True'}),
+            'timestamp': ('django.db.models.fields.DateTimeField', [], {'null': 'True'})
         },
         'sendgrid.eventtype': {
             'Meta': {'object_name': 'EventType'},

@@ -429,8 +429,11 @@ class Event(models.Model):
 	email_message = models.ForeignKey(EmailMessage)
 	email = models.EmailField()
 	event_type = models.ForeignKey(EventType)
-	creation_time = models.DateTimeField()
+	creation_time = models.DateTimeField(auto_now_add=True)
 	last_modified_time = models.DateTimeField(auto_now=True)
+	#this column should always be populated by sendgrids mandatory timestamp param
+	#null=True only because this was added later and need to distinguish old columns saved before this change
+	timestamp = models.DateTimeField(null=True)
 
 	class Meta:
 		verbose_name = _("Event")
