@@ -11,6 +11,7 @@ from django.shortcuts import render_to_response
 # django-sendgrid
 from sendgrid.mail import send_sendgrid_mail
 from sendgrid.message import SendGridEmailMessage
+from sendgrid.message import SendGridEmailMultiAlternatives
 from sendgrid.utils import filterutils
 
 # example_project
@@ -40,7 +41,7 @@ def send_simple_email(request):
 			enable_click_tracking = getattr(request.POST, "enable_click_tracking", False)
 			add_unsubscribe_link = getattr(request.POST, "add_unsubscribe_link", False)
 
-			sendGridEmail = SendGridEmailMessage(
+			sendGridEmail = SendGridEmailMultiAlternatives(
 				subject,
 				message,
 				from_email,
@@ -48,6 +49,7 @@ def send_simple_email(request):
 			)
 			if html:
 				sendGridEmail.content_subtype = "html"
+				sendGridEmail.attach_alternative(message, "text/html")
 				
 			if categories:
 				logger.debug("Categories {c} were given".format(c=categories))
