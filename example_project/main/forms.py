@@ -6,7 +6,7 @@ class EmailForm(forms.Form):
 	message = forms.CharField(widget=forms.Textarea)
 	sender = forms.EmailField()
 	to = forms.EmailField()
-	categories = forms.CharField(help_text="CSV", max_length=100, required=False, widget=forms.Textarea)
+	categories = forms.CharField(help_text="CSV", required=False, widget=forms.Textarea)
 	html = forms.BooleanField(initial=False, required=False)
 	enable_gravatar = forms.BooleanField(initial=False, required=False)
 	enable_click_tracking = forms.BooleanField(initial=False, required=False)
