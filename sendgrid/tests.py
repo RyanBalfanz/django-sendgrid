@@ -114,6 +114,15 @@ class SendGridEventTest(TestCase):
 		}
 		self.verify_event_with_missing_email(postData)
 
+	def test_event_email_doesnt_exist_no_category(self):
+		postData = {
+			"message_id": 'a5df', 
+			"email" : self.email.to[0],
+			"event" : "OPEN"
+		}
+
+		self.verify_event_with_missing_email(postData)
+
 
 class SendGridEmailTest(TestCase):
 	"""docstring for SendGridEmailTest"""
