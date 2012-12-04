@@ -28,28 +28,33 @@ def send_simple_email(request):
 	if request.method == 'POST':
 		form = EmailForm(request.POST)
 		if form.is_valid():
-			subject = request.POST["subject"]
-			message = request.POST["message"]
-			from_email = request.POST["sender"]
-			recipient_list = request.POST["to"]
+			subject = form.cleaned_data["subject"]
+			message = form.cleaned_data["message"]
+			from_email = form.cleaned_data["sender"]
+			recipient_list = form.cleaned_data["to"]
 			recipient_list = [r.strip() for r in recipient_list.split(",")]
-			categoryData = request.POST["category"]
+			categoryData = form.cleaned_data["categories"]
 			categories = parse_csv_string(categoryData)
-			# https://docs.djangoproject.com/en/dev/ref/forms/fields/#booleanfield
-			html = getattr(request.POST, "html", False)
-			enable_gravatar = getattr(request.POST, "enable_gravatar", False)
-			enable_click_tracking = getattr(request.POST, "enable_click_tracking", False)
-			add_unsubscribe_link = getattr(request.POST, "add_unsubscribe_link", False)
+			html = form.cleaned_data["html"]
+			enable_gravatar = form.cleaned_data["enable_gravatar"]
+			enable_click_tracking = form.cleaned_data["enable_click_tracking"]
+			add_unsubscribe_link = form.cleaned_data["add_unsubscribe_link"]
 
-			sendGridEmail = SendGridEmailMultiAlternatives(
-				subject,
-				message,
-				from_email,
-				recipient_list,
-			)
 			if html:
-				sendGridEmail.content_subtype = "html"
+				sendGridEmail = SendGridEmailMultiAlternatives(
+					subject,
+					message,
+					from_email,
+					recipient_list,
+				)
 				sendGridEmail.attach_alternative(message, "text/html")
+			else:
+				sendGridEmail = SendGridEmailMessage(
+					subject,
+					message,
+					from_email,
+					recipient_list,
+				)
 				
 			if categories:
 				logger.debug("Categories {c} were given".format(c=categories))
