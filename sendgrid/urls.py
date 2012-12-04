@@ -2,7 +2,6 @@ from __future__ import absolute_import
 
 from django.conf.urls.defaults import patterns, include, url
 
-from .views import listener
 from sendgrid.views import email_message_detail
 from sendgrid.views import email_message_list
 from sendgrid.views import email_message_preview
