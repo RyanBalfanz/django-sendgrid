@@ -548,5 +548,8 @@ class DownloadAttachmentTestCase(TestCase):
 
 	def test_download_attachments(self):
 		em = EmailMessageModel.objects.get(id=1)
-		reverse("sendgrid_download_attachments", args=(em.message_id,))
+		attachmentsURL = reverse("sendgrid_download_attachments", args=(em.message_id,))
+		c = Client()
+		response = c.get(attachmentsURL)
+		self.assertEqual(response.status_code, 200)
 
