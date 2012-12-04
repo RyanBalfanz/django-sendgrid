@@ -184,3 +184,8 @@ class EmailMessageDetail(DetailView):
 	context_object_name = "emailmessage"
 	slug_field = "message_id"
 email_message_detail = EmailMessageDetail.as_view()
+
+
+class EmailMessagePreview(EmailMessageDetail):
+	template_name = "sendgrid/emailmessage_preview.html"
+email_message_preview = EmailMessagePreview.as_view()
