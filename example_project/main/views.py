@@ -2,6 +2,7 @@ from __future__ import absolute_import
 
 import logging
 
+from django.contrib import messages
 from django.core.context_processors import csrf
 from django.core.urlresolvers import reverse
 from django.http import HttpResponseRedirect
@@ -10,6 +11,7 @@ from django.shortcuts import render_to_response
 # django-sendgrid
 from sendgrid.mail import send_sendgrid_mail
 from sendgrid.message import SendGridEmailMessage
+from sendgrid.message import SendGridEmailMultiAlternatives
 from sendgrid.utils import filterutils
 
 # example_project
@@ -39,7 +41,7 @@ def send_simple_email(request):
 			enable_click_tracking = getattr(request.POST, "enable_click_tracking", False)
 			add_unsubscribe_link = getattr(request.POST, "add_unsubscribe_link", False)
 
-			sendGridEmail = SendGridEmailMessage(
+			sendGridEmail = SendGridEmailMultiAlternatives(
 				subject,
 				message,
 				from_email,
@@ -47,6 +49,7 @@ def send_simple_email(request):
 			)
 			if html:
 				sendGridEmail.content_subtype = "html"
+				sendGridEmail.attach_alternative(message, "text/html")
 				
 			if categories:
 				logger.debug("Categories {c} were given".format(c=categories))
@@ -84,6 +87,15 @@ def send_simple_email(request):
 			logger.debug("Sending SendGrid email {e}".format(e=sendGridEmail))
 			response = sendGridEmail.send()
 			logger.debug("Response {r}".format(r=response))
+
+			if response == 1:
+				msg = "Your message was sent"
+				msgType = messages.SUCCESS
+			else:
+				msg = "The was en error sending your message"
+				msgType = messages.ERROR
+			messages.add_message(request, msgType, msg)
+
 			return HttpResponseRedirect("/")
 	else:
 		form = EmailForm()
