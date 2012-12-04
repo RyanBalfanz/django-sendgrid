@@ -270,6 +270,8 @@ class EmailMessage(models.Model):
 			data = self.attachments.data
 		except EmailMessageAttachmentsData.DoesNotExist:
 			data = None
+
+		return data
 	attachments_data = property(get_attachments_data)
 
 	def get_event_count(self):
