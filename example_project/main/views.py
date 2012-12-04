@@ -28,13 +28,14 @@ def send_simple_email(request):
 	if request.method == 'POST':
 		form = EmailForm(request.POST)
 		if form.is_valid():
-			subject = request.POST["subject"]
-			message = request.POST["message"]
-			from_email = request.POST["sender"]
-			recipient_list = request.POST["to"]
+			subject = form.cleaned_data["subject"]
+			message = form.cleaned_data["message"]
+			from_email = form.cleaned_data["sender"]
+			recipient_list = form.cleaned_data["to"]
 			recipient_list = [r.strip() for r in recipient_list.split(",")]
-			categoryData = request.POST["category"]
+			categoryData = form.cleaned_data["categories"]
 			categories = parse_csv_string(categoryData)
+			import ipdb; ipdb.set_trace()
 			# https://docs.djangoproject.com/en/dev/ref/forms/fields/#booleanfield
 			html = form.cleaned_data["html"]
 			enable_gravatar = form.cleaned_data["enable_gravatar"]
