@@ -266,7 +266,10 @@ class EmailMessage(models.Model):
 	extra_headers_data = property(get_extra_headers_data)
 
 	def get_attachments_data(self):
-		return self.attachments.data
+		try:
+			data = self.attachments.data
+		except EmailMessageAttachmentsData.DoesNotExist:
+			data = None
 	attachments_data = property(get_attachments_data)
 
 	def get_event_count(self):
