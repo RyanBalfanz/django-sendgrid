@@ -132,7 +132,7 @@ def listener(request, statusCode=POST_EVENTS_RESPONSE_STATUS_CODE):
 
 	return clean_response(response)
 
-def download_attachments(request, email_message_id):
+def download_attachments(request, message_id):
 	"""
 	Returns an HttpResponse containing the zipped attachments.
 	"""
@@ -143,7 +143,7 @@ def download_attachments(request, email_message_id):
 
 	from sendgrid.utils import zip_files
 
-	emailMessage = get_object_or_404(EmailMessage, message_id=email_message_id)
+	emailMessage = get_object_or_404(EmailMessage, message_id=message_id)
 
 	emailMessageDataString = emailMessage.attachments_data
 	# TODO: This is a little hacky

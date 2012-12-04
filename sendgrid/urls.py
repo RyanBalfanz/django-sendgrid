@@ -7,7 +7,7 @@ from .views import listener
 
 urlpatterns = patterns('',
 	url(r"^events/$", "sendgrid.views.listener", name="sendgrid_post_event"),
-	url(r"^messages/(?P<email_message_id>\S+)/attachments/$",
+	url(r"^messages/(?P<message_id>[-\w]+)/attachments/$",
 		"sendgrid.views.download_attachments",
 		name="sendgrid_download_attachments"
 	),

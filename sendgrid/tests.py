@@ -542,12 +542,11 @@ class DownloadAttachmentTestCase(TestCase):
 		self.assertEqual(EmailMessageAttachmentsData.objects.count(), 1)
 
 	def test_attachments_exist_for_email_message(self):
-		# import ipdb; ipdb.set_trace()
 		em = EmailMessageModel.objects.get(id=1)
 		emailMessageAttachments = em.attachments
 		self.assertEqual(len(eval(emailMessageAttachments.data)), len(self.attachments))
 
 	def test_download_attachments(self):
 		em = EmailMessageModel.objects.get(id=1)
-		reverse("sendgrid_download_attachment", args=(em.id,))
+		reverse("sendgrid_download_attachments", args=(em.message_id,))
 
