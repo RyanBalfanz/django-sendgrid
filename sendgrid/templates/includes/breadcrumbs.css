@@ -1,0 +1,38 @@
+/*
+	http://veerle-v2.duoh.com/blog/comments/simple_scalable_css_based_breadcrumbs/
+*/
+ol, li {
+	list-style-type:none;
+	padding: 0;
+	margin: 0;
+}
+
+.breadcrumbs {
+	height: 2.3em;
+	border: 1px solid #dedede;
+}
+
+.breadcrumbs li {
+	float: left;
+	line-height: 2.3em;
+	color: #777;
+	padding-left: .75em;
+}
+
+.breadcrumbs li a {
+	/*background: url(data:image/png;base64,{% include "includes/breadcrumb.png.base64" %}) no-repeat right center;*/
+	background: url("data:image/svg+xml;base64,{% include "includes/breadcrumb.svg.base64" %}") no-repeat right center;
+	display: block;
+	padding: 0 15px 0 0;
+}
+.breadcrumbs li a:link,
+.breadcrumbs li a:visited {
+	color: #777;
+	text-decoration: none;
+}
+
+a:link, a:visited,	
+.breadcrumbs li a:hover,
+.breadcrumbs li a:focus {
+	color: #dd2c0d;
+}

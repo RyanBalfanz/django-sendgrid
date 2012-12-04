@@ -1,0 +1,8 @@
+<ol class="breadcrumbs">
+	<li>
+		<a href="{% url sendgrid_email_message_list %}">Email Messages</a>
+	</li>
+	{% if emailmessage %}
+	<li><a href="#">{{ emailmessage }}</a></li>
+	{% endif %}
+</ol>

@@ -1,0 +1,18 @@
+{% extends "sendgrid/emailmessage_base.html" %}
+
+{% block title %}EmailMessages{% endblock title %}
+{% block content %}
+{% with emailMessageCount=object_list.count %}
+	{{ emailMessageCount }} EmailMessage{{ emailMessageCount|pluralize }}
+{% endwith %}
+
+<div id="emailMessageList">
+	<ul>
+		{% for emailMessage in emailmessage_list %}
+			<li>
+				<a href="{% url sendgrid_email_message_detail emailMessage.message_id %}">{{ emailMessage }}</a>
+			</li>
+		{% endfor %}
+	</ul>
+</div>
+{% endblock content %}
