@@ -35,8 +35,6 @@ def send_simple_email(request):
 			recipient_list = [r.strip() for r in recipient_list.split(",")]
 			categoryData = form.cleaned_data["categories"]
 			categories = parse_csv_string(categoryData)
-			import ipdb; ipdb.set_trace()
-			# https://docs.djangoproject.com/en/dev/ref/forms/fields/#booleanfield
 			html = form.cleaned_data["html"]
 			enable_gravatar = form.cleaned_data["enable_gravatar"]
 			enable_click_tracking = form.cleaned_data["enable_click_tracking"]
