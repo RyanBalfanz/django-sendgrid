@@ -436,6 +436,9 @@ class Event(models.Model):
 	event_type = models.ForeignKey(EventType)
 	creation_time = models.DateTimeField(auto_now_add=True)
 	last_modified_time = models.DateTimeField(auto_now=True)
+	#this column should always be populated by sendgrids mandatory timestamp param
+	#null=True only because this was added later and need to distinguish old columns saved before this change
+	timestamp = models.DateTimeField(null=True)
 
 	class Meta:
 		verbose_name = _("Event")
@@ -475,8 +478,8 @@ class BounceType(models.Model):
 
 class BounceEvent(Event):
 	status = models.CharField(max_length=16)
-	bounce_reason = models.ForeignKey(BounceReason)
-	bounce_type = models.ForeignKey(BounceType)
+	bounce_reason = models.ForeignKey(BounceReason,null=True)
+	bounce_type = models.ForeignKey(BounceType,null=True)
 	class Meta:
 		verbose_name = ("Bounce Event")
 		verbose_name_plural = ("Bounce Events")
