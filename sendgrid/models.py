@@ -213,9 +213,11 @@ class EmailMessage(models.Model):
 				"message_id": event_dict.get("message_id", None),
 				"from_email": "",
 				"to_email": to_email,
-				"category": categories[0],
 				"response": None
 			}
+			if len(categories) > 0:
+				emailMessageSpec["category"] = categories[0]
+				
 			emailMessage = EmailMessage.objects.create(**emailMessageSpec)
 			
 			for category in categories:
