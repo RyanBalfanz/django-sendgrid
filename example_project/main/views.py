@@ -36,20 +36,26 @@ def send_simple_email(request):
 			categoryData = request.POST["category"]
 			categories = parse_csv_string(categoryData)
 			# https://docs.djangoproject.com/en/dev/ref/forms/fields/#booleanfield
-			html = getattr(request.POST, "html", False)
+			html = request.POST.get("html", None) == "on"
 			enable_gravatar = getattr(request.POST, "enable_gravatar", False)
 			enable_click_tracking = getattr(request.POST, "enable_click_tracking", False)
 			add_unsubscribe_link = getattr(request.POST, "add_unsubscribe_link", False)
 
-			sendGridEmail = SendGridEmailMultiAlternatives(
-				subject,
-				message,
-				from_email,
-				recipient_list,
-			)
 			if html:
-				sendGridEmail.content_subtype = "html"
+				sendGridEmail = SendGridEmailMultiAlternatives(
+					subject,
+					message,
+					from_email,
+					recipient_list,
+				)
 				sendGridEmail.attach_alternative(message, "text/html")
+			else:
+				sendGridEmail = SendGridEmailMessage(
+					subject,
+					message,
+					from_email,
+					recipient_list,
+				)
 				
 			if categories:
 				logger.debug("Categories {c} were given".format(c=categories))
