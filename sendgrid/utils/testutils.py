@@ -8,7 +8,8 @@ def post_test_event(event_type,event_model_name,email_message):
 	event_data = {
 		"event": event_type,
 		"message_id": email_message.message_id,
-		"email": email_message.to_email
+		"email": email_message.to_email,
+		"timestamp": 1322000095
 	}
 
 	for key in EVENT_TYPES_EXTRA_FIELDS_MAP[event_type.upper()]:
