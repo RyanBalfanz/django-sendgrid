@@ -553,3 +553,25 @@ class DownloadAttachmentTestCase(TestCase):
 		response = c.get(attachmentsURL)
 		self.assertEqual(response.status_code, 200)
 
+class DownloadAttachment404TestCase(TestCase):
+	def setUp(self):
+		emailMessage = SendGridEmailMessage(
+			to=TEST_RECIPIENTS,
+			from_email=TEST_SENDER_EMAIL)
+
+		response = emailMessage.send()
+		self.assertEqual(response, 1)
+		self.assertEqual(EmailMessageModel.objects.count(), 1)
+		self.assertEqual(EmailMessageAttachmentsData.objects.count(), 0)
+
+	def test_attachments_exist_for_email_message(self):
+		em = EmailMessageModel.objects.get(id=1)
+		emailMessageAttachments = em.attachments_data
+		self.assertEqual(emailMessageAttachments, None)
+
+	def test_download_attachments(self):
+		em = EmailMessageModel.objects.get(id=1)
+		attachmentsURL = reverse("sendgrid_download_attachments", args=(em.message_id,))
+		c = Client()
+		response = c.get(attachmentsURL)
+		self.assertEqual(response.status_code, 404)
