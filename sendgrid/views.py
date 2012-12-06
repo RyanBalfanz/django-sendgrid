@@ -100,7 +100,7 @@ def handle_batched_events_request(request):
 	Note: Choosing not to use bulk inserts for now because post_save/pre_save would not be triggered.
 
 	"""
-	events = [json.loads(event) for event in request.POST.keys()[0].split("\n")]
+	events = [json.loads(event) for event in request.POST.keys()[0].split("\r\n")]
 	for event in events:
 		create_event_from_sendgrid_params(event)
 		
