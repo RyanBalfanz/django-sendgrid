@@ -61,7 +61,7 @@ class SendGridBatchedEventTest(TestCase):
 			"event":"DELIVERED"
 		}
 		#prepare postData in sendgrids stupid non valid json
-		postData = "{0}\r\n{1}".format(json.dumps(eventData1),json.dumps(eventData2))
+		postData = "{0}\r\n{1}\r\n".format(json.dumps(eventData1),json.dumps(eventData2))
 		
 		self.client.post(reverse("sendgrid_post_event"),content_type="application/json",data=postData)
 
