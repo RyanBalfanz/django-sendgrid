@@ -46,7 +46,22 @@ class SendGridBatchedEventTest(TestCase):
 		self.email2 = SendGridEmailMessage(to=TEST_RECIPIENTS, from_email=TEST_SENDER_EMAIL)
 		self.email2.send()
 		self.client = Client()
-
+		eventData1 = {
+			"email":TEST_RECIPIENTS[0],
+			"timestamp":1322000095,
+			"message_id":str(self.email1.message_id),
+			"event":"OPEN"
+		}
+		eventData2 = {
+			"email":TEST_RECIPIENTS[0],
+			"timestamp":1322000096,
+			"message_id":str(self.email2.message_id),
+			"event":"DELIVERED"
+		}
+		#prepare postData in sendgrids stupid non valid json
+		postData = "{0}\r\n{1}\r\n".format(json.dumps(eventData1),json.dumps(eventData2))
+		
+		self.client.post(reverse("sendgrid_post_event"),content_type="application/json",data=postData)
 		self.events = [
 			{
 				"email": TEST_RECIPIENTS[0],
