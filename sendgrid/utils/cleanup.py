@@ -74,3 +74,43 @@ def cleanup_email_message_body_data(*args, **kwargs):
 	logger.debug("Result: {r}".format(r=str(result)))
 
 	return result
+
+def consolodate_argument_keys_for_agrument(argumentKey):
+	"""
+	Updates the foreign key on ``UniqueArgument`` objects to use the oldest 
+	``Argument`` given by ``argumentKey``.
+	"""
+	from django.db.models import Q
+	from sendgrid.models import Argument, UniqueArgument
+
+	arguments = (
+		Argument.objects
+			.filter(key=argumentKey)
+			.order_by("creation_time")
+	)
+	originalArgument = arguments[0]
+
+	uniqueArguments = (
+		UniqueArgument.objects.filter(~Q(argument=originalArgument))
+	)
+
+	for uniqueArgument in uniqueArguments:
+		uniqueArgument.argument = originalArgument
+		uniqueArgument.save()
+
+def consolodate_argument_keys():
+	"""
+	Data migration tool for #48, #50 (Argument.key is not unique, MultipleObjectsReturned)
+	"""
+	duplicateArguments = (Argument.objects
+		.values("key")
+		.annotate(multiplicity=Count("id"))
+	)
+	for argument in duplicateArguments:
+		multiplicity = argument["multiplicity"]
+		if multiplicity >= 1:
+			msg = "Found duplicate Argument {a} with multiplicity {m}"
+			logger.info(msg.format(a=argument, m=multiplicity))
+			consolodate_argument_keys_for_agrument(argument.key)
+		else:
+			pass
