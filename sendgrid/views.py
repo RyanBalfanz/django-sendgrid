@@ -20,17 +20,11 @@ POST_EVENTS_RESPONSE_STATUS_CODE = getattr(settings, "POST_EVENT_HANDLER_RESPONS
 
 logger = logging.getLogger(__name__)
 
-def handle_single_event_request(request):
-	"""
-	Handles single event POST requests.
-	"""
-	eventData = request.POST
-
-	# Parameters that are always passed with each event
-	email = eventData.get("email", None)
-	event = eventData.get("event", None).upper()
-	category = eventData.get("category", None)
-	message_id = eventData.get("message_id", None)
+def create_event_from_sendgrid_params(params):
+	email = params.get("email", None)
+	event = params.get("event", None).upper()
+	category = params.get("category", None)
+	message_id = params.get("message_id", None)
 
 	emailMessage = None
 	if message_id:
@@ -45,9 +39,10 @@ def handle_single_event_request(request):
 
 	if not emailMessage and SENDGRID_CREATE_MISSING_EMAIL_MESSAGES:
 		logger.debug("Creating missing EmailMessage from event data")
-		emailMessage = EmailMessage.from_event(eventData)
+		emailMessage = EmailMessage.from_event(params)
 	elif not emailMessage and not SENDGRID_CREATE_MISSING_EMAIL_MESSAGES:
-		return HttpResponse()
+		logger.debug("Event with params {0} not created because email message with id {1} cannot be found and SENDGRID_CREATE_MISSING_EMAIL_MESSAGES=False".format(params,message_id))
+		return False
 
 	event_type = EventType.objects.get(name=event.upper())
 	event_params = {
@@ -55,7 +50,7 @@ def handle_single_event_request(request):
 		"email": email,
 		"event_type":event_type
 	}
-	timestamp = eventData.get("timestamp",None)
+	timestamp = params.get("timestamp",None)
 	if timestamp:
 		event_params["timestamp"] = datetime.utcfromtimestamp(float(timestamp))
 
@@ -69,13 +64,24 @@ def handle_single_event_request(request):
 		unique = True
 	if unique:
 		for key in EVENT_TYPES_EXTRA_FIELDS_MAP[event.upper()]:
-			value = eventData.get(key,None)
+			value = params.get(key,None)
 			if value:
 				event_params[key] = value
 			else:
 				logger.debug("Expected post param {key} for Sendgrid Event {event} not found".format(key=key,event=event))
 		event_model = eval(EVENT_MODEL_NAMES[event]) if event in EVENT_MODEL_NAMES.keys() else Event
 		eventObj = event_model.objects.create(**event_params)
+
+	return True
+
+def handle_single_event_request(request):
+	"""
+	Handles single event POST requests.
+	"""
+	eventData = request.POST
+	create_event_from_sendgrid_params(eventData)
+	# Parameters that are always passed with each event
+	
 
 	response = HttpResponse()
 
