@@ -95,13 +95,19 @@ def handle_batched_events_request(request):
 		{"email":"foo@bar.com","timestamp":1322000095,"unique_arg":"my unique arg","event":"delivered"}
 		{"email":"foo@bar.com","timestamp":1322000096,"unique_arg":"my unique arg","event":"open"}
 
-	Note: Choosing not to use bulk inserts for now because post_save/pre_save would not be triggered.
-
+	Note: Not using bulk inserts for now because post_save/pre_save would not be triggered.
 	"""
+	# https://docs.djangoproject.com/en/dev/releases/1.4/#httprequest-raw-post-data-renamed-to-httprequest-body
+	try:
+		body = request.body
+	except AttributeError:
+		import warnings
+		warnMsg = "django-sendgrid will require at least Django 1.4 in future releases"
+		warnings.warn(warnMsg, FutureWarning)
 
-	eventsData = request.POST.keys()[0] # This is a bit weird
-	events = [json.loads(event) for event in eventsData.split(BATCHED_EVENT_SEPARATOR)]
+		body = request.raw_post_data
 
+	events = [json.loads(line) for line in request.body.splitlines()]
 	for event in events:
 		create_event_from_sendgrid_params(event)
 		
