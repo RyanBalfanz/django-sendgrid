@@ -29,6 +29,7 @@ from .utils import in_test_environment
 from .utils.requestfactory import RequestFactory 
 from .views import handle_single_event_request
 
+import json
 
 TEST_SENDER_EMAIL = "ryan@example.com"
 TEST_RECIPIENTS = ["ryan@example.com"]
@@ -37,6 +38,30 @@ validate_filter_setting_value = filterutils.validate_filter_setting_value
 validate_filter_specification = filterutils.validate_filter_specification
 update_filters = filterutils.update_filters
 
+
+class SendGridBatchedEventTest(TestCase):
+	def setUp(self):
+		self.email1 = SendGridEmailMessage(to=TEST_RECIPIENTS, from_email=TEST_SENDER_EMAIL)
+		self.email1.send()
+		self.email2 = SendGridEmailMessage(to=TEST_RECIPIENTS, from_email=TEST_SENDER_EMAIL)
+		self.email2.send()
+		self.client = Client()
+
+	def test_batched_events_emails_exist(self):
+		eventData1 = {
+			"email":TEST_RECIPIENTS[0],
+			"timestamp":1322000095,
+			"message_id":str(self.email1.message_id)
+		}
+		eventData2 = {
+			"email":TEST_RECIPIENTS[0],
+			"timestamp":1322000096,
+			"message_id":str(self.email2.message_id)
+		}
+		#prepare postData in sendgrids stupid non valid json
+		postData = "{0}\n{1}".format(json.dumps(eventData1),json.dumps(eventData2))
+		
+		self.client.post(reverse("sendgrid_post_event"),content_type="application/json",body=postData)
 
 
 class SendGridEventTest(TestCase):
@@ -51,7 +76,7 @@ class SendGridEventTest(TestCase):
 			"message_id": self.email.message_id, 
 			"email" : self.email.from_email,
 			"event" : "OPEN",
-			}
+		}
 		request = self.rf.post('/sendgrid/events',post_data)
 		handle_single_event_request(request)
 		#Event created
