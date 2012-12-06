@@ -13,7 +13,7 @@ from django.views.decorators.csrf import csrf_exempt
 from .signals import sendgrid_event_recieved
 
 from sendgrid.models import EmailMessage, Event, ClickEvent, DeferredEvent, DroppedEvent, DeliverredEvent, BounceEvent, EventType
-from sendgrid.constants import EVENT_TYPES_EXTRA_FIELDS_MAP, EVENT_MODEL_NAMES
+from sendgrid.constants import BATCHED_EVENT_SEPARATOR, EVENT_TYPES_EXTRA_FIELDS_MAP, EVENT_MODEL_NAMES
 from sendgrid.settings import SENDGRID_CREATE_MISSING_EMAIL_MESSAGES
 
 
@@ -100,7 +100,7 @@ def handle_batched_events_request(request):
 	Note: Choosing not to use bulk inserts for now because post_save/pre_save would not be triggered.
 
 	"""
-	events = [json.loads(event) for event in request.POST.keys()[0].split("\r\n")]
+	events = [json.loads(event) for event in request.POST.keys()[0].split(BATCHED_EVENT_SEPARATOR)]
 	for event in events:
 		create_event_from_sendgrid_params(event)
 		
