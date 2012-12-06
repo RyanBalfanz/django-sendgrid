@@ -51,17 +51,21 @@ class SendGridBatchedEventTest(TestCase):
 		eventData1 = {
 			"email":TEST_RECIPIENTS[0],
 			"timestamp":1322000095,
-			"message_id":str(self.email1.message_id)
+			"message_id":str(self.email1.message_id),
+			"event":"OPEN"
 		}
 		eventData2 = {
 			"email":TEST_RECIPIENTS[0],
 			"timestamp":1322000096,
-			"message_id":str(self.email2.message_id)
+			"message_id":str(self.email2.message_id),
+			"event":"DELIVERED"
 		}
 		#prepare postData in sendgrids stupid non valid json
 		postData = "{0}\n{1}".format(json.dumps(eventData1),json.dumps(eventData2))
 		
 		self.client.post(reverse("sendgrid_post_event"),content_type="application/json",body=postData)
+
+		self.assertEqual(Event.objects.count(),2)
 
 
 class SendGridEventTest(TestCase):
