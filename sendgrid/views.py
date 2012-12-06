@@ -1,5 +1,6 @@
 from __future__ import absolute_import
 
+import json
 import logging
 from datetime import datetime
 from django.conf import settings
@@ -96,9 +97,14 @@ def handle_batched_events_request(request):
 		{"email":"foo@bar.com","timestamp":1322000095,"unique_arg":"my unique arg","event":"delivered"}
 		{"email":"foo@bar.com","timestamp":1322000096,"unique_arg":"my unique arg","event":"open"}
 
+	Note: Choosing note to use bulk inserts for now because post_save/pre_save would not be triggered.
+
 	"""
-	logger.exception("Batched events are not currently supported!")
-	raise NotImplementedError
+	events = [json.loads(event) for event in request.META["body"].split("\n")]
+	for event in events:
+		create_event_from_sendgrid_params(event)
+		
+	return HttpResponse()
 
 def clean_response(response):
 	expectedStatusCode = POST_EVENTS_RESPONSE_STATUS_CODE
