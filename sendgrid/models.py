@@ -169,7 +169,7 @@ class Argument(models.Model):
 		(ARGUMENT_DATA_TYPE_COMPLEX, _("Complex")),
 		(ARGUMENT_DATA_TYPE_STRING, _("String")),
 	)
-	key = models.CharField(max_length=ARGUMENT_KEY_MAX_LENGTH)
+	key = models.CharField(unique=True, max_length=ARGUMENT_KEY_MAX_LENGTH)
 	data_type = models.IntegerField(_("Data Type"), choices=ARGUMENT_DATA_TYPES, default=ARGUMENT_DATA_TYPE_UNKNOWN)
 	creation_time = models.DateTimeField(auto_now_add=True)
 	last_modified_time = models.DateTimeField(auto_now=True)
