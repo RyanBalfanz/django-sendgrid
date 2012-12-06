@@ -49,9 +49,9 @@ def create_event_from_sendgrid_params(params):
 	event_params = {
 		"email_message": emailMessage,
 		"email": email,
-		"event_type":event_type
+		"event_type": event_type
 	}
-	timestamp = params.get("timestamp",None)
+	timestamp = params.get("timestamp", None)
 	if timestamp:
 		event_params["timestamp"] = datetime.utcfromtimestamp(float(timestamp))
 
@@ -81,9 +81,7 @@ def handle_single_event_request(request):
 	"""
 	eventData = request.POST
 	create_event_from_sendgrid_params(eventData)
-	# Parameters that are always passed with each event
 	
-
 	response = HttpResponse()
 
 	return response
@@ -100,7 +98,10 @@ def handle_batched_events_request(request):
 	Note: Choosing not to use bulk inserts for now because post_save/pre_save would not be triggered.
 
 	"""
-	events = [json.loads(event) for event in request.POST.keys()[0].splitlines()]
+
+	eventsData = request.POST.keys()[0] # This is a bit weird
+	events = [json.loads(event) for event in eventsData.split(BATCHED_EVENT_SEPARATOR)]
+
 	for event in events:
 		create_event_from_sendgrid_params(event)
 		
