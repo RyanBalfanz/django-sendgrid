@@ -10,7 +10,7 @@ from django.test import TestCase
 from django.test.client import Client
 from django.utils.http import urlencode
 
-from .constants import EVENT_TYPES_EXTRA_FIELDS_MAP, EVENT_MODEL_NAMES, UNIQUE_ARGS_STORED_FOR_EVENTS_WITHOUT_MESSAGE_ID
+from .constants import BATCHED_EVENT_SEPARATOR, EVENT_TYPES_EXTRA_FIELDS_MAP, EVENT_MODEL_NAMES, UNIQUE_ARGS_STORED_FOR_EVENTS_WITHOUT_MESSAGE_ID
 from .mail import get_sendgrid_connection
 from .mail import send_sendgrid_mail
 from .message import SendGridEmailMessage
@@ -46,8 +46,6 @@ class SendGridBatchedEventTest(TestCase):
 		self.email2 = SendGridEmailMessage(to=TEST_RECIPIENTS, from_email=TEST_SENDER_EMAIL)
 		self.email2.send()
 		self.client = Client()
-
-	def test_batched_events_emails_exist(self):
 		eventData1 = {
 			"email":TEST_RECIPIENTS[0],
 			"timestamp":1322000095,
@@ -64,8 +62,31 @@ class SendGridBatchedEventTest(TestCase):
 		postData = "{0}\r\n{1}\r\n".format(json.dumps(eventData1),json.dumps(eventData2))
 		
 		self.client.post(reverse("sendgrid_post_event"),content_type="application/json",data=postData)
+		self.events = [
+			{
+				"email":TEST_RECIPIENTS[0],
+				"timestamp":1322000095,
+				"message_id":str(self.email1.message_id),
+				"event":"OPEN"
+			},
+			{
+				"email":TEST_RECIPIENTS[0],
+				"timestamp":1322000096,
+				"message_id":str(self.email2.message_id),
+				"event":"DELIVERED"
+			},
+			{
+				"email":TEST_RECIPIENTS[0],
+				"timestamp":1322000097,
+				"message_id":str(self.email2.message_id),
+				"event":"OPEN"
+			}
+		]
 
-		self.assertEqual(Event.objects.count(),2)
+	def test_batched_events_emails_exist(self):
+		postData = BATCHED_EVENT_SEPARATOR.join(json.dumps(event, separators=(",", ":")) for event in self.events)
+		self.client.post(reverse("sendgrid_post_event"), content_type="application/json", data=postData)
+		self.assertEqual(Event.objects.count(), len(self.events))
 
 
 class SendGridEventTest(TestCase):

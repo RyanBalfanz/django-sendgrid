@@ -13,7 +13,7 @@ from django.views.decorators.csrf import csrf_exempt
 from .signals import sendgrid_event_recieved
 
 from sendgrid.models import EmailMessage, Event, ClickEvent, DeferredEvent, DroppedEvent, DeliverredEvent, BounceEvent, EventType
-from sendgrid.constants import EVENT_TYPES_EXTRA_FIELDS_MAP, EVENT_MODEL_NAMES
+from sendgrid.constants import BATCHED_EVENT_SEPARATOR, EVENT_TYPES_EXTRA_FIELDS_MAP, EVENT_MODEL_NAMES
 from sendgrid.settings import SENDGRID_CREATE_MISSING_EMAIL_MESSAGES
 
 
