@@ -1,5 +1,6 @@
 from __future__ import absolute_import
 
+import json
 from collections import defaultdict
 
 from django.conf import settings
@@ -29,7 +30,6 @@ from .utils import in_test_environment
 from .utils.requestfactory import RequestFactory 
 from .views import handle_single_event_request
 
-import json
 
 TEST_SENDER_EMAIL = "ryan@example.com"
 TEST_RECIPIENTS = ["ryan@example.com"]
@@ -49,22 +49,22 @@ class SendGridBatchedEventTest(TestCase):
 
 		self.events = [
 			{
-				"email":TEST_RECIPIENTS[0],
-				"timestamp":1322000095,
-				"message_id":str(self.email1.message_id),
-				"event":"OPEN"
+				"email": TEST_RECIPIENTS[0],
+				"timestamp": 1322000095,
+				"message_id": str(self.email1.message_id),
+				"event": "OPEN"
 			},
 			{
-				"email":TEST_RECIPIENTS[0],
-				"timestamp":1322000096,
-				"message_id":str(self.email2.message_id),
-				"event":"DELIVERED"
+				"email": TEST_RECIPIENTS[0],
+				"timestamp": 1322000096,
+				"message_id": str(self.email2.message_id),
+				"event": "DELIVERED"
 			},
 			{
-				"email":TEST_RECIPIENTS[0],
-				"timestamp":1322000097,
-				"message_id":str(self.email2.message_id),
-				"event":"OPEN"
+				"email": TEST_RECIPIENTS[0],
+				"timestamp": 1322000097,
+				"message_id": str(self.email2.message_id),
+				"event": "OPEN"
 			}
 		]
 
