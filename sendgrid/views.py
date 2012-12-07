@@ -14,14 +14,14 @@ from .signals import sendgrid_event_recieved
 
 from sendgrid.models import EmailMessage, Event, ClickEvent, DeferredEvent, DroppedEvent, DeliverredEvent, BounceEvent, EventType
 from sendgrid.constants import BATCHED_EVENT_SEPARATOR, EVENT_TYPES_EXTRA_FIELDS_MAP, EVENT_MODEL_NAMES
-from sendgrid.settings import SENDGRID_CREATE_MISSING_EMAIL_MESSAGES
+from sendgrid.settings import SENDGRID_CREATE_EVENTS_AND_EMAILS_FOR_NEWSLETTERS
 
 
 POST_EVENTS_RESPONSE_STATUS_CODE = getattr(settings, "POST_EVENT_HANDLER_RESPONSE_STATUS_CODE", 200)
 
 logger = logging.getLogger(__name__)
 
-def create_event_from_sendgrid_params(params):
+def create_event_from_sendgrid_params(params,json_format=False):
 	email = params.get("email", None)
 	event = params.get("event", None).upper()
 	category = params.get("category", None)
@@ -38,11 +38,11 @@ def create_event_from_sendgrid_params(params):
 		msg = "Expected 'message_id' was not found in event data"
 		logger.debug(msg)
 
-	if not emailMessage and SENDGRID_CREATE_MISSING_EMAIL_MESSAGES:
+	if not emailMessage and SENDGRID_CREATE_EVENTS_AND_EMAILS_FOR_NEWSLETTERS:
 		logger.debug("Creating missing EmailMessage from event data")
-		emailMessage = EmailMessage.from_event(params)
-	elif not emailMessage and not SENDGRID_CREATE_MISSING_EMAIL_MESSAGES:
-		logger.debug("Event with params {0} not created because email message with id {1} cannot be found and SENDGRID_CREATE_MISSING_EMAIL_MESSAGES=False".format(params,message_id))
+		emailMessage = EmailMessage.from_event(params,json_format)
+	elif not emailMessage and not SENDGRID_CREATE_EVENTS_AND_EMAILS_FOR_NEWSLETTERS:
+		logger.debug("Event with params {0} not created because email message with id {1} cannot be found and SENDGRID_CREATE_EVENTS_AND_EMAILS_FOR_NEWSLETTERS=False".format(params,message_id))
 		return False
 
 	event_type = EventType.objects.get(name=event.upper())
@@ -109,7 +109,7 @@ def handle_batched_events_request(request):
 
 	events = [json.loads(line) for line in body.splitlines()]
 	for event in events:
-		create_event_from_sendgrid_params(event)
+		create_event_from_sendgrid_params(event,json_format=True)
 		
 	return HttpResponse()
 

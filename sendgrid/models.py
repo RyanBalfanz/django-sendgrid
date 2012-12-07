@@ -18,9 +18,11 @@ from sendgrid.constants import (
 	ARGUMENT_DATA_TYPE_FLOAT,
 	ARGUMENT_DATA_TYPE_COMPLEX,
 	ARGUMENT_DATA_TYPE_STRING,
-	UNIQUE_ARGS_STORED_FOR_EVENTS_WITHOUT_MESSAGE_ID,
+	UNIQUE_ARGS_STORED_FOR_NEWSLETTER_EVENTS,
+	NEWSLETTER_UNIQUE_IDENTIFIER,
 )
 from sendgrid.signals import sendgrid_email_sent
+from sendgrid.utils import get_value_from_dict_using_formdata_key
 
 MAX_CATEGORIES_PER_EMAIL_MESSAGE = 10
 
@@ -199,16 +201,18 @@ class EmailMessage(models.Model):
 		verbose_name_plural = _("Email Messages")
 
 	@classmethod
-	def from_event(self, event_dict):
+	def from_event(self, event_dict,json_format=False):
 		"""
 		Returns a new EmailMessage instance derived from an Event Dictionary.
 		"""
-		newsletter_id = event_dict.get("newsletter[newsletter_id]")
+		newsletter_id = get_value_from_dict_using_formdata_key(NEWSLETTER_UNIQUE_IDENTIFIER,event_dict) if json_format else event_dict.get(NEWSLETTER_UNIQUE_IDENTIFIER)
+
 		to_email = event_dict.get("email")
 		try:
-			emailMessage = UniqueArgument.objects.get(data=newsletter_id, argument__key="newsletter[newsletter_id]", email_message__to_email=to_email).email_message
+			emailMessage = UniqueArgument.objects.get(data=newsletter_id, argument__key=NEWSLETTER_UNIQUE_IDENTIFIER, email_message__to_email=to_email).email_message
 		except UniqueArgument.DoesNotExist:
-			categories = [value for key,value in event_dict.items() if 'category' in key]
+			categories = event_dict.get("category") if json_format else [value for key,value in event_dict.items() if 'category' in key]
+
 			emailMessageSpec = {
 				"message_id": event_dict.get("message_id", None),
 				"from_email": "",
@@ -225,8 +229,8 @@ class EmailMessage(models.Model):
 				emailMessage.categories.add(categoryObj)
 
 			uniqueArgs = {}
-			for key in UNIQUE_ARGS_STORED_FOR_EVENTS_WITHOUT_MESSAGE_ID:
-				uniqueArgs[key] = event_dict.get(key)
+			for key in UNIQUE_ARGS_STORED_FOR_NEWSLETTER_EVENTS:
+				uniqueArgs[key] = get_value_from_dict_using_formdata_key(key,event_dict) if json_format else event_dict.get(key)
 
 			for argName, argValue in uniqueArgs.items():
 				argument,_ = Argument.objects.get_or_create(
