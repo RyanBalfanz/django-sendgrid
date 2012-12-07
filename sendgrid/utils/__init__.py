@@ -35,6 +35,25 @@ logger = logging.getLogger(__name__)
 
 # 	return emailMessage
 
+def get_value_from_dict_using_formdata_key(key,dictionary):
+	"""
+	Example:
+	key="newsletter[newsletter_id]"
+	dict={"newsletter":{"newsletter_id": 123}}
+
+	returns 123
+	"""
+	#check if we need to go deeper
+	if '[' in key and ']' in key:
+		#get top level key e.g. topKey[nextKey][anotherKey] => topKey
+		topKey = key.split('[')[0]
+		#remove top level key, e.g. topKey[nextKey][anotherKey] => nextKey[anotherKey]
+		topKeyRemoved = key[len(topKey)+1:].replace(']','',1)
+		#recurse
+		return get_value_from_dict_using_formdata_key(topKeyRemoved,dictionary[topKey])
+	else:
+		return dictionary[key]
+
 def in_test_environment():
 	"""
 	Returns True if in a test environment, False otherwise.
