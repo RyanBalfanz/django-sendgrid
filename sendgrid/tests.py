@@ -46,31 +46,84 @@ class SendGridBatchedEventTest(TestCase):
 		self.email2 = SendGridEmailMessage(to=TEST_RECIPIENTS, from_email=TEST_SENDER_EMAIL)
 		self.email2.send()
 		self.client = Client()
+
 		self.events = [
 			{
 				"email": TEST_RECIPIENTS[0],
 				"timestamp": 1322000095,
 				"message_id": str(self.email1.message_id),
+				"category":["category1"],
 				"event": "OPEN"
 			},
 			{
 				"email": TEST_RECIPIENTS[0],
 				"timestamp": 1322000096,
 				"message_id": str(self.email2.message_id),
+				"category":["category1"],
 				"event": "DELIVERED"
 			},
 			{
 				"email": TEST_RECIPIENTS[0],
 				"timestamp": 1322000097,
 				"message_id": str(self.email2.message_id),
+				"category":["category1"],
 				"event": "OPEN"
 			}
 		]
+		
 
 	def test_batched_events_emails_exist(self):
 		postData = BATCHED_EVENT_SEPARATOR.join(json.dumps(event, separators=(",", ":")) for event in self.events)
 		self.client.post(reverse("sendgrid_post_event"), content_type="application/json", data=postData)
 		self.assertEqual(Event.objects.count(), len(self.events))
+
+class SendGridBatchedEventNewsletterTest(TestCase):
+	def setUp(self):
+		self.events = [
+			{
+				"email": TEST_RECIPIENTS[0],
+				"timestamp": 1322000095,
+				"category":["newletter"],
+				"event": "OPEN",
+				"newsletter": 
+				{
+								"newsletter_send_id": "952852", 
+								"newsletter_id": "916273", 
+								"newsletter_user_list_id": "5059777"
+				}
+			},
+			{
+				"email": TEST_RECIPIENTS[0],
+				"timestamp": 1322000096,
+				"category":["newletter"],
+				"event": "DELIVERED",
+				"newsletter": 
+				{
+								"newsletter_send_id": "952852", 
+								"newsletter_id": "916273", 
+								"newsletter_user_list_id": "5059777"
+				}
+			},
+			{
+				"email": TEST_RECIPIENTS[0],
+				"timestamp": 1322000097,
+				"category":["newletter"],
+				"event": "OPEN",
+				"newsletter": 
+				{
+								"newsletter_send_id": "952852", 
+								"newsletter_id": "916273", 
+								"newsletter_user_list_id": "5059777"
+				}
+			}
+		]
+		self.client = Client()
+
+	def test_batched_events_newsletter(self):
+		postData = BATCHED_EVENT_SEPARATOR.join(json.dumps(event, separators=(",", ":")) for event in self.events)
+		self.client.post(reverse("sendgrid_post_event"), content_type="application/json", data=postData)
+		self.assertEqual(Event.objects.count(), len(self.events))
+		self.assertEqual(EmailMessage.objects.count(),1)
 
 
 class SendGridEventTest(TestCase):
