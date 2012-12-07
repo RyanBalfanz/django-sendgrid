@@ -107,7 +107,7 @@ def handle_batched_events_request(request):
 
 		body = request.raw_post_data
 
-	events = [json.loads(line) for line in request.body.splitlines()]
+	events = [json.loads(line) for line in body.splitlines()]
 	for event in events:
 		create_event_from_sendgrid_params(event)
 		
