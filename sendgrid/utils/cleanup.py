@@ -64,6 +64,7 @@ def cleanup_email_message_body_data(*args, **kwargs):
 
 	emailMessages = EmailMessage.objects.filter(
 		creation_time__lt=purgeDate,
+		body__isnull=False,
 	)
 
 	if emailMessages.exists():
