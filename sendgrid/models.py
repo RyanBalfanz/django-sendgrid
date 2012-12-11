@@ -22,8 +22,7 @@ from sendgrid.constants import (
 	NEWSLETTER_UNIQUE_IDENTIFIER,
 )
 from sendgrid.signals import sendgrid_email_sent
-from sendgrid.utils import get_value_from_dict_using_formdata_key
-
+from sendgrid.utils.formatutils import get_value_from_dict_using_formdata_key
 MAX_CATEGORIES_PER_EMAIL_MESSAGE = 10
 
 DEFAULT_SENDGRID_EMAIL_TRACKING_COMPONENTS = (
@@ -201,17 +200,17 @@ class EmailMessage(models.Model):
 		verbose_name_plural = _("Email Messages")
 
 	@classmethod
-	def from_event(self, event_dict,json_format=False):
+	def from_event(self, event_dict):
 		"""
 		Returns a new EmailMessage instance derived from an Event Dictionary.
 		"""
-		newsletter_id = get_value_from_dict_using_formdata_key(NEWSLETTER_UNIQUE_IDENTIFIER,event_dict) if json_format else event_dict.get(NEWSLETTER_UNIQUE_IDENTIFIER)
+		newsletter_id = get_value_from_dict_using_formdata_key(NEWSLETTER_UNIQUE_IDENTIFIER,event_dict)
 
 		to_email = event_dict.get("email")
 		try:
 			emailMessage = UniqueArgument.objects.get(data=newsletter_id, argument__key=NEWSLETTER_UNIQUE_IDENTIFIER, email_message__to_email=to_email).email_message
 		except UniqueArgument.DoesNotExist:
-			categories = event_dict.get("category") if json_format else [value for key,value in event_dict.items() if 'category' in key]
+			categories = event_dict.get("category",[])
 
 			emailMessageSpec = {
 				"message_id": event_dict.get("message_id", None),
@@ -228,19 +227,20 @@ class EmailMessage(models.Model):
 				categoryObj,created = Category.objects.get_or_create(name=category)
 				emailMessage.categories.add(categoryObj)
 
-			uniqueArgs = {}
-			for key in UNIQUE_ARGS_STORED_FOR_NEWSLETTER_EVENTS:
-				uniqueArgs[key] = get_value_from_dict_using_formdata_key(key,event_dict) if json_format else event_dict.get(key)
+			if newsletter_id:
+				uniqueArgs = {}
+				for key in UNIQUE_ARGS_STORED_FOR_NEWSLETTER_EVENTS:
+					uniqueArgs[key] = get_value_from_dict_using_formdata_key(key,event_dict)
 
-			for argName, argValue in uniqueArgs.items():
-				argument,_ = Argument.objects.get_or_create(
-					key=argName
-				)
-				uniqueArg = UniqueArgument.objects.create(
-					argument=argument,
-					email_message=emailMessage,
-					data=argValue
-				)
+				for argName, argValue in uniqueArgs.items():
+					argument,_ = Argument.objects.get_or_create(
+						key=argName
+					)
+					uniqueArg = UniqueArgument.objects.create(
+						argument=argument,
+						email_message=emailMessage,
+						data=argValue
+					)
 		
 		return emailMessage
 
