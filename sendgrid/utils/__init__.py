@@ -35,49 +35,6 @@ logger = logging.getLogger(__name__)
 
 # 	return emailMessage
 
-def convert_dict_to_urlencoded_string(dictionary):
-	"""
-	The purpose of this utility is to convert from a python dictionary to a urlencoded string in the format that sendgrid sends.
-	"""
-	def add_keyvalue_to_string(string,keyvalue,separator='&'):
-		if len(string) > 0:
-			return "{string}{separator}{keyvalue}".format(string=string,keyvalue=keyvalue,separator=separator)
-		else:
-			return keyvalue
-
-	string = ""
-	for key,value in dictionary.items():
-		if type(value)==dict:
-			raise NotImplementedError("Sub dictionaries are currently not supported")
-		elif type(value)==list:
-			for i,subValue in enumerate(value):
-				keyvalue = "{key}[{i}]={sub_value}".format(key=key,i=i,sub_value=subValue)
-				string = add_keyvalue_to_string(string,keyvalue)
-		else:
-			keyvalue = "{key}={value}".format(key=key,value=value)
-			string = add_keyvalue_to_string(string,keyvalue)
-
-	return string
-
-def get_value_from_dict_using_formdata_key(key,dictionary):
-	"""
-	Example:
-	key="newsletter[newsletter_id]"
-	dict={"newsletter":{"newsletter_id": 123}}
-
-	returns 123
-	"""
-	#check if we need to go deeper
-	if '[' in key and ']' in key:
-		#get top level key e.g. topKey[nextKey][anotherKey] => topKey
-		topKey = key.split('[')[0]
-		#remove top level key, e.g. topKey[nextKey][anotherKey] => nextKey[anotherKey]
-		topKeyRemoved = key[len(topKey)+1:].replace(']','',1)
-		#recurse
-		return get_value_from_dict_using_formdata_key(topKeyRemoved,dictionary[topKey])
-	else:
-		return dictionary[key]
-
 def in_test_environment():
 	"""
 	Returns True if in a test environment, False otherwise.
