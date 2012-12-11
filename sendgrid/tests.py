@@ -22,8 +22,9 @@ from .models import Event, ClickEvent, BounceEvent, DeferredEvent, DroppedEvent,
 from .models import EmailMessageAttachmentsData
 from .models import EventType
 from .models import UniqueArgument
-from .settings import SENDGRID_CREATE_EVENTS_AND_EMAILS_FOR_NEWSLETTERS
 from .signals import sendgrid_email_sent
+from sendgrid.settings import SENDGRID_CREATE_MISSING_EMAILS_FOR_EVENTS_WITH_MESSAGE_ID, SENDGRID_CREATE_EVENTS_AND_EMAILS_FOR_NEWSLETTERS
+from .utils.formatutils import convert_dict_to_urlencoded_string
 from .utils import filterutils
 # from .utils import get_email_message
 from .utils import in_test_environment
@@ -33,10 +34,16 @@ from .views import handle_single_event_request
 
 TEST_SENDER_EMAIL = "ryan@example.com"
 TEST_RECIPIENTS = ["ryan@example.com"]
+SAMPLE_NEWSLETTER_IDS = {
+	"newsletter_send_id": "952852", 
+	"newsletter_id": "916273", 
+	"newsletter_user_list_id": "5059777"
+}
 
 validate_filter_setting_value = filterutils.validate_filter_setting_value
 validate_filter_specification = filterutils.validate_filter_specification
 update_filters = filterutils.update_filters
+
 
 
 class SendGridBatchedEventTest(TestCase):
@@ -85,36 +92,21 @@ class SendGridBatchedEventNewsletterTest(TestCase):
 				"timestamp": 1322000095,
 				"category":["newletter"],
 				"event": "OPEN",
-				"newsletter": 
-				{
-								"newsletter_send_id": "952852", 
-								"newsletter_id": "916273", 
-								"newsletter_user_list_id": "5059777"
-				}
+				"newsletter": SAMPLE_NEWSLETTER_IDS
 			},
 			{
 				"email": TEST_RECIPIENTS[0],
 				"timestamp": 1322000096,
 				"category":["newletter"],
 				"event": "DELIVERED",
-				"newsletter": 
-				{
-								"newsletter_send_id": "952852", 
-								"newsletter_id": "916273", 
-								"newsletter_user_list_id": "5059777"
-				}
+				"newsletter": SAMPLE_NEWSLETTER_IDS
 			},
 			{
 				"email": TEST_RECIPIENTS[0],
 				"timestamp": 1322000097,
 				"category":["newletter"],
 				"event": "OPEN",
-				"newsletter": 
-				{
-								"newsletter_send_id": "952852", 
-								"newsletter_id": "916273", 
-								"newsletter_user_list_id": "5059777"
-				}
+				"newsletter": SAMPLE_NEWSLETTER_IDS
 			}
 		]
 		self.client = Client()
@@ -129,39 +121,55 @@ class SendGridBatchedEventNewsletterTest(TestCase):
 			self.assertEqual(Event.objects.count(), 0)
 			self.assertEqual(EmailMessageModel.objects.count(),0)
 
-
-
 class SendGridEventTest(TestCase):
 	def setUp(self):
 		self.email = SendGridEmailMessage(to=TEST_RECIPIENTS, from_email=TEST_SENDER_EMAIL)
 		self.email.send()
-		self.rf = RequestFactory()
+		self.client = Client()
 
 	def test_event_email_exists(self):
 		event_count = Event.objects.count()
-		post_data = {
+		postData = {
 			"message_id": self.email.message_id, 
 			"email" : self.email.from_email,
 			"event" : "OPEN",
 		}
-		request = self.rf.post('/sendgrid/events',post_data)
-		handle_single_event_request(request)
+		postString = convert_dict_to_urlencoded_string(postData)
+		response = self.client.post(reverse("sendgrid_post_event"),data=postString,content_type="application/x-www-form-urlencoded")
+
 		#Event created
 		self.assertEqual(Event.objects.count(),event_count+1)
 		#Email matches original message_id
 		self.assertEqual(Event.objects.get().email_message.message_id, self.email.message_id.__str__())
 
+	def test_newsletter_event(self):
+		eventCount = Event.objects.count()
+		emailCount = EmailMessageModel.objects.count()
+		postData = {
+			"newsletter": SAMPLE_NEWSLETTER_IDS,
+			"email" : self.email.from_email,
+			"event" : "OPEN",
+		}
+		postString = convert_dict_to_urlencoded_string(postData)
+		response = self.client.post(reverse("sendgrid_post_event"),data=postString,content_type="application/x-www-form-urlencoded")
+
+		self.assertEqual(response.status_code,200)
+		if SENDGRID_CREATE_EVENTS_AND_EMAILS_FOR_NEWSLETTERS:
+			self.assertEqual(eventCount+1,Event.objects.count())
+			self.assertEqual(emailCount+1,EmailMessageModel.objects.count())
+		else:
+			self.assertEqual(eventCount,Event.objects.count())
+			self.assertEqual(emailCount,EmailMessageModel.objects.count())
+			
+
 	def verify_event_with_missing_email(self,post_data):
 		event_count = Event.objects.count()
 		email_count = EmailMessageModel.objects.count()
 
-		for key in UNIQUE_ARGS_STORED_FOR_NEWSLETTER_EVENTS:
-			post_data[key] = key+"_value"
+		postString = convert_dict_to_urlencoded_string(post_data)
+		response = self.client.post(reverse("sendgrid_post_event"),data=postString,content_type="application/x-www-form-urlencoded")
 
-		request = self.rf.post('/sendgrid/events',post_data)
-		handle_single_event_request(request)
-
-		if SENDGRID_CREATE_EVENTS_AND_EMAILS_FOR_NEWSLETTERS:
+		if SENDGRID_CREATE_MISSING_EMAILS_FOR_EVENTS_WITH_MESSAGE_ID:
 			delta = 1
 		else:
 			delta = 0
@@ -171,39 +179,27 @@ class SendGridEventTest(TestCase):
 		#email created
 		self.assertEqual(EmailMessageModel.objects.count(), email_count + delta)
 
-		if SENDGRID_CREATE_EVENTS_AND_EMAILS_FOR_NEWSLETTERS:
+		if SENDGRID_CREATE_MISSING_EMAILS_FOR_EVENTS_WITH_MESSAGE_ID:
 			event = Event.objects.get(email=post_data['email'])
 			emailMessage = event.email_message
 			#check to_email
 			self.assertEqual(event.email_message.to_email, event.email)
 
-			#check unique args
-			for key in UNIQUE_ARGS_STORED_FOR_NEWSLETTER_EVENTS:
-				self.assertEqual(post_data[key],emailMessage.uniqueargument_set.get(argument__key=key).data)
-
 			#post another event
-			request = self.rf.post('/sendgrid/events',post_data)
-			response = handle_single_event_request(request)
+			postString = convert_dict_to_urlencoded_string(post_data)
+			response = self.client.post(reverse("sendgrid_post_event"),data=postString,content_type="application/x-www-form-urlencoded")
 
 			#should be same email_count
-			self.assertEqual(EmailMessageModel.objects.count(),email_count + 1)
+			self.assertEqual(EmailMessageModel.objects.count(),email_count + delta)
 
-	def test_event_email_doesnt_exist(self):
+	def test_event_email_with_message_id_doesnt_exist(self):
 		postData = {
 			"message_id": 'a5df', 
 			"email" : self.email.to[0],
 			"event" : "OPEN",
 			"category": ["test_category", "another_test_category"],
 		}
-
-		self.verify_event_with_missing_email(postData)
-
-	def test_event_no_message_id(self):
-		postData = {
-			"email" : self.email.to[0],
-			"event" : "OPEN",
-			"category": "test_category",
-		}
+	
 		self.verify_event_with_missing_email(postData)
 
 	def test_event_email_doesnt_exist_no_category(self):
@@ -214,6 +210,25 @@ class SendGridEventTest(TestCase):
 		}
 
 		self.verify_event_with_missing_email(postData)
+
+	def test_event_no_message_id(self):
+		eventCount = Event.objects.count()
+		emailCount = EmailMessageModel.objects.count()
+		postData = {
+			"email" : self.email.to[0],
+			"event" : "OPEN",
+			"category": "test_category",
+		}
+
+		#post an event
+		response = self.client.post('/sendgrid/events/',postData)
+					
+		self.assertEqual(response.status_code,200)
+		#No matter what settings, shouldn't create any emails/events
+		self.assertEqual(EmailMessageModel.objects.count(),emailCount)
+		self.assertEqual(Event.objects.count(),eventCount)
+
+
 
 
 class SendGridEmailTest(TestCase):
