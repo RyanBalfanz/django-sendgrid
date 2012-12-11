@@ -12,16 +12,16 @@ from django.views.decorators.csrf import csrf_exempt
 
 from .signals import sendgrid_event_recieved
 
-from sendgrid.models import EmailMessage, Event, ClickEvent, DeferredEvent, DroppedEvent, DeliverredEvent, BounceEvent, EventType
 from sendgrid.constants import BATCHED_EVENT_SEPARATOR, EVENT_TYPES_EXTRA_FIELDS_MAP, EVENT_MODEL_NAMES
-from sendgrid.settings import SENDGRID_CREATE_EVENTS_AND_EMAILS_FOR_NEWSLETTERS
-
+from sendgrid.models import EmailMessage, Event, ClickEvent, DeferredEvent, DroppedEvent, DeliverredEvent, BounceEvent, EventType
+from sendgrid.utils.formatutils import convert_flat_dict_to_nested
+from sendgrid import settings as sendgrid_settings
 
 POST_EVENTS_RESPONSE_STATUS_CODE = getattr(settings, "POST_EVENT_HANDLER_RESPONSE_STATUS_CODE", 200)
 
 logger = logging.getLogger(__name__)
 
-def create_event_from_sendgrid_params(params,json_format=False):
+def create_event_from_sendgrid_params(params):
 	email = params.get("email", None)
 	event = params.get("event", None).upper()
 	category = params.get("category", None)
@@ -38,11 +38,14 @@ def create_event_from_sendgrid_params(params,json_format=False):
 		msg = "Expected 'message_id' was not found in event data"
 		logger.debug(msg)
 
-	if not emailMessage and SENDGRID_CREATE_EVENTS_AND_EMAILS_FOR_NEWSLETTERS:
-		logger.debug("Creating missing EmailMessage from event data")
-		emailMessage = EmailMessage.from_event(params,json_format)
-	elif not emailMessage and not SENDGRID_CREATE_EVENTS_AND_EMAILS_FOR_NEWSLETTERS:
-		logger.debug("Event with params {0} not created because email message with id {1} cannot be found and SENDGRID_CREATE_EVENTS_AND_EMAILS_FOR_NEWSLETTERS=False".format(params,message_id))
+	if not emailMessage:
+		if sendgrid_settings.SENDGRID_CREATE_MISSING_EMAILS_FOR_EVENTS_WITH_MESSAGE_ID and message_id:
+			emailMessage = EmailMessage.from_event(params)
+		elif sendgrid_settings.SENDGRID_CREATE_EVENTS_AND_EMAILS_FOR_NEWSLETTERS and params.get("newsletter",None):
+			emailMessage = EmailMessage.from_event(params)
+
+	if not emailMessage:
+		logger.debug("Couldn't create email message for event with params {0}".format(params))
 		return False
 
 	event_type = EventType.objects.get(name=event.upper())
@@ -80,6 +83,7 @@ def handle_single_event_request(request):
 	Handles single event POST requests.
 	"""
 	eventData = request.POST
+	eventData = convert_flat_dict_to_nested(eventData)
 	create_event_from_sendgrid_params(eventData)
 	
 	response = HttpResponse()
@@ -109,7 +113,7 @@ def handle_batched_events_request(request):
 
 	events = [json.loads(line) for line in body.splitlines()]
 	for event in events:
-		create_event_from_sendgrid_params(event,json_format=True)
+		create_event_from_sendgrid_params(event)
 		
 	return HttpResponse()
 
