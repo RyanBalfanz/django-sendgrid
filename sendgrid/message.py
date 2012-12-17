@@ -117,8 +117,8 @@ class SendGridEmailMessage(SendGridEmailMessageMixin, EmailMessage):
 		"""Sends the email message."""
 		self.prep_message_for_sending()
 		
-		response = super(SendGridEmailMessage, self).send(*args, **kwargs)
 		save_email_message(sender=self,message=self,response=None)
+		response = super(SendGridEmailMessage, self).send(*args, **kwargs)
 		logger.debug("Tried to send an email with SendGrid and got response {r}".format(r=response))
 		sendgrid_email_sent.send(sender=self, message=self, response=response)
 		
@@ -143,8 +143,8 @@ class SendGridEmailMultiAlternatives(SendGridEmailMessageMixin, EmailMultiAltern
 		"""Sends the email message."""
 		self.prep_message_for_sending()
 		
-		response = super(SendGridEmailMultiAlternatives, self).send(*args, **kwargs)
 		save_email_message(sender=self,message=self,response=None)
+		response = super(SendGridEmailMultiAlternatives, self).send(*args, **kwargs)
 		logger.debug("Tried to send a multialternatives email with SendGrid and got response {r}".format(r=response))
 		sendgrid_email_sent.send(sender=self, message=self, response=response)
 
