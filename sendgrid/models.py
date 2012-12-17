@@ -221,7 +221,7 @@ class EmailMessage(models.Model):
 			if len(categories) > 0:
 				emailMessageSpec["category"] = categories[0]
 				
-			emailMessage = EmailMessage.objects.create(**emailMessageSpec)
+			emailMessage = EmailMessage.objects.get_or_create(**emailMessageSpec)
 			
 			for category in categories:
 				categoryObj,created = Category.objects.get_or_create(name=category)
