@@ -6,6 +6,7 @@ import logging
 from django.conf import settings
 from django.core.exceptions import MultipleObjectsReturned
 from django.db import models
+from django.db import transaction
 from django.dispatch import receiver
 from django.utils.translation import ugettext_lazy as _
 
@@ -65,6 +66,7 @@ def update_email_message(sender, message, response, **kwargs):
 	emailMessage.response = response
 	emailMessage.save()
 
+@transaction.commit_manually
 def save_email_message(sender, **kwargs):
 	message = kwargs.get("message", None)
 	response = kwargs.get("response", None)
@@ -104,8 +106,9 @@ def save_email_message(sender, **kwargs):
 			category=category,
 			response=response,
 		)
+		transaction.commit()
 		logger.debug("DEBUG-EVENT: emailMessage record Created with message_id:{0}".format(emailMessage.message_id))
-
+		
 		if categories:
 			for categoryName in categories:
 				category, created = Category.objects.get_or_create(name=categoryName)
@@ -142,6 +145,7 @@ def save_email_message(sender, **kwargs):
 			else:
 				logMessage = "Component {c} is not tracked"
 				logger.debug(logMessage.format(c=component))
+	return emailMessage
 
 @receiver(sendgrid_event_recieved)
 def log_event_recieved(sender, request, **kwargs):
