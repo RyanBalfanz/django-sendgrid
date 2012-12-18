@@ -58,10 +58,10 @@ if SENDGRID_USER_MIXIN_ENABLED:
 logger = logging.getLogger(__name__)
 
 @receiver(sendgrid_email_sent)
-def update_email_message(sender, **kwargs):
-	messageId = getattr(sender, "message_id", None)
+def update_email_message(sender, message, response, **kwargs):
+	messageId = getattr(message, "message_id", None)
 	emailMessage = EmailMessage.objects.get(message_id=messageId)
-	emailMessage.response = kwargs["response"]
+	emailMessage.response = response
 	emailMessage.save()
 
 def save_email_message(sender, **kwargs):
