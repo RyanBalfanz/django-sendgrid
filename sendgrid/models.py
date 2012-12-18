@@ -104,6 +104,7 @@ def save_email_message(sender, **kwargs):
 			category=category,
 			response=response,
 		)
+		logger.debug("DEBUG-EVENT: emailMessage record Created with message_id:{0}".format(emailMessage.message_id))
 
 		if categories:
 			for categoryName in categories:
@@ -226,7 +227,12 @@ class EmailMessage(models.Model):
 			}
 			if len(categories) > 0:
 				emailMessageSpec["category"] = categories[0]
-				
+			
+			if event_dict.get("message_id", None):
+				logger.debug("DEBUG-EVENT: Trying To Create Email From Event with message_id {0}".event_dict.get("message_id", None))
+				existingEmail = EmailMessage.objects.filter(message_id=event_dict.get("message_id", None))
+				if len(existingEmail) > 0:
+					logger.debug("DEBUG-EVENT: Found an existing email with message_id {0}".event_dict.get("message_id", None))
 			emailMessage = EmailMessage.objects.create(**emailMessageSpec)
 			
 			for category in categories:
