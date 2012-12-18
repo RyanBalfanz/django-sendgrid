@@ -25,6 +25,9 @@ def create_event_from_sendgrid_params(params):
 	email = params.get("email", None)
 	event = params.get("event", None).upper()
 	category = params.get("category", None)
+	if type(category) == str:
+		category = [category]
+
 	message_id = params.get("message_id", None)
 
 	emailMessage = None
