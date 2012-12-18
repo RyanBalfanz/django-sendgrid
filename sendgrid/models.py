@@ -229,10 +229,10 @@ class EmailMessage(models.Model):
 				emailMessageSpec["category"] = categories[0]
 			
 			if event_dict.get("message_id", None):
-				logger.debug("DEBUG-EVENT: Trying To Create Email From Event with message_id {0}".event_dict.get("message_id", None))
+				logger.debug("DEBUG-EVENT: Trying To Create Email From Event with message_id {0}".format(event_dict.get("message_id", None)))
 				existingEmail = EmailMessage.objects.filter(message_id=event_dict.get("message_id", None))
 				if len(existingEmail) > 0:
-					logger.debug("DEBUG-EVENT: Found an existing email with message_id {0}".event_dict.get("message_id", None))
+					logger.debug("DEBUG-EVENT: Found an existing email with message_id {0}".format(event_dict.get("message_id", None)))
 			emailMessage = EmailMessage.objects.create(**emailMessageSpec)
 			
 			for category in categories:
