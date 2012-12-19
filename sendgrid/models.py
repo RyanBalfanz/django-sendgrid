@@ -59,6 +59,10 @@ if SENDGRID_USER_MIXIN_ENABLED:
 
 logger = logging.getLogger(__name__)
 
+@transaction.commit_manually
+def flush_transaction():
+	transaction.commit()
+
 @receiver(sendgrid_email_sent)
 def update_email_message(sender, message, response, **kwargs):
 	messageId = getattr(message, "message_id", None)
@@ -66,7 +70,7 @@ def update_email_message(sender, message, response, **kwargs):
 	emailMessage.response = response
 	emailMessage.save()
 
-@transaction.commit_manually
+
 def save_email_message(sender, **kwargs):
 	message = kwargs.get("message", None)
 	response = kwargs.get("response", None)
@@ -106,9 +110,9 @@ def save_email_message(sender, **kwargs):
 			category=category,
 			response=response,
 		)
-		transaction.commit()
+		flush_transaction()
 		logger.debug("DEBUG-EVENT: emailMessage record Created with message_id:{0}".format(emailMessage.message_id))
-		
+
 		if categories:
 			for categoryName in categories:
 				category, created = Category.objects.get_or_create(name=categoryName)
@@ -145,6 +149,7 @@ def save_email_message(sender, **kwargs):
 			else:
 				logMessage = "Component {c} is not tracked"
 				logger.debug(logMessage.format(c=component))
+		flush_transaction()
 	return emailMessage
 
 @receiver(sendgrid_event_recieved)

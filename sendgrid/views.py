@@ -4,6 +4,7 @@ import json
 import logging
 from datetime import datetime
 from django.conf import settings
+from django.db import transaction
 from django.http import HttpResponse
 from django.http import HttpResponseBadRequest
 from django.http import HttpResponseNotFound
@@ -21,7 +22,12 @@ POST_EVENTS_RESPONSE_STATUS_CODE = getattr(settings, "POST_EVENT_HANDLER_RESPONS
 
 logger = logging.getLogger(__name__)
 
+@transaction.commit_manually
+def flush_transaction():
+	transaction.commit()
+
 def create_event_from_sendgrid_params(params):
+	flush_transaction()
 	email = params.get("email", None)
 	event = params.get("event", None).upper()
 	category = params.get("category", None)
