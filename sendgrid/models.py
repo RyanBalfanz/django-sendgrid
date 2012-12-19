@@ -6,7 +6,6 @@ import logging
 from django.conf import settings
 from django.core.exceptions import MultipleObjectsReturned
 from django.db import models
-from django.db import transaction
 from django.dispatch import receiver
 from django.utils.translation import ugettext_lazy as _
 
@@ -24,6 +23,7 @@ from sendgrid.constants import (
 )
 from sendgrid.signals import sendgrid_email_sent
 from sendgrid.utils.formatutils import get_value_from_dict_using_formdata_key
+from sendgrid.utils.dbutils import flush_transaction
 MAX_CATEGORIES_PER_EMAIL_MESSAGE = 10
 
 DEFAULT_SENDGRID_EMAIL_TRACKING_COMPONENTS = (
@@ -58,10 +58,6 @@ if SENDGRID_USER_MIXIN_ENABLED:
 	User.__bases__ += (SendGridUserMixin,)
 
 logger = logging.getLogger(__name__)
-
-@transaction.commit_manually
-def flush_transaction():
-	transaction.commit()
 
 @receiver(sendgrid_email_sent)
 def update_email_message(sender, message, response, **kwargs):
