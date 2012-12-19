@@ -39,6 +39,7 @@ def create_event_from_sendgrid_params(params):
 	emailMessage = None
 	if message_id:
 		try:
+			flush_transaction()
 			emailMessage = EmailMessage.objects.get(message_id=message_id)
 		except EmailMessage.DoesNotExist:
 			msg = "EmailMessage with message_id {id} not found"
