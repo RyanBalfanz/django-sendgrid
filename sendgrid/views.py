@@ -22,7 +22,7 @@ POST_EVENTS_RESPONSE_STATUS_CODE = getattr(settings, "POST_EVENT_HANDLER_RESPONS
 
 logger = logging.getLogger(__name__)
 
-def create_event_from_sendgrid_params(params):
+def create_event_from_sendgrid_params(params,create=True):
 	flush_transaction()
 	email = params.get("email", None)
 	event = params.get("event", None).upper()
@@ -52,7 +52,7 @@ def create_event_from_sendgrid_params(params):
 
 	if not emailMessage:
 		logger.debug("Couldn't create email message for event with params {0}".format(params))
-		return False
+		return None
 
 	event_type = EventType.objects.get(name=event.upper())
 	event_params = {
@@ -80,9 +80,12 @@ def create_event_from_sendgrid_params(params):
 			else:
 				logger.debug("Expected post param {key} for Sendgrid Event {event} not found".format(key=key,event=event))
 		event_model = eval(EVENT_MODEL_NAMES[event]) if event in EVENT_MODEL_NAMES.keys() else Event
-		eventObj = event_model.objects.create(**event_params)
+		if create:
+			eventObj = event_model.objects.create(**event_params)
+		else:
+			eventObj = event_model(**event_params)
 
-	return True
+	return eventObj
 
 def handle_single_event_request(request):
 	"""
@@ -118,8 +121,13 @@ def handle_batched_events_request(request):
 		body = request.raw_post_data
 
 	events = [json.loads(line) for line in body.splitlines()]
+	eventsToSave = []
 	for event in events:
-		create_event_from_sendgrid_params(event)
+		eventToSave = create_event_from_sendgrid_params(event,False)
+		if eventToSave:
+			eventsToSave.append(eventToSave)
+
+	Event.objects.bulk_create(eventsToSave)
 		
 	return HttpResponse()
 
