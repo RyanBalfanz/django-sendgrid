@@ -45,7 +45,7 @@ def build_email_from_newsletter_event(newsletter_event):
 	newsletterId = get_value_from_dict_using_formdata_key(NEWSLETTER_UNIQUE_IDENTIFIER,newsletter_event)
 	email = EmailMessage(
 		from_email=newsletterId,
-		to_email=newsletter_event.get("to_email",None),
+		to_email=newsletter_event.get("email",None),
 		response=None,
 		category=categories[0]
 	)
@@ -160,7 +160,7 @@ def batch_create_events(events):
 	for event in eventsWithMessageIds:
 		existingEmailMessage = [emailMessage for emailMessage in existingEmailMessages if emailMessage.message_id == event.get("message_id",None)]
 		
-	eventsWithMessageIds = [{"event":event,} for event in events if event.get("message_id",None)]
+	eventsWithMessageIds = [{"event":event} for event in events if event.get("message_id",None)]
 
 
 	#second group is message_id given and email doesn't exist
