@@ -141,7 +141,7 @@ def batch_create_newsletter_events(newsletter_id,events):
 
 	for event,eventDict in newsletterEventTuplesWithoutEmails:
 		email = [email for email in newEmails if email.to_email == event.email][0]
-		categories = eventDict
+		categories = eventDict["category"]
 		if type(categories) == basestring:
 			categories = [categories]
 		event.email_message = email
@@ -149,31 +149,23 @@ def batch_create_newsletter_events(newsletter_id,events):
 			categoryObj,_ = Category.objects.get_or_create(name=category)
 			categoriesToCreate.append(email.categories.through(category=categoryObj, emailmessage=email))
 
-		categories = [eventd["category"] for eventd in events if eventd["email"] == email.to_email][0]
-		if type(categories) == basestring:
-			categories = [categories]
-		event.email_message = email
-		for category in categories:
+		uniqueArgs = {}
+		for key in UNIQUE_ARGS_STORED_FOR_NEWSLETTER_EVENTS:
+			uniqueArgs[key] = get_value_from_dict_using_formdata_key(key,eventDict)
+
+		for argName, argValue in uniqueArgs.items():
 			flush_transaction()
-			categoryObj,_ = Category.objects.get_or_create(name=category)
-			categoriesToCreate.append(email.categories.through(category=categoryObj, emailmessage=email))
+			argument,_ = Argument.objects.get_or_create(
+				key=argName
+			)
+			uniqueArgsToCreate .append(UniqueArgument(
+				argument=argument,
+				email_message=email,
+				data=argValue
+			))
 
-			uniqueArgs = {}
-			for key in UNIQUE_ARGS_STORED_FOR_NEWSLETTER_EVENTS:
-				uniqueArgs[key] = get_value_from_dict_using_formdata_key(key,eventDict)
-
-			for argName, argValue in uniqueArgs.items():
-				flush_transaction()
-				argument,_ = Argument.objects.get_or_create(
-					key=argName
-				)
-				uniqueArgsToCreate = UniqueArgument(
-					argument=argument,
-					email_message=email,
-					data=argValue
-				)
-
-
+	EmailMessage.categories.through.objects.bulk_create(categoriesToCreate)
+	UniqueArgument.objects.bulk_create(uniqueArgsToCreate)
 	Event.objects.bulk_create([tup[0] for tup in newsletterEventTuplesWithoutEmails])
 
 	
