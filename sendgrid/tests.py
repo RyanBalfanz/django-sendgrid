@@ -33,18 +33,22 @@ from .views import handle_single_event_request
 
 
 TEST_SENDER_EMAIL = "ryan@example.com"
-TEST_RECIPIENTS = ["ryan@example.com"]
+TEST_RECIPIENTS = ["ryan@example.com", "tom@example.com","anotherguy@example.com"]
 SAMPLE_NEWSLETTER_IDS = {
 	"newsletter_send_id": "952852", 
 	"newsletter_id": "916273", 
 	"newsletter_user_list_id": "5059777"
 }
 
+SAMPLE_NEWSLETTER_IDS_2 = {
+	"newsletter_send_id": "666", 
+	"newsletter_id": "4324324", 
+	"newsletter_user_list_id": "2344324"
+}
+
 validate_filter_setting_value = filterutils.validate_filter_setting_value
 validate_filter_specification = filterutils.validate_filter_specification
 update_filters = filterutils.update_filters
-
-
 
 class SendGridBatchedEventTest(TestCase):
 	def setUp(self):
@@ -117,6 +121,51 @@ class SendGridBatchedEventNewsletterTest(TestCase):
 		if SENDGRID_CREATE_EVENTS_AND_EMAILS_FOR_NEWSLETTERS:
 			self.assertEqual(Event.objects.count(), len(self.events))
 			self.assertEqual(EmailMessageModel.objects.count(),1)
+		else:
+			self.assertEqual(Event.objects.count(), 0)
+			self.assertEqual(EmailMessageModel.objects.count(),0)
+
+class SendGridBatchedEventMultipleNewsletterTest(TestCase):
+	def setUp(self):
+		self.events = [
+			{
+				"email": TEST_RECIPIENTS[1],
+				"timestamp": 1322000095,
+				"category":["newletter","sale"],
+				"event": "OPEN",
+				"newsletter": SAMPLE_NEWSLETTER_IDS_2
+			},
+			{
+				"email": TEST_RECIPIENTS[2],
+				"timestamp": 1322000097,
+				"category":["newletter","sale"],
+				"event": "OPEN",
+				"newsletter": SAMPLE_NEWSLETTER_IDS_2
+			},
+			{
+				"email": TEST_RECIPIENTS[0],
+				"timestamp": 1322000096,
+				"category":["newletter","sale"],
+				"event": "DELIVERED",
+				"newsletter": SAMPLE_NEWSLETTER_IDS
+			},
+			
+			{
+				"email": TEST_RECIPIENTS[2],
+				"timestamp": 1322000097,
+				"category":["newletter","sale"],
+				"event": "OPEN",
+				"newsletter": SAMPLE_NEWSLETTER_IDS
+			}
+		]
+		self.client = Client()
+
+	def test_batched_events_newsletter_post(self):
+		postData = BATCHED_EVENT_SEPARATOR.join(json.dumps(event, separators=(",", ":")) for event in self.events)
+		self.client.post(reverse("sendgrid_post_event"), content_type="application/json", data=postData)
+		if SENDGRID_CREATE_EVENTS_AND_EMAILS_FOR_NEWSLETTERS:
+			self.assertEqual(Event.objects.count(), len(self.events))
+			self.assertEqual(EmailMessageModel.objects.count(),4)
 		else:
 			self.assertEqual(Event.objects.count(), 0)
 			self.assertEqual(EmailMessageModel.objects.count(),0)
