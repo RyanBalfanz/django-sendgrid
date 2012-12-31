@@ -4,6 +4,7 @@ import json
 import logging
 from datetime import datetime
 from django.conf import settings
+from django.db import transaction, models
 from django.http import HttpResponse
 from django.http import HttpResponseBadRequest
 from django.http import HttpResponseNotFound
@@ -12,8 +13,8 @@ from django.views.decorators.csrf import csrf_exempt
 
 from .signals import sendgrid_event_recieved
 
-from sendgrid.constants import BATCHED_EVENT_SEPARATOR, EVENT_TYPES_EXTRA_FIELDS_MAP, EVENT_MODEL_NAMES, NEWSLETTER_UNIQUE_IDENTIFIER
-from sendgrid.models import EmailMessage, Event, ClickEvent, DeferredEvent, DroppedEvent, DeliverredEvent, BounceEvent, EventType, Category
+from sendgrid.constants import BATCHED_EVENT_SEPARATOR, EVENT_TYPES_EXTRA_FIELDS_MAP, EVENT_MODEL_NAMES, NEWSLETTER_UNIQUE_IDENTIFIER, UNIQUE_ARGS_STORED_FOR_NEWSLETTER_EVENTS
+from sendgrid.models import EmailMessage, Event, ClickEvent, DeferredEvent, DroppedEvent, DeliverredEvent, BounceEvent, EventType, Category, Argument, UniqueArgument
 from sendgrid.utils.formatutils import convert_flat_dict_to_nested
 from sendgrid.utils.formatutils import get_value_from_dict_using_formdata_key
 from sendgrid.utils.dbutils import flush_transaction
@@ -95,6 +96,14 @@ def seperate_events_by_newsletter_id(events):
 
 	return eventsByNewsletter
 
+@transaction.commit_on_success
+def bulk_create_emails_with_manual_ids(emails):
+    start = (EmailMessage.objects.all().aggregate(models.Max('id'))['id__max'] or 0) + 1
+    for i,email in enumerate(emails): 
+    	email.id = start + i
+    return EmailMessage.objects.bulk_create(emails)
+
+
 def batch_create_newsletter_events(newsletter_id,events):
 	flush_transaction()
 	toEmails = [event.get("email",None) for event in events]
@@ -105,7 +114,7 @@ def batch_create_newsletter_events(newsletter_id,events):
 	)
 
 	newsletterEmailsToCreate = []
-	newsletterEventsWithoutEmails = []
+	newsletterEventTuplesWithoutEmails = []
 	newsletterEventsWithEmails = []
 	for newsletterEvent in events:
 		toEmail = newsletterEvent.get("email",None)
@@ -116,17 +125,58 @@ def batch_create_newsletter_events(newsletter_id,events):
 			newsletterEmailsToCreate.append(emailToCreate)
 
 			eventToCreate = build_event(newsletterEvent,emailToCreate)
-			newsletterEventsWithoutEmails.append(eventToCreate)
+			newsletterEventTuplesWithoutEmails.append((eventToCreate,event))
 		else:
 			#create the event and attach it to the email
 			eventToCreate = build_event(newsletterEvent,existingNewsletterEmail)
 			newsletterEventsWithEmails.append(eventToCreate)
 
+	Event.objects.bulk_create(newsletterEventsWithEmails)
+	
 	flush_transaction()		
-	EmailMessage.objects.bulk_create(newsletterEmailsToCreate)
+	newEmails = bulk_create_emails_with_manual_ids(newsletterEmailsToCreate)
 
 	uniqueArgsToCreate = []
 	categoriesToCreate = []
+
+	for event,eventDict in newsletterEventTuplesWithoutEmails:
+		email = [email for email in newEmails if email.to_email == event.email][0]
+		categories = eventDict
+		if type(categories) == basestring:
+			categories = [categories]
+		event.email_message = email
+		for category in categories:
+			categoryObj,_ = Category.objects.get_or_create(name=category)
+			categoriesToCreate.append(email.categories.through(category=categoryObj, emailmessage=email))
+
+		categories = [eventd["category"] for eventd in events if eventd["email"] == email.to_email][0]
+		if type(categories) == basestring:
+			categories = [categories]
+		event.email_message = email
+		for category in categories:
+			flush_transaction()
+			categoryObj,_ = Category.objects.get_or_create(name=category)
+			categoriesToCreate.append(email.categories.through(category=categoryObj, emailmessage=email))
+
+			uniqueArgs = {}
+			for key in UNIQUE_ARGS_STORED_FOR_NEWSLETTER_EVENTS:
+				uniqueArgs[key] = get_value_from_dict_using_formdata_key(key,eventDict)
+
+			for argName, argValue in uniqueArgs.items():
+				flush_transaction()
+				argument,_ = Argument.objects.get_or_create(
+					key=argName
+				)
+				uniqueArgsToCreate = UniqueArgument(
+					argument=argument,
+					email_message=email,
+					data=argValue
+				)
+
+
+	Event.objects.bulk_create([tup[0] for tup in newsletterEventTuplesWithoutEmails])
+
+	
 
 	#createdEmails = 
 	#for toEmail in newsletterEmailsToCreate:
