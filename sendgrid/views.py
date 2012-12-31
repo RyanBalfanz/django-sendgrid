@@ -158,7 +158,6 @@ def batch_create_newsletter_events(newsletter_id,events):
 			eventToCreate = build_event(newsletterEvent,emailToCreate)
 			newsletterEventTuplesWithoutEmails.append((eventToCreate,newsletterEvent))
 		else:
-			#create the event and attach it to the email
 			eventToCreate = build_event(newsletterEvent,existingNewsletterEmail)
 			newsletterEventsWithEmails.append(eventToCreate)
 
@@ -167,26 +166,22 @@ def batch_create_newsletter_events(newsletter_id,events):
 	flush_transaction()		
 	newEmails = bulk_create_emails_with_manual_ids(newsletterEmailsToCreate)
 
-	uniqueArgsToCreate = []
-	categoriesToCreate = []
+	#use dicts where keys are emails to ensure uniqueness
+	uniqueArgsToCreate = {}
+	categoriesToCreate = {}
 
 	for event,eventDict in newsletterEventTuplesWithoutEmails:
 		email = [email for email in newEmails if email.to_email == event.email][0]
 		event.email_message = email
-		categoriesToCreate.extend(build_categories(email,eventDict))
-		uniqueArgsToCreate.extend(build_uniqueargs(email,eventDict))
+		categoriesToCreate[email] = build_categories(email,eventDict)
+		uniqueArgsToCreate[email] = build_uniqueargs(email,eventDict)
 
+	uniqueArgsToCreate = [uniquearg for sublist in uniqueArgsToCreate.values() for uniquearg in sublist]
+	categoriesToCreate = [category for sublist in categoriesToCreate.values() for category in sublist]
 	flush_transaction()
 	EmailMessage.categories.through.objects.bulk_create(categoriesToCreate)
 	UniqueArgument.objects.bulk_create(uniqueArgsToCreate)
 	Event.objects.bulk_create([tup[0] for tup in newsletterEventTuplesWithoutEmails])
-
-	
-
-	#createdEmails = 
-	#for toEmail in newsletterEmailsToCreate:
-
-	#categories
 
 def batch_create_events(events):
 	#split events into 2 groups
