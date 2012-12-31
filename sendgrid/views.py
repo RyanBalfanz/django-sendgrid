@@ -103,6 +103,35 @@ def bulk_create_emails_with_manual_ids(emails):
     	email.id = start + i
     return EmailMessage.objects.bulk_create(emails)
 
+def build_categories(email,event_dict):
+	categories = event_dict["category"]
+	categoriesToReturn = []
+	if type(categories) == basestring:
+		categories = [categories]
+	
+	for category in categories:
+		categoryObj,_ = Category.objects.get_or_create(name=category)
+		categoriesToReturn.append(email.categories.through(category=categoryObj, emailmessage=email))
+
+	return categoriesToReturn
+
+def build_uniqueargs(email,event_dict):
+	uniqueArgsToReturn = []
+	uniqueArgs = {}
+	for key in UNIQUE_ARGS_STORED_FOR_NEWSLETTER_EVENTS:
+		uniqueArgs[key] = get_value_from_dict_using_formdata_key(key,event_dict)
+
+	for argName, argValue in uniqueArgs.items():
+		flush_transaction()
+		argument,_ = Argument.objects.get_or_create(
+			key=argName
+		)
+		uniqueArgsToReturn.append(UniqueArgument(
+			argument=argument,
+			email_message=email,
+			data=argValue
+		))
+	return uniqueArgsToReturn
 
 def batch_create_newsletter_events(newsletter_id,events):
 	flush_transaction()
@@ -141,28 +170,9 @@ def batch_create_newsletter_events(newsletter_id,events):
 
 	for event,eventDict in newsletterEventTuplesWithoutEmails:
 		email = [email for email in newEmails if email.to_email == event.email][0]
-		categories = eventDict["category"]
-		if type(categories) == basestring:
-			categories = [categories]
 		event.email_message = email
-		for category in categories:
-			categoryObj,_ = Category.objects.get_or_create(name=category)
-			categoriesToCreate.append(email.categories.through(category=categoryObj, emailmessage=email))
-
-		uniqueArgs = {}
-		for key in UNIQUE_ARGS_STORED_FOR_NEWSLETTER_EVENTS:
-			uniqueArgs[key] = get_value_from_dict_using_formdata_key(key,eventDict)
-
-		for argName, argValue in uniqueArgs.items():
-			flush_transaction()
-			argument,_ = Argument.objects.get_or_create(
-				key=argName
-			)
-			uniqueArgsToCreate .append(UniqueArgument(
-				argument=argument,
-				email_message=email,
-				data=argValue
-			))
+		categoriesToCreate.extend(build_categories(email,eventDict))
+		uniqueArgsToCreate.extend(build_uniqueargs(email,eventDict))
 
 	EmailMessage.categories.through.objects.bulk_create(categoriesToCreate)
 	UniqueArgument.objects.bulk_create(uniqueArgsToCreate)
