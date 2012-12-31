@@ -52,8 +52,8 @@ def build_email_from_newsletter_event(newsletter_event):
 	)
 	return email
 
-def build_event(event,email_message):
-	eventType = EventType.objects.get(name=event["event"].upper())
+def build_event(event,email_message,event_types):
+	eventType = event_types[event["event"].upper()]
 	eventParams = {
 		"email_message": email_message,
 		"email": event["email"],
@@ -149,6 +149,10 @@ def create_arguments_for_newsletters():
 	return args
 
 def batch_create_newsletter_events(newsletter_id,events):
+	eventTypes = {}
+	for eventType in EventType.objects.all():
+		eventTypes[eventType.name] = eventType
+
 	flush_transaction()
 	toEmails = set([event.get("email",None) for event in events])
 
@@ -171,11 +175,11 @@ def batch_create_newsletter_events(newsletter_id,events):
 				emailToCreate = build_email_from_newsletter_event(newsletterEvent)
 				newsletterEmailsToCreate.append(emailToCreate)
 
-			eventToCreate = build_event(newsletterEvent,emailToCreate)
+			eventToCreate = build_event(newsletterEvent,emailToCreate,eventTypes)
 			newsletterEventTuplesWithoutEmails.append((eventToCreate,newsletterEvent))
 		else:
 			#create the event and attach it to the email
-			eventToCreate = build_event(newsletterEvent,existingNewsletterEmail)
+			eventToCreate = build_event(newsletterEvent,existingNewsletterEmail,eventTypes)
 			newsletterEventsWithEmails.append(eventToCreate)
 
 	Event.objects.bulk_create(newsletterEventsWithEmails)
