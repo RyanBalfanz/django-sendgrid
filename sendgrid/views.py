@@ -204,15 +204,15 @@ def batch_create_events(events):
 
 
 	
-	messageIds = [event.get("message_id",None) for event in eventsWithMessageIds if event.get("message_id",None)]
-	flush_transaction()
-	#batch select email messages from db
-	existingEmailMessages = EmailMessage.objects.filter(message_id__in=messageIds)
+	# messageIds = [event.get("message_id",None) for event in eventsWithMessageIds if event.get("message_id",None)]
+	# flush_transaction()
+	# #batch select email messages from db
+	# existingEmailMessages = EmailMessage.objects.filter(message_id__in=messageIds)
 
-	for event in eventsWithMessageIds:
-		existingEmailMessage = [emailMessage for emailMessage in existingEmailMessages if emailMessage.message_id == event.get("message_id",None)]
+	# for event in eventsWithMessageIds:
+	# 	existingEmailMessage = [emailMessage for emailMessage in existingEmailMessages if emailMessage.message_id == event.get("message_id",None)]
 		
-	eventsWithMessageIds = [{"event":event} for event in events if event.get("message_id",None)]
+	# eventsWithMessageIds = [{"event":event} for event in events if event.get("message_id",None)]
 
 
 	#second group is message_id given and email doesn't exist
@@ -318,13 +318,7 @@ def handle_batched_events_request(request):
 		body = request.raw_post_data
 
 	events = [json.loads(line) for line in body.splitlines()]
-	eventsToSave = []
-	for event in events:
-		eventToSave = create_event_from_sendgrid_params(event,False)
-		if eventToSave:
-			eventsToSave.append(eventToSave)
-
-	Event.objects.bulk_create(eventsToSave)
+	batch_create_events(events)
 		
 	return HttpResponse()
 
