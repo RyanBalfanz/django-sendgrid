@@ -206,13 +206,6 @@ def batch_create_newsletter_events(newsletter_id,events):
 	UniqueArgument.objects.bulk_create(uniqueArgsToCreate)
 	Event.objects.bulk_create([tup[0] for tup in newsletterEventTuplesWithoutEmails])
 
-	
-
-	#createdEmails = 
-	#for toEmail in newsletterEmailsToCreate:
-
-	#categories
-
 def batch_create_events(events):
 	#split events into 2 groups
 	#first group is events with message_ids
