@@ -207,11 +207,15 @@ def batch_create_newsletter_events(newsletter_id,events):
 	Event.objects.bulk_create([tup[0] for tup in newsletterEventTuplesWithoutEmails])
 
 def batch_create_events(events):
+	#split events into 2 groups
+	#first group is events with message_ids
 	eventsWithMessageIds = [event for event in events if event.get("message_id",None)]
-	eventsWithoutMessageIds = [event for event in events if not event.get("message_id",None)]
+
 	#check for newsletter events
 	if sendgrid_settings.SENDGRID_CREATE_EVENTS_AND_EMAILS_FOR_NEWSLETTERS:
-		newsletterEvents = [event for event in eventsWithoutMessageIds if event.get("newsletter",None)]
+		
+
+		newsletterEvents = [event for event in events if (not event.get("message_id",None)) and event.get("newsletter",None)]
 
 		newsletterEventsByNewsletter = seperate_events_by_newsletter_id(newsletterEvents)
 		for newsletterId, events in newsletterEventsByNewsletter.items():
