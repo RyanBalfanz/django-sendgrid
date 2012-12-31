@@ -12,15 +12,160 @@ from django.views.decorators.csrf import csrf_exempt
 
 from .signals import sendgrid_event_recieved
 
-from sendgrid.constants import BATCHED_EVENT_SEPARATOR, EVENT_TYPES_EXTRA_FIELDS_MAP, EVENT_MODEL_NAMES
-from sendgrid.models import EmailMessage, Event, ClickEvent, DeferredEvent, DroppedEvent, DeliverredEvent, BounceEvent, EventType
+from sendgrid.constants import BATCHED_EVENT_SEPARATOR, EVENT_TYPES_EXTRA_FIELDS_MAP, EVENT_MODEL_NAMES, NEWSLETTER_UNIQUE_IDENTIFIER
+from sendgrid.models import EmailMessage, Event, ClickEvent, DeferredEvent, DroppedEvent, DeliverredEvent, BounceEvent, EventType, Category
 from sendgrid.utils.formatutils import convert_flat_dict_to_nested
+from sendgrid.utils.formatutils import get_value_from_dict_using_formdata_key
 from sendgrid.utils.dbutils import flush_transaction
 from sendgrid import settings as sendgrid_settings
 
 POST_EVENTS_RESPONSE_STATUS_CODE = getattr(settings, "POST_EVENT_HANDLER_RESPONSE_STATUS_CODE", 200)
 
 logger = logging.getLogger(__name__)
+
+def find_email(message_id,emails):
+	for email in emails:
+		if email.message_id == message_id:
+			return email
+
+	return None
+
+def find_newsletter_email(to_email,emails):
+	for email in emails:
+		if email.to_email == to_email:
+			return email
+
+	return None
+
+def build_email_from_newsletter_event(newsletter_event):
+	categories = newsletter_event.get("category",[])
+	if type(categories) == basestring:
+		categories = [categories]
+
+	newsletterId = get_value_from_dict_using_formdata_key(NEWSLETTER_UNIQUE_IDENTIFIER,newsletter_event)
+	email = EmailMessage(
+		from_email=newsletterId,
+		to_email=newsletter_event.get("to_email",None),
+		response=None,
+		category=categories[0]
+	)
+	return email
+
+def build_event(event,email_message):
+	eventType = EventType.objects.get(name=event["event"].upper())
+	eventParams = {
+		"email_message": email_message,
+		"email": event["email"],
+		"event_type": eventType
+	}
+	timestamp = event.get("timestamp", None)
+	if timestamp:
+		eventParams["timestamp"] = datetime.utcfromtimestamp(float(timestamp))
+
+		#enforce unique constraint on email_message,event_type,creation_time
+		#this should be done at the db level but since it was added later it would have needed a data migration that either deleted or updated duplicate events
+		#this also might need a combined index, but django orm doesn't have this feature yet: https://code.djangoproject.com/ticket/5805
+		existingEvents = Event.objects.filter(email_message=email_message,event_type=eventType,timestamp=eventParams["timestamp"])
+		unique = existingEvents.count() == 0
+	else:
+		#no timestamp provided. therefore we cannot enforce any kind of uniqueness
+		unique = True
+
+	eventObj = None
+	if unique:
+		for key in EVENT_TYPES_EXTRA_FIELDS_MAP[eventType.name]:
+			value = event.get(key,None)
+			if value:
+				eventParams[key] = value
+			else:
+				logger.debug("Expected post param {key} for Sendgrid Event {event} not found".format(key=key,event=event))
+		event_model = eval(EVENT_MODEL_NAMES[event]) if event in EVENT_MODEL_NAMES.keys() else Event
+
+	return event_model(**eventParams)
+
+def seperate_events_by_newsletter_id(events):
+	eventsByNewsletter = {}
+	for event in events:
+		newsletterId = get_value_from_dict_using_formdata_key(NEWSLETTER_UNIQUE_IDENTIFIER,event)
+		if newsletterId:
+			if eventsByNewsletter.get(newsletterId,None) != None:
+				eventsByNewsletter[newsletterId].append(event)
+			else:
+				eventsByNewsletter[newsletterId] = [event]
+
+	return eventsByNewsletter
+
+def batch_create_newsletter_events(newsletter_id,events):
+	flush_transaction()
+	toEmails = [event.get("email",None) for event in events]
+	existingNewsletterEmails = EmailMessage.objects.filter(
+		uniqueargument__data=newsletter_id, 
+		uniqueargument__argument__key=NEWSLETTER_UNIQUE_IDENTIFIER, 
+		to_email__in=toEmails
+	)
+
+	newsletterEmailsToCreate = []
+	newsletterEventsWithoutEmails = []
+	newsletterEventsWithEmails = []
+	for newsletterEvent in events:
+		toEmail = newsletterEvent.get("email",None)
+		existingNewsletterEmail = find_newsletter_email(toEmail,existingNewsletterEmails)
+
+		if not existingNewsletterEmail:
+			emailToCreate = build_email_from_newsletter_event(newsletterEvent)
+			newsletterEmailsToCreate.append(emailToCreate)
+
+			eventToCreate = build_event(newsletterEvent,emailToCreate)
+			newsletterEventsWithoutEmails.append(eventToCreate)
+		else:
+			#create the event and attach it to the email
+			eventToCreate = build_event(newsletterEvent,existingNewsletterEmail)
+			newsletterEventsWithEmails.append(eventToCreate)
+
+	flush_transaction()		
+	EmailMessage.objects.bulk_create(newsletterEmailsToCreate)
+
+	uniqueArgsToCreate = []
+	categoriesToCreate = []
+
+	#createdEmails = 
+	#for toEmail in newsletterEmailsToCreate:
+
+	#categories
+
+def batch_create_events(events):
+	#split events into 2 groups
+	#first group is events with message_ids
+	eventsWithMessageIds = [event for event in events if event.get("message_id",None)]
+
+	#check for newsletter events
+	if sendgrid_settings.SENDGRID_CREATE_EVENTS_AND_EMAILS_FOR_NEWSLETTERS:
+		
+
+		newsletterEvents = [event for event in events if (not event.get("message_id",None)) and event.get("newsletter",None)]
+
+		newsletterEventsByNewsletter = seperate_events_by_newsletter_id(newsletterEvents)
+		for newsletterId, events in newsletterEventsByNewsletter.items():
+			batch_create_newsletter_events(newsletterId,events)
+		
+
+
+
+	
+	messageIds = [event.get("message_id",None) for event in eventsWithMessageIds if event.get("message_id",None)]
+	flush_transaction()
+	#batch select email messages from db
+	existingEmailMessages = EmailMessage.objects.filter(message_id__in=messageIds)
+
+	for event in eventsWithMessageIds:
+		existingEmailMessage = [emailMessage for emailMessage in existingEmailMessages if emailMessage.message_id == event.get("message_id",None)]
+		
+	eventsWithMessageIds = [{"event":event,} for event in events if event.get("message_id",None)]
+
+
+	#second group is message_id given and email doesn't exist
+
+	#third group is newsletter events
 
 def create_event_from_sendgrid_params(params,create=True):
 	flush_transaction()

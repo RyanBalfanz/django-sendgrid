@@ -94,28 +94,39 @@ class SendGridBatchedEventNewsletterTest(TestCase):
 			{
 				"email": TEST_RECIPIENTS[0],
 				"timestamp": 1322000095,
-				"category":["newletter"],
+				"category":["newsletter"],
 				"event": "OPEN",
 				"newsletter": SAMPLE_NEWSLETTER_IDS
 			},
 			{
 				"email": TEST_RECIPIENTS[0],
 				"timestamp": 1322000096,
-				"category":["newletter"],
+				"category":["newsletter"],
 				"event": "DELIVERED",
 				"newsletter": SAMPLE_NEWSLETTER_IDS
 			},
 			{
 				"email": TEST_RECIPIENTS[0],
 				"timestamp": 1322000097,
-				"category":["newletter"],
+				"category":["newsletter"],
 				"event": "OPEN",
 				"newsletter": SAMPLE_NEWSLETTER_IDS
 			}
 		]
 		self.client = Client()
 
-	def test_batched_events_newsletter(self):
+	def test_build_email_from_newsletter_event(self):
+		from .views import build_email_from_newsletter_event
+		email = build_email_from_newsletter_event(self.events[0])
+
+	def test_batch_create_newsletter_events(self):
+		from .views import batch_create_newsletter_events
+		from .constants import NEWSLETTER_UNIQUE_IDENTIFIER
+		from .utils.formatutils import get_value_from_dict_using_formdata_key
+		newsletterId = get_value_from_dict_using_formdata_key(NEWSLETTER_UNIQUE_IDENTIFIER,self.events[0])
+		batch_create_newsletter_events(newsletterId,self.events)
+
+	def test_batched_events_newsletter_post(self):
 		postData = BATCHED_EVENT_SEPARATOR.join(json.dumps(event, separators=(",", ":")) for event in self.events)
 		self.client.post(reverse("sendgrid_post_event"), content_type="application/json", data=postData)
 		if SENDGRID_CREATE_EVENTS_AND_EMAILS_FOR_NEWSLETTERS:
@@ -131,21 +142,21 @@ class SendGridBatchedEventMultipleNewsletterTest(TestCase):
 			{
 				"email": TEST_RECIPIENTS[1],
 				"timestamp": 1322000095,
-				"category":["newletter","sale"],
+				"category":["newsletter","sale"],
 				"event": "OPEN",
 				"newsletter": SAMPLE_NEWSLETTER_IDS_2
 			},
 			{
 				"email": TEST_RECIPIENTS[2],
 				"timestamp": 1322000097,
-				"category":["newletter","sale"],
+				"category":["newsletter","sale"],
 				"event": "OPEN",
 				"newsletter": SAMPLE_NEWSLETTER_IDS_2
 			},
 			{
 				"email": TEST_RECIPIENTS[0],
 				"timestamp": 1322000096,
-				"category":["newletter","sale"],
+				"category":["newsletter","sale"],
 				"event": "DELIVERED",
 				"newsletter": SAMPLE_NEWSLETTER_IDS
 			},
@@ -153,12 +164,28 @@ class SendGridBatchedEventMultipleNewsletterTest(TestCase):
 			{
 				"email": TEST_RECIPIENTS[2],
 				"timestamp": 1322000097,
-				"category":["newletter","sale"],
+				"category":["newsletter","sale"],
 				"event": "OPEN",
 				"newsletter": SAMPLE_NEWSLETTER_IDS
 			}
 		]
 		self.client = Client()
+
+	def test_seperate_events_by_newsletter_id(self):
+		from .views import seperate_events_by_newsletter_id
+		from .utils.formatutils import get_value_from_dict_using_formdata_key
+		from .constants import NEWSLETTER_UNIQUE_IDENTIFIER
+		eventsByNewsletter = seperate_events_by_newsletter_id(self.events)
+		id1 = get_value_from_dict_using_formdata_key(NEWSLETTER_UNIQUE_IDENTIFIER,{"newsletter":SAMPLE_NEWSLETTER_IDS})
+		id2 = get_value_from_dict_using_formdata_key(NEWSLETTER_UNIQUE_IDENTIFIER,{"newsletter":SAMPLE_NEWSLETTER_IDS})
+
+		self.assertEqual(len(eventsByNewsletter[id1]),2)
+		self.assertEqual(len(eventsByNewsletter[id2]),2)
+		self.assertEqual(len(eventsByNewsletter.keys()),2)
+
+	def test_batch_create_events(self):
+		from .views import batch_create_events
+		batch_create_events(self.events)
 
 	def test_batched_events_newsletter_post(self):
 		postData = BATCHED_EVENT_SEPARATOR.join(json.dumps(event, separators=(",", ":")) for event in self.events)
