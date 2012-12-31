@@ -81,8 +81,9 @@ def build_event(event,email_message):
 			else:
 				logger.debug("Expected post param {key} for Sendgrid Event {event} not found".format(key=key,event=event))
 		event_model = eval(EVENT_MODEL_NAMES[event]) if event in EVENT_MODEL_NAMES.keys() else Event
+		eventObj = event_model(**eventParams)
 
-	return event_model(**eventParams)
+	return eventObj
 
 def seperate_events_by_newsletter_id(events):
 	eventsByNewsletter = {}
@@ -103,19 +104,19 @@ def bulk_create_emails_with_manual_ids(emails):
     	email.id = start + i
     return EmailMessage.objects.bulk_create(emails)
 
-def build_categories(email,event_dict):
+def build_categories(email,event_dict,category_objs):
 	categories = event_dict["category"]
 	categoriesToReturn = []
 	if type(categories) == basestring:
 		categories = [categories]
 	
 	for category in categories:
-		categoryObj,_ = Category.objects.get_or_create(name=category)
+		categoryObj = [catObj for catObj in category_objs if catObj.name == category][0]
 		categoriesToReturn.append(email.categories.through(category=categoryObj, emailmessage=email))
 
 	return categoriesToReturn
 
-def build_uniqueargs(email,event_dict):
+def build_uniqueargs(email,event_dict,arguments):
 	uniqueArgsToReturn = []
 	uniqueArgs = {}
 	for key in UNIQUE_ARGS_STORED_FOR_NEWSLETTER_EVENTS:
@@ -123,9 +124,7 @@ def build_uniqueargs(email,event_dict):
 
 	for argName, argValue in uniqueArgs.items():
 		flush_transaction()
-		argument,_ = Argument.objects.get_or_create(
-			key=argName
-		)
+		argument = [arg for arg in arguments if arg.key == argName][0]
 		uniqueArgsToReturn.append(UniqueArgument(
 			argument=argument,
 			email_message=email,
@@ -133,9 +132,26 @@ def build_uniqueargs(email,event_dict):
 		))
 	return uniqueArgsToReturn
 
+def create_categories_from_events(events):
+	#get category lists
+	categories = [event["category"] for event in events]
+	#flatten lists
+	categories = set([category for sublist in categories for category in sublist])
+	categories = [Category.objects.get_or_create(name=category)[0] for category in categories]
+
+	return categories
+
+def create_arguments_for_newsletters():
+	args = []
+	for key in UNIQUE_ARGS_STORED_FOR_NEWSLETTER_EVENTS:
+		args.append(Argument.objects.get_or_create(key=key)[0])
+
+	return args
+
 def batch_create_newsletter_events(newsletter_id,events):
 	flush_transaction()
 	toEmails = set([event.get("email",None) for event in events])
+
 	existingNewsletterEmails = EmailMessage.objects.filter(
 		uniqueargument__data=newsletter_id, 
 		uniqueargument__argument__key=NEWSLETTER_UNIQUE_IDENTIFIER, 
@@ -158,6 +174,7 @@ def batch_create_newsletter_events(newsletter_id,events):
 			eventToCreate = build_event(newsletterEvent,emailToCreate)
 			newsletterEventTuplesWithoutEmails.append((eventToCreate,newsletterEvent))
 		else:
+			#create the event and attach it to the email
 			eventToCreate = build_event(newsletterEvent,existingNewsletterEmail)
 			newsletterEventsWithEmails.append(eventToCreate)
 
@@ -166,6 +183,8 @@ def batch_create_newsletter_events(newsletter_id,events):
 	flush_transaction()		
 	newEmails = bulk_create_emails_with_manual_ids(newsletterEmailsToCreate)
 
+	categories = create_categories_from_events(events)
+	arguments = create_arguments_for_newsletters()
 	#use dicts where keys are emails to ensure uniqueness
 	uniqueArgsToCreate = {}
 	categoriesToCreate = {}
@@ -173,8 +192,8 @@ def batch_create_newsletter_events(newsletter_id,events):
 	for event,eventDict in newsletterEventTuplesWithoutEmails:
 		email = [email for email in newEmails if email.to_email == event.email][0]
 		event.email_message = email
-		categoriesToCreate[email] = build_categories(email,eventDict)
-		uniqueArgsToCreate[email] = build_uniqueargs(email,eventDict)
+		categoriesToCreate[email] = build_categories(email,eventDict,categories)
+		uniqueArgsToCreate[email] = build_uniqueargs(email,eventDict,arguments)
 
 	uniqueArgsToCreate = [uniquearg for sublist in uniqueArgsToCreate.values() for uniquearg in sublist]
 	categoriesToCreate = [category for sublist in categoriesToCreate.values() for category in sublist]
@@ -182,6 +201,13 @@ def batch_create_newsletter_events(newsletter_id,events):
 	EmailMessage.categories.through.objects.bulk_create(categoriesToCreate)
 	UniqueArgument.objects.bulk_create(uniqueArgsToCreate)
 	Event.objects.bulk_create([tup[0] for tup in newsletterEventTuplesWithoutEmails])
+
+	
+
+	#createdEmails = 
+	#for toEmail in newsletterEmailsToCreate:
+
+	#categories
 
 def batch_create_events(events):
 	#split events into 2 groups
@@ -288,6 +314,9 @@ def handle_single_event_request(request):
 	"""
 	eventData = request.POST
 	eventData = convert_flat_dict_to_nested(eventData)
+	category = eventData.get("category",None)
+	if type(category) == basestring:
+		eventData["category"] = [category]
 	create_event_from_sendgrid_params(eventData)
 	
 	response = HttpResponse()
