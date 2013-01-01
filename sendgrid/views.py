@@ -230,8 +230,9 @@ def batch_create_events_with_message_ids(events):
 		messageId = event["message_id"]
 		existingEmail = existingEmails.get(messageId,None)
 		if existingEmail:
+			eventToCreate = build_event(event,existingEmail,eventTypes)
 			if eventToCreate:
-				eventsWithEmails.append(build_event(event,existingEmail,eventTypes))
+				eventsWithEmails.append(eventToCreate)
 		elif sendgrid_settings.SENDGRID_CREATE_MISSING_EMAILS_FOR_EVENTS_WITH_MESSAGE_ID:
 			email = emailsToCreate.get(messageId,None)
 			if not email:
