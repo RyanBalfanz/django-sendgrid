@@ -47,7 +47,8 @@ def build_email_from_event(event):
 		from_email="",
 		to_email=event.get("email",None),
 		response=None,
-		category=categories[0]
+		category=categories[0],
+		message_id=event.get("message_id",None)
 	)
 	return email
 
@@ -220,17 +221,30 @@ def batch_create_events_with_message_ids(events):
 	for email in EmailMessage.objects.filter(message_id__in=messageIds):
 		existingEmails[email.message_id] = email
 
-	emailsToCreate = []
-	eventsToCreate = []
+	emailsToCreate = {}
+	eventsWithEmails = []
+	eventTuplesWithoutEmails = []
 	for event in events:
-		existingEmail = existingEmails.get(event["message_id"],None)
+		messageId = event["message_id"]
+		existingEmail = existingEmails.get(messageId,None)
 		if existingEmail:
-			eventsToCreate.append(build_event(event,existingEmail,eventTypes))
+			eventsWithEmails.append(build_event(event,existingEmail,eventTypes))
 		elif sendgrid_settings.SENDGRID_CREATE_MISSING_EMAILS_FOR_EVENTS_WITH_MESSAGE_ID:
-			email = build_email_from_event(event)
-			eventsToCreate.append(build_event(event,email,eventTypes))
+			email = emailsToCreate.get(messageId,None)
+			if not email:
+				email = build_email_from_event(event)
+				emailsToCreate[messageId] = email
+			eventToCreate = build_event(event,email,eventTypes)
+			eventTuplesWithoutEmails.append((eventToCreate,messageId))
 
-	Event.objects.bulk_create(eventsToCreate)
+	newEmails = {}
+	for email in bulk_create_emails_with_manual_ids(emailsToCreate.values()):
+		newEmails[email.message_id] = email
+
+	for event,message_id in eventTuplesWithoutEmails:
+		event.email_message = newEmails[message_id]
+
+	Event.objects.bulk_create([tup[0] for tup in eventTuplesWithoutEmails] + eventsWithEmails)
 
 def batch_create_events(events):
 	#check for newsletter events
