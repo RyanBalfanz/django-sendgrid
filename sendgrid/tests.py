@@ -115,9 +115,9 @@ class SendGridBatchedEventNewsletterTest(TestCase):
 		]
 		self.client = Client()
 
-	def test_build_email_from_newsletter_event(self):
-		from .views import build_email_from_newsletter_event
-		email = build_email_from_newsletter_event(self.events[0])
+	def test_build_email_from_event(self):
+		from .views import build_email_from_event
+		email = build_email_from_event(self.events[0])
 
 	def test_batch_create_newsletter_events(self):
 		from .views import batch_create_newsletter_events

@@ -38,15 +38,14 @@ def find_newsletter_email(to_email,emails):
 
 	return None
 
-def build_email_from_newsletter_event(newsletter_event):
-	categories = newsletter_event.get("category",[])
+def build_email_from_event(event):
+	categories = event.get("category",[])
 	if type(categories) == basestring:
 		categories = [categories]
 
-	newsletterId = get_value_from_dict_using_formdata_key(NEWSLETTER_UNIQUE_IDENTIFIER,newsletter_event)
 	email = EmailMessage(
-		from_email=newsletterId,
-		to_email=newsletter_event.get("email",None),
+		from_email="",
+		to_email=event.get("email",None),
 		response=None,
 		category=categories[0]
 	)
@@ -172,7 +171,7 @@ def batch_create_newsletter_events(newsletter_id,events):
 		if not existingNewsletterEmail:
 			emailToCreate = find_newsletter_email(toEmail,newsletterEmailsToCreate)
 			if not emailToCreate:
-				emailToCreate = build_email_from_newsletter_event(newsletterEvent)
+				emailToCreate = build_email_from_event(newsletterEvent)
 				newsletterEmailsToCreate.append(emailToCreate)
 
 			eventToCreate = build_event(newsletterEvent,emailToCreate,eventTypes)
@@ -204,41 +203,47 @@ def batch_create_newsletter_events(newsletter_id,events):
 	flush_transaction()
 	EmailMessage.categories.through.objects.bulk_create(categoriesToCreate)
 	UniqueArgument.objects.bulk_create(uniqueArgsToCreate)
+
+	flush_transaction()
 	Event.objects.bulk_create([tup[0] for tup in newsletterEventTuplesWithoutEmails])
 
-def batch_create_events(events):
-	#split events into 2 groups
-	#first group is events with message_ids
-	eventsWithMessageIds = [event for event in events if event.get("message_id",None)]
+def batch_create_events_with_message_ids(events):
+	eventTypes = {}
+	for eventType in EventType.objects.all():
+		eventTypes[eventType.name] = eventType
+	messageIds = [event.get("message_id",None) for event in events if event.get("message_id",None)]
 
+	# flush_transaction()
+	# #batch select email messages from db
+	existingEmails = {}
+
+	for email in EmailMessage.objects.filter(message_id__in=messageIds):
+		existingEmails[email.message_id] = email
+
+	emailsToCreate = []
+	eventsToCreate = []
+	for event in events:
+		existingEmail = existingEmails.get(event["message_id"],None)
+		if existingEmail:
+			eventsToCreate.append(build_event(event,existingEmail,eventTypes))
+		elif sendgrid_settings.SENDGRID_CREATE_MISSING_EMAILS_FOR_EVENTS_WITH_MESSAGE_ID:
+			email = build_email_from_event(event)
+			eventsToCreate.append(build_event(event,email,eventTypes))
+
+	Event.objects.bulk_create(eventsToCreate)
+
+def batch_create_events(events):
 	#check for newsletter events
 	if sendgrid_settings.SENDGRID_CREATE_EVENTS_AND_EMAILS_FOR_NEWSLETTERS:
-		
-
 		newsletterEvents = [event for event in events if (not event.get("message_id",None)) and event.get("newsletter",None)]
 
 		newsletterEventsByNewsletter = seperate_events_by_newsletter_id(newsletterEvents)
 		for newsletterId, events in newsletterEventsByNewsletter.items():
 			batch_create_newsletter_events(newsletterId,events)
-		
-
-
-
 	
-	# messageIds = [event.get("message_id",None) for event in eventsWithMessageIds if event.get("message_id",None)]
-	# flush_transaction()
-	# #batch select email messages from db
-	# existingEmailMessages = EmailMessage.objects.filter(message_id__in=messageIds)
 
-	# for event in eventsWithMessageIds:
-	# 	existingEmailMessage = [emailMessage for emailMessage in existingEmailMessages if emailMessage.message_id == event.get("message_id",None)]
-		
-	# eventsWithMessageIds = [{"event":event} for event in events if event.get("message_id",None)]
-
-
-	#second group is message_id given and email doesn't exist
-
-	#third group is newsletter events
+	eventsWithMessageIds = [event for event in events if event.get("message_id",None)]	
+	batch_create_events_with_message_ids(eventsWithMessageIds)
 
 def create_event_from_sendgrid_params(params,create=True):
 	flush_transaction()
