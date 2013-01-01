@@ -54,8 +54,6 @@ class SendGridBatchedEventTest(TestCase):
 	def setUp(self):
 		self.email1 = SendGridEmailMessage(to=TEST_RECIPIENTS, from_email=TEST_SENDER_EMAIL)
 		self.email1.send()
-		self.email2 = SendGridEmailMessage(to=TEST_RECIPIENTS, from_email=TEST_SENDER_EMAIL)
-		self.email2.send()
 		self.client = Client()
 
 		self.events = [
@@ -69,14 +67,14 @@ class SendGridBatchedEventTest(TestCase):
 			{
 				"email": TEST_RECIPIENTS[0],
 				"timestamp": 1322000096,
-				"message_id": str(self.email2.message_id),
+				"message_id": "12GH12K312NKJ123HK2",
 				"category":["category1"],
 				"event": "DELIVERED"
 			},
 			{
 				"email": TEST_RECIPIENTS[0],
 				"timestamp": 1322000097,
-				"message_id": str(self.email2.message_id),
+				"message_id":  "12GH12K312NKJ123HK2",
 				"category":["category1"],
 				"event": "OPEN"
 			}
@@ -87,6 +85,7 @@ class SendGridBatchedEventTest(TestCase):
 		postData = BATCHED_EVENT_SEPARATOR.join(json.dumps(event, separators=(",", ":")) for event in self.events)
 		self.client.post(reverse("sendgrid_post_event"), content_type="application/json", data=postData)
 		self.assertEqual(Event.objects.count(), len(self.events))
+		self.assertEqual(EmailMessageModel.objects.count(),2)
 
 class SendGridBatchedEventNewsletterTest(TestCase):
 	def setUp(self):
