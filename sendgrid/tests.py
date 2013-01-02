@@ -198,16 +198,20 @@ class SendGridBatchedEventMultipleNewsletterTest(TestCase):
 		from .constants import NEWSLETTER_UNIQUE_IDENTIFIER
 
 		batch_create_events(self.events)
-		self.assertEqual(Event.objects.count(), len(self.events))
-		self.assertEqual(EmailMessageModel.objects.count(),4)
-		for event in self.events:
-			newsletterId = get_value_from_dict_using_formdata_key(NEWSLETTER_UNIQUE_IDENTIFIER,event)
-			email = EmailMessageModel.objects.get(
-				to_email=event["email"],
-				uniqueargument__data=newsletterId, 
-				uniqueargument__argument__key=NEWSLETTER_UNIQUE_IDENTIFIER,
-			)
-			self.assertEqual(set(event["category"]),set([category.name for category in email.categories.all()]))
+		if SENDGRID_CREATE_EVENTS_AND_EMAILS_FOR_NEWSLETTERS:
+			self.assertEqual(Event.objects.count(), len(self.events))
+			self.assertEqual(EmailMessageModel.objects.count(),4)
+			for event in self.events:
+				newsletterId = get_value_from_dict_using_formdata_key(NEWSLETTER_UNIQUE_IDENTIFIER,event)
+				email = EmailMessageModel.objects.get(
+					to_email=event["email"],
+					uniqueargument__data=newsletterId, 
+					uniqueargument__argument__key=NEWSLETTER_UNIQUE_IDENTIFIER,
+				)
+				self.assertEqual(set(event["category"]),set([category.name for category in email.categories.all()]))
+		else:
+			self.assertEqual(EmailMessageModel.objects.count(),0)
+			self.assertEqual(Event.objects.count(), 0)
 
 
 	def test_batched_events_newsletter_post(self):
