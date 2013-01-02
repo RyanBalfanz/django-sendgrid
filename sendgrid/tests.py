@@ -167,6 +167,7 @@ class SendGridBatchedEventMultipleNewsletterTest(TestCase):
 				"timestamp": 1322000096,
 				"category":["newsletter","sale"],
 				"event": "DELIVERED",
+				"response": "OK",
 				"newsletter": SAMPLE_NEWSLETTER_IDS
 			},
 			
