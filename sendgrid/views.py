@@ -97,7 +97,6 @@ def seperate_events_by_newsletter_id(events):
 
 	return eventsByNewsletter
 
-@transaction.commit_on_success
 def bulk_create_emails_with_manual_ids(emails):
     start = (EmailMessage.objects.all().aggregate(models.Max('id'))['id__max'] or 0) + 1
     for i,email in enumerate(emails): 
@@ -251,6 +250,7 @@ def batch_create_events_with_message_ids(events):
 
 	Event.objects.bulk_create([tup[0] for tup in eventTuplesWithoutEmails] + eventsWithEmails)
 
+@transaction.commit_on_success
 def batch_create_events(events):
 	#check for newsletter events
 	if sendgrid_settings.SENDGRID_CREATE_EVENTS_AND_EMAILS_FOR_NEWSLETTERS:
