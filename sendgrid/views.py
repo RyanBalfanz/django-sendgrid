@@ -80,7 +80,7 @@ def build_event(event,email_message,event_types):
 				eventParams[key] = value
 			else:
 				logger.debug("Expected post param {key} for Sendgrid Event {event} not found".format(key=key,event=event))
-		event_model = eval(EVENT_MODEL_NAMES[event]) if event in EVENT_MODEL_NAMES.keys() else Event
+		event_model = eval(EVENT_MODEL_NAMES[eventType.name]) if eventType.name in EVENT_MODEL_NAMES.keys() else Event
 		eventObj = event_model(**eventParams)
 
 	return eventObj
