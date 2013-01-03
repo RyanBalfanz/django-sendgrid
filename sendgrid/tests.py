@@ -7,6 +7,7 @@ from django.conf import settings
 from django.core.mail import EmailMessage
 from django.core.urlresolvers import reverse
 from django.dispatch import receiver
+from django.db.models.signals import post_save
 from django.test import TestCase
 from django.test.client import Client
 from django.utils.http import urlencode
@@ -62,8 +63,10 @@ validate_filter_setting_value = filterutils.validate_filter_setting_value
 validate_filter_specification = filterutils.validate_filter_specification
 update_filters = filterutils.update_filters
 
+
 class SendGridBatchedEventTest(TestCase):
 	def setUp(self):
+		self.post_save_received = 0
 		self.client = Client()
 		self.emails = []
 		for i in range(2):
@@ -77,10 +80,14 @@ class SendGridBatchedEventTest(TestCase):
 			for email in self.emails:
 				self.events.append(sample_event_dict_for_email(email))
 
-	def test_batched_events_post_emails_exist(self):
+	def test_batched_events_post_emails_exist(self):	
+		@receiver(post_save, sender=Event)
+		def check(sender,instance,*args,**kwargs):
+			self.post_save_received += 1
 		postData = BATCHED_EVENT_SEPARATOR.join(json.dumps(event, separators=(",", ":")) for event in self.events)
 		self.client.post(reverse("sendgrid_post_event"), content_type="application/json", data=postData)
 		self.assertEqual(Event.objects.count(), len(self.events))
+		self.assertEqual(self.post_save_received,len(self.events))
 		self.assertEqual(EmailMessageModel.objects.count(),len(self.emails))
 
 class SendGridBatchedEventTestEmailsDontExist(TestCase):
