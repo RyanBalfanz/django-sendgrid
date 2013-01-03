@@ -27,7 +27,7 @@ def post_test_event(event_type, event_model_name, email_message,batched=False):
 	if batched:
 		response = client.post(
 			reverse("sendgrid_post_event", args=[]),
-			data = json.dumps(event, separators=(",", ":")),
+			data = json.dumps(event_data, separators=(",", ":")),
 			content_type="application/json"
 		)
 	else:
