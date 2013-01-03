@@ -2,6 +2,8 @@ from django.core.urlresolvers import reverse
 from django.test.client import Client
 from django.utils.http import urlencode
 
+import json
+
 from sendgrid.constants import EVENT_TYPES_EXTRA_FIELDS_MAP
 
 
