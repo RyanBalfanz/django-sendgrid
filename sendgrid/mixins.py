@@ -19,7 +19,13 @@ class BulkCreateManager(models.Manager):
 		instancesCreated = self.bulk_create(instances)
 		for instance in instancesCreated:
 			#this should possibly be abandoned for a custom bulk_post_save signal for efficiency reasons
-			models.signals.post_save.send(sender=instance.__class__, instance=instance)
+			models.signals.post_save.send(
+				sender=instance.__class__, 
+				instance=instance,
+				created=True, 
+				raw=False,
+				using='default'
+			)
 		return instancesCreated
 
 class SendGridUserMixin:
