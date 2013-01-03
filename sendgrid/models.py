@@ -9,6 +9,7 @@ from django.db import models
 from django.dispatch import receiver
 from django.utils.translation import ugettext_lazy as _
 
+from .mixins import BulkCreateManager
 from .signals import sendgrid_email_sent
 from .signals import sendgrid_event_recieved
 from sendgrid.constants import (
@@ -194,8 +195,8 @@ class Argument(models.Model):
 	def __unicode__(self):
 		return self.key
 
-
 class EmailMessage(models.Model):
+	objects = BulkCreateManager()
 	message_id = models.CharField(unique=True, max_length=36, editable=False, blank=True, null=True, help_text="UUID")
 	# user = models.ForeignKey(User, null=True) # TODO
 	from_email = models.CharField(max_length=EMAIL_MESSAGE_FROM_EMAIL_MAX_LENGTH, help_text="Sender's e-mail")

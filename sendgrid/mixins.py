@@ -1,4 +1,5 @@
 from django.conf import settings
+from django.db import models, transaction
 from django.utils import simplejson
 
 from utils import add_unsubscribes
@@ -9,6 +10,13 @@ from utils import get_unsubscribes
 SENDGRID_EMAIL_USERNAME = getattr(settings, "SENDGRID_EMAIL_USERNAME", None)
 SENDGRID_EMAIL_PASSWORD = getattr(settings, "SENDGRID_EMAIL_PASSWORD", None)
 
+class BulkCreateManager(models.Manager):
+	@transaction.commit_on_success
+	def bulk_create_with_manual_ids(self,instances):
+		start = (self.all().aggregate(models.Max('id'))['id__max'] or 0) + 1
+		for i,instance in enumerate(instances): 
+			instance.id = start + i
+		return self.bulk_create(instances)
 
 class SendGridUserMixin:
 	"""

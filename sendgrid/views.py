@@ -97,12 +97,6 @@ def seperate_events_by_newsletter_id(events):
 
 	return eventsByNewsletter
 
-def bulk_create_emails_with_manual_ids(emails):
-    start = (EmailMessage.objects.all().aggregate(models.Max('id'))['id__max'] or 0) + 1
-    for i,email in enumerate(emails): 
-    	email.id = start + i
-    return EmailMessage.objects.bulk_create(emails)
-
 def build_categories(email,event_dict,category_objs):
 	categories = event_dict["category"]
 	categoriesToReturn = []
@@ -184,9 +178,9 @@ def batch_create_newsletter_events(newsletter_id,events):
 				newsletterEventsWithEmails.append(eventToCreate)
 
 	Event.objects.bulk_create(newsletterEventsWithEmails)
-	
+
 	flush_transaction()		
-	newEmails = bulk_create_emails_with_manual_ids(newsletterEmailsToCreate)
+	newEmails = EmailMessage.objects.bulk_create_with_manual_ids(newsletterEmailsToCreate)
 
 	categories = create_categories_from_events(events)
 	arguments = create_arguments_for_newsletters()
