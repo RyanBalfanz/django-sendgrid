@@ -177,7 +177,7 @@ def batch_create_newsletter_events(newsletter_id,events):
 			if eventToCreate:
 				newsletterEventsWithEmails.append(eventToCreate)
 
-	Event.objects.bulk_create(newsletterEventsWithEmails)
+	Event.objects.bulk_create_with_manual_ids(newsletterEventsWithEmails)
 
 	flush_transaction()		
 	newEmails = EmailMessage.objects.bulk_create_with_manual_ids(newsletterEmailsToCreate)
@@ -201,7 +201,7 @@ def batch_create_newsletter_events(newsletter_id,events):
 	UniqueArgument.objects.bulk_create(uniqueArgsToCreate)
 
 	flush_transaction()
-	Event.objects.bulk_create([tup[0] for tup in newsletterEventTuplesWithoutEmails])
+	Event.objects.bulk_create_with_manual_ids([tup[0] for tup in newsletterEventTuplesWithoutEmails])
 
 def batch_create_events_with_message_ids(events):
 	eventTypes = {}
@@ -236,13 +236,13 @@ def batch_create_events_with_message_ids(events):
 				eventTuplesWithoutEmails.append((eventToCreate,messageId))
 
 	newEmails = {}
-	for email in bulk_create_emails_with_manual_ids(emailsToCreate.values()):
+	for email in EmailMessage.objects.bulk_create_with_manual_ids(emailsToCreate.values()):
 		newEmails[email.message_id] = email
 
 	for event,message_id in eventTuplesWithoutEmails:
 		event.email_message = newEmails[message_id]
 
-	Event.objects.bulk_create([tup[0] for tup in eventTuplesWithoutEmails] + eventsWithEmails)
+	Event.objects.bulk_create_with_manual_ids([tup[0] for tup in eventTuplesWithoutEmails] + eventsWithEmails)
 
 @transaction.commit_on_success
 def batch_create_events(events):

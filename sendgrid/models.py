@@ -455,6 +455,7 @@ class EventType(models.Model):
 
 
 class Event(models.Model):
+	objects = BulkCreateManager()
 	email_message = models.ForeignKey(EmailMessage)
 	email = models.EmailField()
 	event_type = models.ForeignKey(EventType)
