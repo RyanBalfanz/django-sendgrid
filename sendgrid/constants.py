@@ -43,3 +43,25 @@ UNIQUE_ARGS_STORED_FOR_NEWSLETTER_EVENTS = (
 	"newsletter[newsletter_send_id]",
 	"newsletter[newsletter_user_list_id]",
 )
+
+TEST_SENDER_EMAIL = "ryan@example.com"
+TEST_RECIPIENTS = ["ryan@example.com", "tom@example.com","anotherguy@example.com"]
+
+SAMPLE_NEWSLETTER_IDS = {
+	"newsletter_send_id": "952852", 
+	"newsletter_id": "916273", 
+	"newsletter_user_list_id": "5059777"
+}
+
+SAMPLE_NEWSLETTER_IDS_2 = {
+	"newsletter_send_id": "666", 
+	"newsletter_id": "4324324", 
+	"newsletter_user_list_id": "2344324"
+}
+
+SAMPLE_EVENT_DICT_WITHOUT_MESSAGE_ID_OR_TIMESTAMP = {
+	"email": TEST_RECIPIENTS[0],
+	"category":["category1"],
+	"event": "OPEN"
+}
+

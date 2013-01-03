@@ -11,7 +11,17 @@ from django.test import TestCase
 from django.test.client import Client
 from django.utils.http import urlencode
 
-from .constants import BATCHED_EVENT_SEPARATOR, EVENT_TYPES_EXTRA_FIELDS_MAP, EVENT_MODEL_NAMES, UNIQUE_ARGS_STORED_FOR_NEWSLETTER_EVENTS
+from .constants import (
+	BATCHED_EVENT_SEPARATOR, 
+	EVENT_TYPES_EXTRA_FIELDS_MAP, 
+	EVENT_MODEL_NAMES, 
+	UNIQUE_ARGS_STORED_FOR_NEWSLETTER_EVENTS,
+	SAMPLE_NEWSLETTER_IDS,
+	SAMPLE_NEWSLETTER_IDS_2,
+	SAMPLE_EVENT_DICT_WITHOUT_MESSAGE_ID_OR_TIMESTAMP,
+	TEST_RECIPIENTS,
+	TEST_SENDER_EMAIL
+)
 from .mail import get_sendgrid_connection
 from .mail import send_sendgrid_mail
 from .message import SendGridEmailMessage
@@ -23,34 +33,16 @@ from .models import EmailMessageAttachmentsData
 from .models import EventType
 from .models import UniqueArgument
 from .signals import sendgrid_email_sent
-from sendgrid.settings import SENDGRID_CREATE_MISSING_EMAILS_FOR_EVENTS_WITH_MESSAGE_ID, SENDGRID_CREATE_EVENTS_AND_EMAILS_FOR_NEWSLETTERS
+from sendgrid.settings import (
+	SENDGRID_CREATE_MISSING_EMAILS_FOR_EVENTS_WITH_MESSAGE_ID, 
+	SENDGRID_CREATE_EVENTS_AND_EMAILS_FOR_NEWSLETTERS,
+)
 from .utils.formatutils import convert_dict_to_urlencoded_string
 from .utils import filterutils
 # from .utils import get_email_message
 from .utils import in_test_environment
 from .utils.requestfactory import RequestFactory 
 from .views import handle_single_event_request
-
-
-TEST_SENDER_EMAIL = "ryan@example.com"
-TEST_RECIPIENTS = ["ryan@example.com", "tom@example.com","anotherguy@example.com"]
-SAMPLE_NEWSLETTER_IDS = {
-	"newsletter_send_id": "952852", 
-	"newsletter_id": "916273", 
-	"newsletter_user_list_id": "5059777"
-}
-
-SAMPLE_NEWSLETTER_IDS_2 = {
-	"newsletter_send_id": "666", 
-	"newsletter_id": "4324324", 
-	"newsletter_user_list_id": "2344324"
-}
-
-SAMPLE_EVENT_DICT_WITHOUT_MESSAGE_ID_OR_TIMESTAMP = {
-	"email": TEST_RECIPIENTS[0],
-	"category":["category1"],
-	"event": "OPEN"
-}
 
 def sample_event_dict(**kwargs):
 	from django.utils.timezone import now
