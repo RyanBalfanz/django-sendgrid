@@ -308,6 +308,8 @@ def create_event_from_sendgrid_params(params,create=True):
 	else:
 		#no timestamp provided. therefore we cannot enforce any kind of uniqueness
 		unique = True
+
+	eventObj = None
 	if unique:
 		for key in EVENT_TYPES_EXTRA_FIELDS_MAP[event.upper()]:
 			value = params.get(key,None)
