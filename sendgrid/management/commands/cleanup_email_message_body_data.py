@@ -36,4 +36,4 @@ class Command(BaseCommand):
 	def handle(self, *args, **kwargs):
 		days = kwargs.get("days", None)
 		weeks = kwargs.get("weeks", None)
-		return cleanup_email_message_body_data(days=days, weeks=weeks)
+		return str(cleanup_email_message_body_data(days=days, weeks=weeks))
