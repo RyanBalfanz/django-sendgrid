@@ -24,7 +24,7 @@ from sendgrid.constants import (
 )
 from sendgrid.signals import sendgrid_email_sent
 from sendgrid.utils.formatutils import get_value_from_dict_using_formdata_key
-from sendgrid.utils.dbutils import flush_transaction
+
 MAX_CATEGORIES_PER_EMAIL_MESSAGE = 10
 
 DEFAULT_SENDGRID_EMAIL_TRACKING_COMPONENTS = (
@@ -107,7 +107,7 @@ def save_email_message(sender, **kwargs):
 			category=category,
 			response=response,
 		)
-		flush_transaction()
+
 		logger.debug("DEBUG-EVENT: emailMessage record Created with message_id:{0}".format(emailMessage.message_id))
 
 		if categories:
@@ -146,7 +146,7 @@ def save_email_message(sender, **kwargs):
 			else:
 				logMessage = "Component {c} is not tracked"
 				logger.debug(logMessage.format(c=component))
-		flush_transaction()
+
 	return emailMessage
 
 @receiver(sendgrid_event_recieved)
