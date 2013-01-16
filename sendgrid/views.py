@@ -17,7 +17,6 @@ from sendgrid.constants import BATCHED_EVENT_SEPARATOR, EVENT_TYPES_EXTRA_FIELDS
 from sendgrid.models import EmailMessage, Event, ClickEvent, DeferredEvent, DroppedEvent, DeliverredEvent, BounceEvent, EventType, Category, Argument, UniqueArgument
 from sendgrid.utils.formatutils import convert_flat_dict_to_nested
 from sendgrid.utils.formatutils import get_value_from_dict_using_formdata_key
-from sendgrid.utils.dbutils import flush_transaction
 from sendgrid import settings as sendgrid_settings
 
 POST_EVENTS_RESPONSE_STATUS_CODE = getattr(settings, "POST_EVENT_HANDLER_RESPONSE_STATUS_CODE", 200)
@@ -116,7 +115,6 @@ def build_uniqueargs(email,event_dict,arguments):
 		uniqueArgs[key] = get_value_from_dict_using_formdata_key(key,event_dict)
 
 	for argName, argValue in uniqueArgs.items():
-		flush_transaction()
 		argument = [arg for arg in arguments if arg.key == argName][0]
 		uniqueArgsToReturn.append(UniqueArgument(
 			argument=argument,
@@ -146,7 +144,6 @@ def batch_create_newsletter_events(newsletter_id,events):
 	for eventType in EventType.objects.all():
 		eventTypes[eventType.name] = eventType
 
-	flush_transaction()
 	toEmails = set([event.get("email",None) for event in events])
 
 	existingNewsletterEmails = EmailMessage.objects.filter(
@@ -178,8 +175,7 @@ def batch_create_newsletter_events(newsletter_id,events):
 				newsletterEventsWithEmails.append(eventToCreate)
 
 	Event.objects.bulk_create_with_manual_ids(newsletterEventsWithEmails)
-
-	flush_transaction()		
+	
 	newEmails = EmailMessage.objects.bulk_create_with_manual_ids(newsletterEmailsToCreate)
 
 	categories = create_categories_from_events(events)
@@ -196,11 +192,9 @@ def batch_create_newsletter_events(newsletter_id,events):
 
 	uniqueArgsToCreate = [uniquearg for sublist in uniqueArgsToCreate.values() for uniquearg in sublist]
 	categoriesToCreate = [category for sublist in categoriesToCreate.values() for category in sublist]
-	flush_transaction()
 	EmailMessage.categories.through.objects.bulk_create(categoriesToCreate)
 	UniqueArgument.objects.bulk_create(uniqueArgsToCreate)
 
-	flush_transaction()
 	Event.objects.bulk_create_with_manual_ids([tup[0] for tup in newsletterEventTuplesWithoutEmails])
 
 def batch_create_events_with_message_ids(events):
@@ -209,8 +203,7 @@ def batch_create_events_with_message_ids(events):
 		eventTypes[eventType.name] = eventType
 	messageIds = [event.get("message_id",None) for event in events if event.get("message_id",None)]
 
-	# flush_transaction()
-	# #batch select email messages from db
+
 	existingEmails = {}
 
 	for email in EmailMessage.objects.filter(message_id__in=messageIds):
@@ -259,7 +252,6 @@ def batch_create_events(events):
 	batch_create_events_with_message_ids(eventsWithMessageIds)
 
 def create_event_from_sendgrid_params(params,create=True):
-	flush_transaction()
 	email = params.get("email", None)
 	event = params.get("event", None).upper()
 	category = params.get("category", None)
@@ -271,7 +263,6 @@ def create_event_from_sendgrid_params(params,create=True):
 	emailMessage = None
 	if message_id:
 		try:
-			flush_transaction()
 			emailMessage = EmailMessage.objects.get(message_id=message_id)
 		except EmailMessage.DoesNotExist:
 			msg = "EmailMessage with message_id {id} not found"
