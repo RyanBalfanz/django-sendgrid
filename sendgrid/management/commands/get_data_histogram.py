@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 import datetime
 from optparse import make_option
 
@@ -45,7 +47,7 @@ class Command(BaseCommand):
 		)
 		for model in (EmailMessage,) + extraModels:
 			modelsObjectCount = model.objects.count()
-			print "{modelId} ({count})".format(modelId=model._meta, count=modelsObjectCount)
+			print("{modelId} ({count})".format(modelId=model._meta, count=modelsObjectCount))
 			if model in extraModels:
 				modelData = model.objects.values("email_message__creation_time").all()
 				data = [item["email_message__creation_time"] for item in modelData]
@@ -54,13 +56,13 @@ class Command(BaseCommand):
 				data = [item["creation_time"] for item in modelData]
 
 			if modelsObjectCount == 0:
-				print "\n"
+				print("\n")
 				continue
 
 			histData = DateBasedHistogram(data, "day").get_histogram_data()
-			print "\t".join(["Key", "Count", "Freq"])
+			print("\t".join(["Key", "Count", "Freq"]))
 			for k, v in histData.iteritems():
 				rowItems = [k, len(v), len(v) / float(len(data))]
 				strItems = map(str, rowItems)
-				print "\t".join(strItems)
-			print "\n"
+				print("\t".join(strItems))
+			print("\n")
