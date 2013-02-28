@@ -13,7 +13,10 @@ SENDGRID_EMAIL_PASSWORD = getattr(settings, "SENDGRID_EMAIL_PASSWORD", None)
 class BulkCreateManager(models.Manager):
 	@transaction.commit_on_success
 	def bulk_create_with_manual_ids(self,instances):
-		start = (self.all().aggregate(models.Max('pk'))['pk__max'] or 0) + 1
+		try:
+			start = self.select_for_update().all().order_by('-pk')[0].pk + 1
+		except IndexError:
+			start = 1
 		for i,instance in enumerate(instances): 
 			instance.pk = start + i
 		instancesCreated = self.bulk_create(instances)
