@@ -174,9 +174,9 @@ def batch_create_newsletter_events(newsletter_id,events):
 			if eventToCreate:
 				newsletterEventsWithEmails.append(eventToCreate)
 
-	Event.objects.bulk_create_with_post_save(newsletterEventsWithEmails)
+	Event.objects.bulk_create_with_manual_ids_retry(newsletterEventsWithEmails)
 	
-	newEmails = EmailMessage.objects.bulk_create_with_manual_ids(newsletterEmailsToCreate)
+	newEmails = EmailMessage.objects.bulk_create_with_manual_ids_retry(newsletterEmailsToCreate)
 
 	categories = create_categories_from_events(events)
 	arguments = create_arguments_for_newsletters()
@@ -195,7 +195,7 @@ def batch_create_newsletter_events(newsletter_id,events):
 	EmailMessage.categories.through.objects.bulk_create(categoriesToCreate)
 	UniqueArgument.objects.bulk_create(uniqueArgsToCreate)
 
-	Event.objects.bulk_create_with_post_save([tup[0] for tup in newsletterEventTuplesWithoutEmails])
+	Event.objects.bulk_create_with_manual_ids_retry([tup[0] for tup in newsletterEventTuplesWithoutEmails])
 
 def batch_create_events_with_message_ids(events):
 	eventTypes = {}
@@ -229,13 +229,13 @@ def batch_create_events_with_message_ids(events):
 				eventTuplesWithoutEmails.append((eventToCreate,messageId))
 
 	newEmails = {}
-	for email in EmailMessage.objects.bulk_create_with_manual_ids(emailsToCreate.values()):
+	for email in EmailMessage.objects.bulk_create_with_manual_ids_retry(emailsToCreate.values()):
 		newEmails[email.message_id] = email
 
 	for event,message_id in eventTuplesWithoutEmails:
 		event.email_message = newEmails[message_id]
 
-	Event.objects.bulk_create_with_post_save([tup[0] for tup in eventTuplesWithoutEmails] + eventsWithEmails)
+	Event.objects.bulk_create_with_manual_ids_retry([tup[0] for tup in eventTuplesWithoutEmails] + eventsWithEmails)
 
 @transaction.commit_on_success
 def batch_create_events(events):
