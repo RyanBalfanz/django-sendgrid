@@ -1,5 +1,5 @@
 from django.conf import settings
-from django.db import models, transaction
+from django.db import models, transaction, IntegrityError
 from django.utils import simplejson
 
 from utils import add_unsubscribes
@@ -35,7 +35,14 @@ class BulkCreateManager(models.Manager):
 
 		return self.bulk_create_with_post_save(instances)
 
-	
+	def bulk_create_with_manual_ids_retry(self,instances,max_retries=5,retry_counter=0):
+		try:
+			return self.bulk_create_with_manual_ids(instances)
+		except IntegrityError, e:
+			if "Duplicate" in e.message and "PRIMARY" in e.message and retry_counter < max_retries:
+				return self.bulk_create_with_manual_ids_retry(self.bulk_create,retry_counter=retry_counter+1)
+			else:
+				raise e
 
 class SendGridUserMixin:
 	"""
