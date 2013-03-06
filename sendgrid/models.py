@@ -9,6 +9,7 @@ from django.db import models
 from django.dispatch import receiver
 from django.utils.translation import ugettext_lazy as _
 
+from .mixins import BulkCreateManager
 from .signals import sendgrid_email_sent
 from .signals import sendgrid_event_recieved
 from sendgrid.constants import (
@@ -18,9 +19,11 @@ from sendgrid.constants import (
 	ARGUMENT_DATA_TYPE_FLOAT,
 	ARGUMENT_DATA_TYPE_COMPLEX,
 	ARGUMENT_DATA_TYPE_STRING,
-	UNIQUE_ARGS_STORED_FOR_EVENTS_WITHOUT_MESSAGE_ID,
+	UNIQUE_ARGS_STORED_FOR_NEWSLETTER_EVENTS,
+	NEWSLETTER_UNIQUE_IDENTIFIER,
 )
 from sendgrid.signals import sendgrid_email_sent
+from sendgrid.utils.formatutils import get_value_from_dict_using_formdata_key
 
 MAX_CATEGORIES_PER_EMAIL_MESSAGE = 10
 
@@ -64,6 +67,7 @@ def update_email_message(sender, message, response, **kwargs):
 	emailMessage.response = response
 	emailMessage.save()
 
+
 def save_email_message(sender, **kwargs):
 	message = kwargs.get("message", None)
 	response = kwargs.get("response", None)
@@ -104,6 +108,8 @@ def save_email_message(sender, **kwargs):
 			response=response,
 		)
 
+		logger.debug("DEBUG-EVENT: emailMessage record Created with message_id:{0}".format(emailMessage.message_id))
+
 		if categories:
 			for categoryName in categories:
 				category, created = Category.objects.get_or_create(name=categoryName)
@@ -140,6 +146,8 @@ def save_email_message(sender, **kwargs):
 			else:
 				logMessage = "Component {c} is not tracked"
 				logger.debug(logMessage.format(c=component))
+
+	return emailMessage
 
 @receiver(sendgrid_event_recieved)
 def log_event_recieved(sender, request, **kwargs):
@@ -187,8 +195,8 @@ class Argument(models.Model):
 	def __unicode__(self):
 		return self.key
 
-
 class EmailMessage(models.Model):
+	objects = BulkCreateManager()
 	message_id = models.CharField(unique=True, max_length=36, editable=False, blank=True, null=True, help_text="UUID")
 	# user = models.ForeignKey(User, null=True) # TODO
 	from_email = models.CharField(max_length=EMAIL_MESSAGE_FROM_EMAIL_MAX_LENGTH, help_text="Sender's e-mail")
@@ -209,12 +217,14 @@ class EmailMessage(models.Model):
 		"""
 		Returns a new EmailMessage instance derived from an Event Dictionary.
 		"""
-		newsletter_id = event_dict.get("newsletter[newsletter_id]")
+		newsletter_id = get_value_from_dict_using_formdata_key(NEWSLETTER_UNIQUE_IDENTIFIER,event_dict)
+
 		to_email = event_dict.get("email")
 		try:
-			emailMessage = UniqueArgument.objects.get(data=newsletter_id, argument__key="newsletter[newsletter_id]", email_message__to_email=to_email).email_message
+			emailMessage = UniqueArgument.objects.get(data=newsletter_id, argument__key=NEWSLETTER_UNIQUE_IDENTIFIER, email_message__to_email=to_email).email_message
 		except UniqueArgument.DoesNotExist:
-			categories = [value for key,value in event_dict.items() if 'category' in key]
+			categories = event_dict.get("category",[])
+
 			emailMessageSpec = {
 				"message_id": event_dict.get("message_id", None),
 				"from_email": "",
@@ -223,26 +233,32 @@ class EmailMessage(models.Model):
 			}
 			if len(categories) > 0:
 				emailMessageSpec["category"] = categories[0]
-				
+			
+			if event_dict.get("message_id", None):
+				logger.debug("DEBUG-EVENT: Trying To Create Email From Event with message_id {0}".format(event_dict.get("message_id", None)))
+				existingEmail = EmailMessage.objects.filter(message_id=event_dict.get("message_id", None))
+				if len(existingEmail) > 0:
+					logger.debug("DEBUG-EVENT: Found an existing email with message_id {0}".format(event_dict.get("message_id", None)))
 			emailMessage = EmailMessage.objects.create(**emailMessageSpec)
 			
 			for category in categories:
 				categoryObj,created = Category.objects.get_or_create(name=category)
 				emailMessage.categories.add(categoryObj)
 
-			uniqueArgs = {}
-			for key in UNIQUE_ARGS_STORED_FOR_EVENTS_WITHOUT_MESSAGE_ID:
-				uniqueArgs[key] = event_dict.get(key)
+			if newsletter_id:
+				uniqueArgs = {}
+				for key in UNIQUE_ARGS_STORED_FOR_NEWSLETTER_EVENTS:
+					uniqueArgs[key] = get_value_from_dict_using_formdata_key(key,event_dict)
 
-			for argName, argValue in uniqueArgs.items():
-				argument,_ = Argument.objects.get_or_create(
-					key=argName
-				)
-				uniqueArg = UniqueArgument.objects.create(
-					argument=argument,
-					email_message=emailMessage,
-					data=argValue
-				)
+				for argName, argValue in uniqueArgs.items():
+					argument,_ = Argument.objects.get_or_create(
+						key=argName
+					)
+					uniqueArg = UniqueArgument.objects.create(
+						argument=argument,
+						email_message=emailMessage,
+						data=argValue
+					)
 		
 		return emailMessage
 
@@ -439,6 +455,7 @@ class EventType(models.Model):
 
 
 class Event(models.Model):
+	objects = BulkCreateManager()
 	email_message = models.ForeignKey(EmailMessage)
 	email = models.EmailField()
 	event_type = models.ForeignKey(EventType)
