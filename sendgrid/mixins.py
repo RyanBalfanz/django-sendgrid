@@ -39,8 +39,12 @@ class BulkCreateManager(models.Manager):
 		try:
 			return self.bulk_create_with_manual_ids(instances)
 		except IntegrityError, e:
-			if "Duplicate" in e.message and "PRIMARY" in e.message and retry_counter < max_retries:
-				return self.bulk_create_with_manual_ids_retry(self.bulk_create,retry_counter=retry_counter+1)
+			if "Duplicate" in e.__str__() and "PRIMARY" in e.__str__() and retry_counter < max_retries:
+				return self.bulk_create_with_manual_ids_retry(
+					instances=instances,
+					max_retries=max_retries,
+					retry_counter=retry_counter+1
+				)
 			else:
 				raise e
 
