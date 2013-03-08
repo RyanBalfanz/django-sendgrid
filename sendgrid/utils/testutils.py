@@ -1,10 +1,15 @@
-from django.test.client import Client
-from sendgrid.constants import EVENT_TYPES_EXTRA_FIELDS_MAP
 from django.core.urlresolvers import reverse
+from django.test.client import Client
 from django.utils.http import urlencode
 
+import json
+
+from sendgrid.constants import EVENT_TYPES_EXTRA_FIELDS_MAP
+
+
 client = Client()
-def post_test_event(event_type,event_model_name,email_message):
+
+def post_test_event(event_type, event_model_name, email_message,batched=False):
 	event_data = {
 		"event": event_type,
 		"message_id": email_message.message_id,
@@ -19,4 +24,16 @@ def post_test_event(event_type,event_model_name,email_message):
 		else:
 			event_data[key] = "test_param" + key
 
-	return client.post(reverse("sendgrid_post_event",args=[]),data=urlencode(event_data),content_type="application/x-www-form-urlencoded; charset=utf-8")
+	if batched:
+		response = client.post(
+			reverse("sendgrid_post_event", args=[]),
+			data = json.dumps(event_data, separators=(",", ":")),
+			content_type="application/json"
+		)
+	else:
+		response = client.post(
+			reverse("sendgrid_post_event", args=[]),
+			data=urlencode(event_data),
+			content_type="application/x-www-form-urlencoded; charset=utf-8"
+		)
+	return response
