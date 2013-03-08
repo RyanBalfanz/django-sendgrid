@@ -53,7 +53,8 @@ EMAIL_MESSAGE_FROM_EMAIL_MAX_LENGTH = 254
 EMAIL_MESSAGE_TO_EMAIL_MAX_LENGTH = 254
 
 if SENDGRID_USER_MIXIN_ENABLED:
-	from django.contrib.auth.models import User
+	from django.contrib.auth import get_user_model
+	User = get_user_model()
 	from .mixins import SendGridUserMixin
 	
 	User.__bases__ += (SendGridUserMixin,)
