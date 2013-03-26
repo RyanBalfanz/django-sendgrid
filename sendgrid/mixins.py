@@ -1,6 +1,8 @@
 from django.conf import settings
 from django.db import models, transaction, IntegrityError
 from django.utils import simplejson
+from django.core.exceptions import ObjectDoesNotExist
+
 
 from utils import add_unsubscribes
 from utils import delete_unsubscribes
@@ -29,7 +31,7 @@ class BulkCreateManager(models.Manager):
 	def bulk_create_with_manual_ids(self,instances):
 		try:
 			start = self.select_for_update().latest(field_name='pk').pk + 1
-		except IndexError:
+		except ObjectDoesNotExist:
 			start = 1
 		for i,instance in enumerate(instances): 
 			instance.pk = start + i
