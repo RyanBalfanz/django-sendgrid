@@ -25,14 +25,16 @@ class BulkCreateManager(models.Manager):
 			)
 		return instancesCreated
 
+	@transaction.commit_on_success
 	def bulk_create_with_manual_ids(self,instances):
 		try:
-			start = self.select_for_update().all().order_by('-pk')[0].pk + 1
+			start = self.select_for_update().latest(field_name='pk').pk + 1
 		except IndexError:
 			start = 1
 		for i,instance in enumerate(instances): 
 			instance.pk = start + i
 
+		# this call will end the transaction, but that's okay
 		return self.bulk_create_with_post_save(instances)
 
 	def bulk_create_with_manual_ids_retry(self,instances,max_retries=5,retry_counter=0):
