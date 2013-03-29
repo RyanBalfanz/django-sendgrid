@@ -36,7 +36,7 @@ setup(
 	# license="BSD",
 	packages=packages,
 	package_dir={'sendgrid': 'sendgrid'},
-	package_data={'sendgrid': ['fixtures/initial_data.json']},
+	package_data={'sendgrid': ['fixtures/initial_data.json', 'static/js/message_body_preview.js']},
 	data_files=data_files,
 	long_description=long_description,
 	install_requires=[

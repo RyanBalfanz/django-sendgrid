@@ -71,6 +71,8 @@ class EmailMessageBccInline(EmailMessageGenericDataInline):
 
 class EmailMessageBodyDataInline(EmailMessageGenericDataInline):
 	model = EmailMessageBodyData
+	class Media:
+		js = ('js/message_body_preview.js',)
 
 
 class EmailMessageCcInline(EmailMessageGenericDataInline):
@@ -170,6 +172,8 @@ class EmailMessageAdmin(admin.ModelAdmin):
 		return emailMessage.categories.count()
 
 	def first_event_type(self, emailMessage):
+		if not emailMessage.first_event:
+			return None
 		return emailMessage.first_event.event_type.name
 
 	def latest_event_type(self, emailMessage):
