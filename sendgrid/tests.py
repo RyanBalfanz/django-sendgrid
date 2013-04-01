@@ -1,16 +1,28 @@
 from __future__ import absolute_import
 
+import json
 from collections import defaultdict
 
 from django.conf import settings
 from django.core.mail import EmailMessage
 from django.core.urlresolvers import reverse
 from django.dispatch import receiver
+from django.db.models.signals import post_save
 from django.test import TestCase
 from django.test.client import Client
 from django.utils.http import urlencode
 
-from .constants import EVENT_TYPES_EXTRA_FIELDS_MAP, EVENT_MODEL_NAMES, UNIQUE_ARGS_STORED_FOR_EVENTS_WITHOUT_MESSAGE_ID
+from .constants import (
+	BATCHED_EVENT_SEPARATOR, 
+	EVENT_TYPES_EXTRA_FIELDS_MAP, 
+	EVENT_MODEL_NAMES, 
+	UNIQUE_ARGS_STORED_FOR_NEWSLETTER_EVENTS,
+	SAMPLE_NEWSLETTER_IDS,
+	SAMPLE_NEWSLETTER_IDS_2,
+	SAMPLE_EVENT_DICT_WITHOUT_MESSAGE_ID_OR_TIMESTAMP,
+	TEST_RECIPIENTS,
+	TEST_SENDER_EMAIL
+)
 from .mail import get_sendgrid_connection
 from .mail import send_sendgrid_mail
 from .message import SendGridEmailMessage
@@ -21,55 +33,246 @@ from .models import Event, ClickEvent, BounceEvent, DeferredEvent, DroppedEvent,
 from .models import EmailMessageAttachmentsData
 from .models import EventType
 from .models import UniqueArgument
-from .settings import SENDGRID_CREATE_MISSING_EMAIL_MESSAGES
 from .signals import sendgrid_email_sent
+from sendgrid.settings import (
+	SENDGRID_CREATE_MISSING_EMAILS_FOR_EVENTS_WITH_MESSAGE_ID, 
+	SENDGRID_CREATE_EVENTS_AND_EMAILS_FOR_NEWSLETTERS,
+)
+from .utils.formatutils import convert_dict_to_urlencoded_string
 from .utils import filterutils
 # from .utils import get_email_message
 from .utils import in_test_environment
 from .utils.requestfactory import RequestFactory 
 from .views import handle_single_event_request
 
+def sample_event_dict(**kwargs):
+	from django.utils.timezone import now
+	import time, copy
+	sampleEvent = copy.deepcopy(SAMPLE_EVENT_DICT_WITHOUT_MESSAGE_ID_OR_TIMESTAMP)
+	for key,value in kwargs.items():
+		sampleEvent[key] = value
+	sampleEvent["timestamp"] = time.mktime(now().timetuple())
+	return sampleEvent
 
-TEST_SENDER_EMAIL = "ryan@example.com"
-TEST_RECIPIENTS = ["ryan@example.com"]
+def sample_event_dict_for_email(email):
+	sampleEvent = sample_event_dict()
+	sampleEvent["message_id"] = str(email.message_id)
+	return sampleEvent
 
 validate_filter_setting_value = filterutils.validate_filter_setting_value
 validate_filter_specification = filterutils.validate_filter_specification
 update_filters = filterutils.update_filters
 
 
+class SendGridBatchedEventTest(TestCase):
+	def setUp(self):
+		self.post_save_received = 0
+		self.client = Client()
+		self.emails = []
+		for i in range(2):
+			email = SendGridEmailMessage(to=TEST_RECIPIENTS, from_email=TEST_SENDER_EMAIL)
+			email.send()
+			self.emails.append(email)
+
+		self.events = []
+		eventsPerEmail = 3
+		for i in range(eventsPerEmail):
+			for email in self.emails:
+				self.events.append(sample_event_dict_for_email(email))
+
+	def test_batched_events_post_emails_exist(self):	
+		@receiver(post_save, sender=Event)
+		def check(sender,instance,*args,**kwargs):
+			self.post_save_received += 1
+		postData = BATCHED_EVENT_SEPARATOR.join(json.dumps(event, separators=(",", ":")) for event in self.events)
+		self.client.post(reverse("sendgrid_post_event"), content_type="application/json", data=postData)
+		self.assertEqual(Event.objects.count(), len(self.events))
+		self.assertEqual(self.post_save_received,len(self.events))
+		self.assertEqual(EmailMessageModel.objects.count(),len(self.emails))
+
+class SendGridBatchedEventTestEmailsDontExist(TestCase):
+	def setUp(self):
+		self.message_ids = ["id1","id2"]
+		eventsPerMessageId = 3
+
+		self.events = []
+		for message_id in self.message_ids:
+			for i in range(eventsPerMessageId):
+				self.events.append(sample_event_dict(message_id=message_id))
+
+	def test_batched_events_post_emails_dont_exist(self):
+		postData = BATCHED_EVENT_SEPARATOR.join(json.dumps(event, separators=(",", ":")) for event in self.events)
+
+		#post twice because second time shouldn't create any more events
+		for i in range(2):
+			self.client.post(reverse("sendgrid_post_event"), content_type="application/json", data=postData)
+			if SENDGRID_CREATE_MISSING_EMAILS_FOR_EVENTS_WITH_MESSAGE_ID:
+				self.assertEqual(Event.objects.count(),len(self.events))
+				self.assertEqual(EmailMessageModel.objects.count(),len(self.message_ids))
+			else:
+				self.assertEqual(Event.objects.count(),0)
+				self.assertEqual(EmailMessageModel.objects.count(),0)
+
+class SendGridBatchedEventNewsletterTest(TestCase):
+	def setUp(self):
+		self.events = []
+		for i in range(3):
+			self.events.append(sample_event_dict(category=["newsletter"],newsletter=SAMPLE_NEWSLETTER_IDS))
+		self.client = Client()
+
+	def test_build_email_from_event(self):
+		from .views import build_email_from_event
+		email = build_email_from_event(self.events[0])
+
+	def test_batch_create_newsletter_events(self):
+		from .views import batch_create_newsletter_events
+		from .constants import NEWSLETTER_UNIQUE_IDENTIFIER
+		from .utils.formatutils import get_value_from_dict_using_formdata_key
+		newsletterId = get_value_from_dict_using_formdata_key(NEWSLETTER_UNIQUE_IDENTIFIER,self.events[0])
+		batch_create_newsletter_events(newsletterId,self.events)
+
+	def test_batched_events_newsletter_post(self):
+		postData = BATCHED_EVENT_SEPARATOR.join(json.dumps(event, separators=(",", ":")) for event in self.events)
+
+		#post twice because second time shouldn't create any more events
+		for i in range(2):
+			self.client.post(reverse("sendgrid_post_event"), content_type="application/json", data=postData)
+			if SENDGRID_CREATE_EVENTS_AND_EMAILS_FOR_NEWSLETTERS:
+				self.assertEqual(Event.objects.count(), len(self.events))
+				self.assertEqual(EmailMessageModel.objects.count(),1)
+			else:
+				self.assertEqual(Event.objects.count(), 0)
+				self.assertEqual(EmailMessageModel.objects.count(),0)
+
+class SendGridBatchedEventMultipleNewsletterTest(TestCase):
+	def setUp(self):
+		self.events = [
+			{
+				"email": TEST_RECIPIENTS[1],
+				"timestamp": 1322000095,
+				"category":["newsletter","sale"],
+				"event": "OPEN",
+				"newsletter": SAMPLE_NEWSLETTER_IDS_2
+			},
+			{
+				"email": TEST_RECIPIENTS[2],
+				"timestamp": 1322000097,
+				"category":["newsletter","sale"],
+				"event": "OPEN",
+				"newsletter": SAMPLE_NEWSLETTER_IDS_2
+			},
+			{
+				"email": TEST_RECIPIENTS[0],
+				"timestamp": 1322000096,
+				"category":["newsletter","sale"],
+				"event": "DELIVERED",
+				"response": "OK",
+				"newsletter": SAMPLE_NEWSLETTER_IDS
+			},
+			
+			{
+				"email": TEST_RECIPIENTS[2],
+				"timestamp": 1322000097,
+				"category":["newsletter","sale"],
+				"event": "OPEN",
+				"newsletter": SAMPLE_NEWSLETTER_IDS
+			}
+		]
+		self.client = Client()
+
+	def test_seperate_events_by_newsletter_id(self):
+		from .views import seperate_events_by_newsletter_id
+		from .utils.formatutils import get_value_from_dict_using_formdata_key
+		from .constants import NEWSLETTER_UNIQUE_IDENTIFIER
+		eventsByNewsletter = seperate_events_by_newsletter_id(self.events)
+		id1 = get_value_from_dict_using_formdata_key(NEWSLETTER_UNIQUE_IDENTIFIER,{"newsletter":SAMPLE_NEWSLETTER_IDS})
+		id2 = get_value_from_dict_using_formdata_key(NEWSLETTER_UNIQUE_IDENTIFIER,{"newsletter":SAMPLE_NEWSLETTER_IDS})
+
+		self.assertEqual(len(eventsByNewsletter[id1]),2)
+		self.assertEqual(len(eventsByNewsletter[id2]),2)
+		self.assertEqual(len(eventsByNewsletter.keys()),2)
+
+	def test_batch_create_events(self):
+		from .views import batch_create_events
+		from .utils.formatutils import get_value_from_dict_using_formdata_key
+		from .constants import NEWSLETTER_UNIQUE_IDENTIFIER
+
+		batch_create_events(self.events)
+		if SENDGRID_CREATE_EVENTS_AND_EMAILS_FOR_NEWSLETTERS:
+			self.assertEqual(Event.objects.count(), len(self.events))
+			self.assertEqual(EmailMessageModel.objects.count(),4)
+			for event in self.events:
+				newsletterId = get_value_from_dict_using_formdata_key(NEWSLETTER_UNIQUE_IDENTIFIER,event)
+				email = EmailMessageModel.objects.get(
+					to_email=event["email"],
+					uniqueargument__data=newsletterId, 
+					uniqueargument__argument__key=NEWSLETTER_UNIQUE_IDENTIFIER,
+				)
+				self.assertEqual(set(event["category"]),set([category.name for category in email.categories.all()]))
+		else:
+			self.assertEqual(EmailMessageModel.objects.count(),0)
+			self.assertEqual(Event.objects.count(), 0)
+
+
+	def test_batched_events_newsletter_post(self):
+		postData = BATCHED_EVENT_SEPARATOR.join(json.dumps(event, separators=(",", ":")) for event in self.events)
+		self.client.post(reverse("sendgrid_post_event"), content_type="application/json", data=postData)
+		if SENDGRID_CREATE_EVENTS_AND_EMAILS_FOR_NEWSLETTERS:
+			self.assertEqual(Event.objects.count(), len(self.events))
+			self.assertEqual(EmailMessageModel.objects.count(),4)
+		else:
+			self.assertEqual(Event.objects.count(), 0)
+			self.assertEqual(EmailMessageModel.objects.count(),0)
 
 class SendGridEventTest(TestCase):
 	def setUp(self):
 		self.email = SendGridEmailMessage(to=TEST_RECIPIENTS, from_email=TEST_SENDER_EMAIL)
 		self.email.send()
-		self.rf = RequestFactory()
+		self.client = Client()
 
 	def test_event_email_exists(self):
 		event_count = Event.objects.count()
-		post_data = {
+		postData = {
 			"message_id": self.email.message_id, 
 			"email" : self.email.from_email,
 			"event" : "OPEN",
-			}
-		request = self.rf.post('/sendgrid/events',post_data)
-		handle_single_event_request(request)
+		}
+		postString = convert_dict_to_urlencoded_string(postData)
+		response = self.client.post(reverse("sendgrid_post_event"),data=postString,content_type="application/x-www-form-urlencoded")
+
 		#Event created
 		self.assertEqual(Event.objects.count(),event_count+1)
 		#Email matches original message_id
 		self.assertEqual(Event.objects.get().email_message.message_id, self.email.message_id.__str__())
 
+	def test_newsletter_event(self):
+		eventCount = Event.objects.count()
+		emailCount = EmailMessageModel.objects.count()
+		postData = {
+			"newsletter": SAMPLE_NEWSLETTER_IDS,
+			"email" : self.email.from_email,
+			"event" : "OPEN",
+		}
+		postString = convert_dict_to_urlencoded_string(postData)
+		response = self.client.post(reverse("sendgrid_post_event"),data=postString,content_type="application/x-www-form-urlencoded")
+
+		self.assertEqual(response.status_code,200)
+		if SENDGRID_CREATE_EVENTS_AND_EMAILS_FOR_NEWSLETTERS:
+			self.assertEqual(eventCount+1,Event.objects.count())
+			self.assertEqual(emailCount+1,EmailMessageModel.objects.count())
+		else:
+			self.assertEqual(eventCount,Event.objects.count())
+			self.assertEqual(emailCount,EmailMessageModel.objects.count())
+			
+
 	def verify_event_with_missing_email(self,post_data):
 		event_count = Event.objects.count()
 		email_count = EmailMessageModel.objects.count()
 
-		for key in UNIQUE_ARGS_STORED_FOR_EVENTS_WITHOUT_MESSAGE_ID:
-			post_data[key] = key+"_value"
+		postString = convert_dict_to_urlencoded_string(post_data)
+		response = self.client.post(reverse("sendgrid_post_event"),data=postString,content_type="application/x-www-form-urlencoded")
 
-		request = self.rf.post('/sendgrid/events',post_data)
-		handle_single_event_request(request)
-
-		if SENDGRID_CREATE_MISSING_EMAIL_MESSAGES:
+		if SENDGRID_CREATE_MISSING_EMAILS_FOR_EVENTS_WITH_MESSAGE_ID:
 			delta = 1
 		else:
 			delta = 0
@@ -79,39 +282,27 @@ class SendGridEventTest(TestCase):
 		#email created
 		self.assertEqual(EmailMessageModel.objects.count(), email_count + delta)
 
-		if SENDGRID_CREATE_MISSING_EMAIL_MESSAGES:
+		if SENDGRID_CREATE_MISSING_EMAILS_FOR_EVENTS_WITH_MESSAGE_ID:
 			event = Event.objects.get(email=post_data['email'])
 			emailMessage = event.email_message
 			#check to_email
 			self.assertEqual(event.email_message.to_email, event.email)
 
-			#check unique args
-			for key in UNIQUE_ARGS_STORED_FOR_EVENTS_WITHOUT_MESSAGE_ID:
-				self.assertEqual(post_data[key],emailMessage.uniqueargument_set.get(argument__key=key).data)
-
 			#post another event
-			request = self.rf.post('/sendgrid/events',post_data)
-			response = handle_single_event_request(request)
+			postString = convert_dict_to_urlencoded_string(post_data)
+			response = self.client.post(reverse("sendgrid_post_event"),data=postString,content_type="application/x-www-form-urlencoded")
 
 			#should be same email_count
-			self.assertEqual(EmailMessageModel.objects.count(),email_count + 1)
+			self.assertEqual(EmailMessageModel.objects.count(),email_count + delta)
 
-	def test_event_email_doesnt_exist(self):
+	def test_event_email_with_message_id_doesnt_exist(self):
 		postData = {
 			"message_id": 'a5df', 
 			"email" : self.email.to[0],
 			"event" : "OPEN",
 			"category": ["test_category", "another_test_category"],
 		}
-
-		self.verify_event_with_missing_email(postData)
-
-	def test_event_no_message_id(self):
-		postData = {
-			"email" : self.email.to[0],
-			"event" : "OPEN",
-			"category": "test_category",
-		}
+	
 		self.verify_event_with_missing_email(postData)
 
 	def test_event_email_doesnt_exist_no_category(self):
@@ -122,6 +313,25 @@ class SendGridEventTest(TestCase):
 		}
 
 		self.verify_event_with_missing_email(postData)
+
+	def test_event_no_message_id(self):
+		eventCount = Event.objects.count()
+		emailCount = EmailMessageModel.objects.count()
+		postData = {
+			"email" : self.email.to[0],
+			"event" : "OPEN",
+			"category": "test_category",
+		}
+
+		#post an event
+		response = self.client.post('/sendgrid/events/',postData)
+					
+		self.assertEqual(response.status_code,200)
+		#No matter what settings, shouldn't create any emails/events
+		self.assertEqual(EmailMessageModel.objects.count(),emailCount)
+		self.assertEqual(Event.objects.count(),eventCount)
+
+
 
 
 class SendGridEmailTest(TestCase):
