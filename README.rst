@@ -5,6 +5,7 @@ django-sendgrid
 Build Statuses (master, develop):
 
 .. image:: https://www.codeship.io/projects/64b8c9d0-8f52-0130-fe63-22000a95225b/status?branch=master
+
 .. image:: https://www.codeship.io/projects/64b8c9d0-8f52-0130-fe63-22000a95225b/status?branch=develop
 
 
