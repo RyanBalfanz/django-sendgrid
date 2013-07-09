@@ -52,7 +52,7 @@ EMAIL_MESSAGE_TO_EMAIL_MAX_LENGTH = 254
 if SENDGRID_USER_MIXIN_ENABLED:
 	from django.contrib.auth.models import User
 	from .mixins import SendGridUserMixin
-	
+
 	User.__bases__ += (SendGridUserMixin,)
 
 logger = logging.getLogger(__name__)
@@ -223,9 +223,9 @@ class EmailMessage(models.Model):
 			}
 			if len(categories) > 0:
 				emailMessageSpec["category"] = categories[0]
-				
+
 			emailMessage = EmailMessage.objects.create(**emailMessageSpec)
-			
+
 			for category in categories:
 				categoryObj,created = Category.objects.get_or_create(name=category)
 				emailMessage.categories.add(categoryObj)
@@ -243,7 +243,7 @@ class EmailMessage(models.Model):
 					email_message=emailMessage,
 					data=argValue
 				)
-		
+
 		return emailMessage
 
 	def __unicode__(self):
@@ -266,7 +266,7 @@ class EmailMessage(models.Model):
 	subject_data = property(get_subject_data)
 
 	def get_body_data(self):
-		return self.subject.data
+		return self.body.data
 	body_data = property(get_body_data)
 
 	def get_extra_headers_data(self):
