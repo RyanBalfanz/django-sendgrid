@@ -43,6 +43,10 @@ Add the following to your ``settings``::
 	SENDGRID_EMAIL_USERNAME = "your_sendgrid_username"
 	SENDGRID_EMAIL_PASSWORD = "your_sendgrid_password"
 
+Don't forget to migrate::
+
+	python manage.py migrate sendgrid
+
 The API is similar to that of Django's; create a ``SendGridEmailMessage`` and send it::
 
 	>>> from sendgrid.message import SendGridEmailMessage
