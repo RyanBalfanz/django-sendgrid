@@ -7,6 +7,8 @@ from django.http import HttpResponse
 from django.http import HttpResponseBadRequest
 from django.http import HttpResponseNotFound
 from django.utils import simplejson
+from django.views.generic import DetailView
+from django.views.generic import ListView
 from django.views.decorators.csrf import csrf_exempt
 
 from .signals import sendgrid_event_recieved
@@ -184,3 +186,20 @@ def download_attachments(request, message_id):
 
 	return response
 
+
+class EmailMessageList(ListView):
+	model = EmailMessage
+	context_object_name="emailmessage_list"
+email_message_list = EmailMessageList.as_view()
+
+
+class EmailMessageDetail(DetailView):
+	model = EmailMessage
+	context_object_name = "emailmessage"
+	slug_field = "message_id"
+email_message_detail = EmailMessageDetail.as_view()
+
+
+class EmailMessagePreview(EmailMessageDetail):
+	template_name = "sendgrid/emailmessage_preview.html"
+email_message_preview = EmailMessagePreview.as_view()

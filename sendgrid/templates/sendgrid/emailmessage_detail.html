@@ -1,0 +1,29 @@
+{% extends "sendgrid/emailmessage_base.html" %}
+
+{% block title %}{{ emailmessage }}{% endblock title %}
+{% block content %}
+<div id="emailmessage_info">
+{% block emailmessage_info %}
+	<table>
+		<tr><th>From</th><td>{{ emailmessage.from_email }}</td></tr>
+		<tr><th>To</th><td>{{ emailmessage.to_email }}</td></tr>
+		<tr><th>Subject</th><td>{{ emailmessage.subject_data }}</td></tr>
+		<tr><th>Creation Time</th><td>{{ emailmessage.creation_time }}</td></tr>
+		<tr><th>Subject</th><td>{{ emailmessage.subject_data }}</td></tr>
+		<tr><th>Category</th><td>{% for c in emailmessage.category %}{{c}}{% endfor %}</td></tr>
+		<tr><th>Categories</th><td>{% for c in emailmessage.categories.all %}{{c}}{% endfor %}</td></tr>
+		<tr><th>Events</th><td>{{ emailmessage.event_set.count }}</td></tr>
+		<tr><th>Attachments</th><td>{{ emailmessage.attachments.count|default:0 }}</td></tr>
+	</table>
+{% endblock emailmessage_info %}
+</div>
+
+<div id="emailmessage_preview">
+{% block emailmessage_preview %}
+	<div id="emailBody">
+		<a href="{% url sendgrid_email_message_preview emailmessage.message_id %}" target="_blank">Preview</a>
+		<iframe srcdoc="{{ emailmessage.body_data }}" src="{% url sendgrid_email_message_preview emailmessage.message_id %}" />
+	</div>
+{% endblock emailmessage_preview %}
+</div>
+{% endblock content %}
