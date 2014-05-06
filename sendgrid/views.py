@@ -352,7 +352,7 @@ def handle_batched_events_request(request):
 
 		body = request.raw_post_data
 
-	events = [json.loads(line) for line in body.splitlines()]
+	events = json.loads(body)
 	batch_create_events(events)
 		
 	return HttpResponse()
