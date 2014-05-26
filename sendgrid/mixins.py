@@ -1,5 +1,8 @@
 from django.conf import settings
-from django.utils import simplejson
+try:
+	import json
+except ImportError:
+	from django.utils import simplejson as json
 
 from utils import add_unsubscribes
 from utils import delete_unsubscribes
@@ -19,7 +22,7 @@ class SendGridUserMixin:
 		Returns True if the ``User``.``email`` belongs to the unsubscribe list.
 		"""
 		response = get_unsubscribes(email=self.email)
-		results = simplejson.loads(response)
+		results = json.loads(response)
 		return len(results) > 0
 		
 	def add_to_unsubscribes(self):
@@ -27,7 +30,7 @@ class SendGridUserMixin:
 		Adds the ``User``.``email`` from the unsubscribe list.
 		"""
 		response = add_unsubscribes(email=self.email)
-		result = simplejson.loads(response)
+		result = json.loads(response)
 		return result
 		
 	def delete_from_unsubscribes(self):
@@ -35,5 +38,5 @@ class SendGridUserMixin:
 		Removes the ``User``.``email`` from the unsubscribe list.
 		"""
 		response = delete_unsubscribes(email=self.email)
-		result = simplejson.loads(response)
+		result = json.loads(response)
 		return result
