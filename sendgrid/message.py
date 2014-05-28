@@ -4,10 +4,6 @@ from __future__ import absolute_import
 import logging
 import time
 import uuid
-try:
-	import simplejson as json
-except ImportError:
-	import json
 
 from django.conf import settings
 from django.core import mail
