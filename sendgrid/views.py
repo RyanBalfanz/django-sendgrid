@@ -6,7 +6,6 @@ from django.conf import settings
 from django.http import HttpResponse
 from django.http import HttpResponseBadRequest
 from django.http import HttpResponseNotFound
-from django.utils import simplejson
 from django.views.decorators.csrf import csrf_exempt
 
 from .signals import sendgrid_event_recieved
@@ -153,7 +152,10 @@ def download_attachments(request, message_id):
 	import zipfile
 	from contextlib import closing
 	from django.shortcuts import get_object_or_404
-	from django.utils import simplejson as json
+	try:
+		import json
+	except ImportError:
+		from django.utils import simplejson as json
 
 	from sendgrid.utils import zip_files
 
