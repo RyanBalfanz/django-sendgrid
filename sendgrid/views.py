@@ -2,6 +2,7 @@ from __future__ import absolute_import
 
 import logging
 from datetime import datetime
+from django import get_version as django_version
 from django.conf import settings
 from django.http import HttpResponse
 from django.http import HttpResponseBadRequest
@@ -14,6 +15,7 @@ from sendgrid.models import EmailMessage, Event, ClickEvent, DeferredEvent, Drop
 from sendgrid.constants import EVENT_TYPES_EXTRA_FIELDS_MAP, EVENT_MODEL_NAMES
 from sendgrid.settings import SENDGRID_CREATE_MISSING_EMAIL_MESSAGES
 
+import json
 
 POST_EVENTS_RESPONSE_STATUS_CODE = getattr(settings, "POST_EVENT_HANDLER_RESPONSE_STATUS_CODE", 200)
 
@@ -23,7 +25,10 @@ def handle_single_event_request(request):
 	"""
 	Handles single event POST requests.
 	"""
-	eventData = request.POST
+ 	if type(request) == dict:
+ 		eventData = request
+ 	else:
+ 		eventData = request.POST
 
 	# Parameters that are always passed with each event
 	email = eventData.get("email", None)
@@ -90,8 +95,17 @@ def handle_batched_events_request(request):
 		{"email":"foo@bar.com","timestamp":1322000096,"unique_arg":"my unique arg","event":"open"}
 
 	"""
-	logger.exception("Batched events are not currently supported!")
-	raise NotImplementedError
+ 	from distutils.version import LooseVersion
+ 	current_django_version = V(django_version())
+ 	if current_django_version >= V('1.4'):
+ 		events = json.loads(request.body)
+ 	else:
+		events = json.loads(request.raw_post_data)
+
+ 	for event in events:
+ 		handle_single_event_request(event)
+ 	response = HttpResponse()
+ 	return response
 
 def clean_response(response):
 	expectedStatusCode = POST_EVENTS_RESPONSE_STATUS_CODE
