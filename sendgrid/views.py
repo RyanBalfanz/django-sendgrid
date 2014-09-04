@@ -95,7 +95,7 @@ def handle_batched_events_request(request):
 		{"email":"foo@bar.com","timestamp":1322000096,"unique_arg":"my unique arg","event":"open"}
 
 	"""
- 	from distutils.version import LooseVersion
+ 	from distutils.version import LooseVersion as V
  	current_django_version = V(django_version())
  	if current_django_version >= V('1.4'):
  		events = json.loads(request.body)
