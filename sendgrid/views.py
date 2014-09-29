@@ -186,3 +186,16 @@ def download_attachments(request, message_id):
 
 	return response
 
+
+from django.views.generic import TemplateView
+
+
+class CrossfilterReport(TemplateView):
+	template_name = "sendgrid/reports/crossfilter.html"
+
+	def get_context_data(self, **kwargs):
+		from sendgrid.utils.reports import get_report_data, get_report_data_as_json
+
+		context = super(CrossfilterReport, self).get_context_data(**kwargs)
+		context["data"] = get_report_data()
+		return context
