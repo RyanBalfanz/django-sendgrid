@@ -5,3 +5,4 @@ distribute==0.6.24
 virtualenv==1.6.4
 virtualenvwrapper==2.11.1
 wsgiref==0.1.2
+django-nose==1.1
