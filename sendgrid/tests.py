@@ -3,16 +3,20 @@ from __future__ import absolute_import
 from collections import defaultdict
 
 from django.core.mail import EmailMessage
+from django.core.urlresolvers import reverse
 from django.dispatch import receiver
 from django.test import TestCase
+from django.test.client import Client
+from django.utils.http import urlencode
 
+from .constants import EVENT_TYPES_EXTRA_FIELDS_MAP, EVENT_MODEL_NAMES
 from .mail import get_sendgrid_connection
 from .mail import send_sendgrid_mail
 from .message import SendGridEmailMessage
 from .message import SendGridEmailMultiAlternatives
 from .models import Argument
 from .models import Category
-from .models import Event, EmailMessage as EmailMessageModel
+from .models import Event, ClickEvent, BounceEvent, DeferredEvent, DroppedEvent, DeliverredEvent, EmailMessage as EmailMessageModel
 from .models import EventType
 from .models import UniqueArgument
 from .signals import sendgrid_email_sent
@@ -420,6 +424,28 @@ class UniqueArgumentTests(TestCase):
 		uniqueArgument = self.assert_unique_argument_exists(**expectedUniqueArgKeyValue)
 		self.assertTrue(uniqueArgument)
 
+from .utils.testutils import post_test_event
+class EventPostTests(TestCase):
+	fixtures = ["initial_data.json"]
+
+	def setUp(self):
+		self.client = Client()
+		self.email_message = EmailMessageModel.objects.create(to_email=TEST_RECIPIENTS[0], from_email=TEST_SENDER_EMAIL,message_id='123abc')
+
+	def test_all_event_types(self):
+		"""
+		Tests all event types listed in EVENT_MODEL_NAMES
+		Checks that every EXTRA_FIELD is saved
+		"""
+		for event_type, event_model_name in EVENT_MODEL_NAMES.items():
+			print "Testing {0} event".format(event_type)
+			event_model = eval(EVENT_MODEL_NAMES[event_type]) if event_type in EVENT_MODEL_NAMES.keys() else Event
+			event_count_before = event_model.objects.count()
+			response = post_test_event(event_type,event_model_name,self.email_message)
+			self.assertEqual(event_model.objects.count(),event_count_before+1)
+			event = event_model.objects.filter(event_type__name=event_type)[0]
+			for key in EVENT_TYPES_EXTRA_FIELDS_MAP[event_type.upper()]:
+				self.assertNotEqual(event.__getattribute__(key),None)
 
 class EventTypeFixtureTests(TestCase):
 	fixtures = ["initial_data.json"]

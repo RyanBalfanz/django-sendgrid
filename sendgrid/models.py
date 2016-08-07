@@ -4,6 +4,7 @@ import datetime
 import logging
 
 from django.conf import settings
+from django.core.exceptions import MultipleObjectsReturned
 from django.db import models
 from django.dispatch import receiver
 from django.utils.translation import ugettext_lazy as _
@@ -386,7 +387,7 @@ class EventType(models.Model):
 class Event(models.Model):
 	email_message = models.ForeignKey(EmailMessage)
 	email = models.EmailField()
-	type = models.ForeignKey(EventType)
+	event_type = models.ForeignKey(EventType)
 	creation_time = models.DateTimeField(auto_now_add=True)
 	last_modified_time = models.DateTimeField(auto_now=True)
 
@@ -395,4 +396,68 @@ class Event(models.Model):
 		verbose_name_plural = _("Events")
 
 	def __unicode__(self):
-		return u"{0} - {1}".format(self.email_message, self.type)
+		return u"{0} - {1}".format(self.email_message, self.event_type)
+
+class ClickUrl(models.Model):
+	url = models.TextField()
+
+class ClickEvent(Event):
+	click_url = models.ForeignKey(ClickUrl)
+
+	class Meta:
+		verbose_name = ("Click Event")
+		verbose_name_plural = ("Click Events")
+
+	def __unicode__(self):
+		return u"{0} - {1}".format(super(ClickEvent,self).__unicode__(),self.url)
+
+	def get_url(self):
+		return self.click_url.url
+
+	def set_url(self,url):
+		try:
+			self.click_url = ClickUrl.objects.get_or_create(url=url)[0]
+		except MultipleObjectsReturned:
+			self.click_url = ClickUrl.objects.filter(url=url).order_by('id')[0]
+	url = property(get_url,set_url)
+
+class BounceReason(models.Model):
+	reason = models.TextField()
+
+class BounceType(models.Model):
+	type = models.CharField(max_length=32,unique=True)
+
+class BounceEvent(Event):
+	status = models.CharField(max_length=16)
+	bounce_reason = models.ForeignKey(BounceReason)
+	bounce_type = models.ForeignKey(BounceType)
+	class Meta:
+		verbose_name = ("Bounce Event")
+		verbose_name_plural = ("Bounce Events")
+
+	def __unicode__(self):
+		return u"{0} - {1}".format(super(self,BounceEvent).__unicode__(),reason)
+
+	def get_reason(self):
+		return self.bounce_reason.reason
+
+	def set_reason(self,reason):
+		self.bounce_reason = BounceReason.objects.get_or_create(reason=reason)[0]
+	reason = property(get_reason,set_reason)
+
+	def get_type(self):
+		return self.bounce_type.type
+
+	def set_type(self,reason):
+		self.bounce_type = BounceType.objects.get_or_create(type=reason)[0]
+	type = property(get_type,set_type)
+
+class DeferredEvent(Event):
+	response = models.TextField()
+	attempt = models.IntegerField()
+
+class DroppedEvent(Event):
+	reason = models.CharField(max_length=255)
+
+class DeliverredEvent(Event):
+	response = models.TextField()
