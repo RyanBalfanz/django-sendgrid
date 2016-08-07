@@ -184,10 +184,10 @@ class EmailMessage(models.Model):
 	message_id = models.CharField(unique=True, max_length=36, editable=False, blank=True, null=True, help_text="UUID")
 	# user = models.ForeignKey(User, null=True) # TODO
 	from_email = models.CharField(max_length=EMAIL_MESSAGE_FROM_EMAIL_MAX_LENGTH, help_text="Sender's e-mail")
-	to_email = models.CharField(max_length=EMAIL_MESSAGE_TO_EMAIL_MAX_LENGTH, help_text="Primiary recipient's e-mail")
+	to_email = models.CharField(max_length=EMAIL_MESSAGE_TO_EMAIL_MAX_LENGTH, db_index=True, help_text="Primiary recipient's e-mail")
 	category = models.CharField(max_length=EMAIL_MESSAGE_CATEGORY_MAX_LENGTH, blank=True, null=True, help_text="Primary SendGrid category")
 	response = models.IntegerField(blank=True, null=True, help_text="Response received from SendGrid after sending")
-	creation_time = models.DateTimeField(auto_now_add=True)
+	creation_time = models.DateTimeField(auto_now_add=True, db_index=True)
 	last_modified_time = models.DateTimeField(auto_now=True)
 	categories = models.ManyToManyField(Category)
 	arguments = models.ManyToManyField(Argument, through="UniqueArgument")
@@ -385,9 +385,9 @@ class EventType(models.Model):
 
 class Event(models.Model):
 	email_message = models.ForeignKey(EmailMessage)
-	email = models.EmailField()
-	type = models.ForeignKey(EventType)
-	creation_time = models.DateTimeField(auto_now_add=True)
+	email = models.EmailField(db_index=True)
+	event_type = models.ForeignKey(EventType)
+	creation_time = models.DateTimeField(auto_now_add=True, db_index=True)
 	last_modified_time = models.DateTimeField(auto_now=True)
 
 	class Meta:
@@ -395,4 +395,65 @@ class Event(models.Model):
 		verbose_name_plural = _("Events")
 
 	def __unicode__(self):
-		return u"{0} - {1}".format(self.email_message, self.type)
+		return u"{0} - {1}".format(self.email_message, self.event_type)
+
+class ClickUrl(models.Model):
+	url = models.TextField()
+
+class ClickEvent(Event):
+	click_url = models.ForeignKey(ClickUrl)
+
+	class Meta:
+		verbose_name = ("Click Event")
+		verbose_name_plural = ("Click Events")
+
+	def __unicode__(self):
+		return u"{0} - {1}".format(super(self,ClickEvent).__unicode__(),url)
+
+	def get_url(self):
+		return self.click_url.url
+
+	def set_url(self,url):
+		self.click_url = ClickUrl.objects.get_or_create(url=url)[0]
+	url = property(get_url,set_url)
+
+class BounceReason(models.Model):
+	reason = models.TextField()
+
+class BounceType(models.Model):
+	type = models.CharField(max_length=32,unique=True)
+
+class BounceEvent(Event):
+	status = models.CharField(max_length=16)
+	bounce_reason = models.ForeignKey(BounceReason)
+	bounce_type = models.ForeignKey(BounceType)
+	class Meta:
+		verbose_name = ("Bounce Event")
+		verbose_name_plural = ("Bounce Events")
+
+	def __unicode__(self):
+		return u"{0} - {1}".format(super(self,BounceEvent).__unicode__(),reason)
+
+	def get_reason(self):
+		return self.bounce_reason.reason
+
+	def set_reason(self,reason):
+		self.bounce_reason = BounceReason.objects.get_or_create(reason=reason)[0]
+	reason = property(get_reason,set_reason)
+
+	def get_type(self):
+		return self.bounce_type.type
+
+	def set_type(self,reason):
+		self.bounce_type = BounceType.objects.get_or_create(type=reason)[0]
+	type = property(get_type,set_type)
+
+class DeferredEvent(Event):
+	response = models.TextField()
+	attempt = models.IntegerField()
+
+class DroppedEvent(Event):
+	reason = models.CharField(max_length=255)
+
+class DeliverredEvent(Event):
+	response = models.TextField()

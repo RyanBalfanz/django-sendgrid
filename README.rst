@@ -46,3 +46,14 @@ Additional Information
  - http://ryanbalfanz.github.com/django-sendgrid/
  - http://pypi.python.org/pypi/django-sendgrid
  - http://djangopackages.com/packages/p/django-sendgrid/
+
+Preview
+-------
+
+List View
+
+.. image:: https://s3.amazonaws.com/django-sendgrid/email_message_list.png
+
+Detail View
+
+.. image:: https://s3.amazonaws.com/django-sendgrid/email_message_detail.png
