@@ -9,7 +9,11 @@ except ImportError:
 try:
 	import cStringIO as StringIO
 except ImportError:
-	import StringIO
+	try:
+		from StringIO import StringIO
+	except ImportError:
+		from io import StringIO
+
 
 
 from django.conf import settings
