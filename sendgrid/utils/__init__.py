@@ -1,5 +1,4 @@
 import datetime
-import httplib
 import logging
 import time
 import urllib
