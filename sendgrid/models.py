@@ -8,6 +8,7 @@ from django.core.exceptions import MultipleObjectsReturned
 from django.db import models
 from django.dispatch import receiver
 from django.utils.translation import ugettext_lazy as _
+from six import string_types
 
 from .signals import sendgrid_email_sent
 from .signals import sendgrid_event_recieved
@@ -85,7 +86,7 @@ def save_email_message(sender, **kwargs):
 		recipients = getattr(message, "to", None)
 		toEmail = recipients[0]
 		categoryData = message.sendgrid_headers.data.get("category", None)
-		if isinstance(categoryData, basestring):
+		if isinstance(categoryData, string_types):
 			category = categoryData
 			categories = [category]
 		else:
@@ -113,7 +114,7 @@ def save_email_message(sender, **kwargs):
 
 		uniqueArgsData = message.sendgrid_headers.data.get("unique_args", None)
 		if uniqueArgsData:
-			for k, v in uniqueArgsData.iteritems():
+			for k, v in uniqueArgsData.items():
 				argument, argumentCreated = Argument.objects.get_or_create(key=k)
 				if argumentCreated:
 					logger.debug("Argument {a} was created".format(a=argument))
@@ -123,7 +124,7 @@ def save_email_message(sender, **kwargs):
 					data=v,
 				)
 
-		for component, componentModel in COMPONENT_DATA_MODEL_MAP.iteritems():
+		for component, componentModel in COMPONENT_DATA_MODEL_MAP.items():
 			if component in SENDGRID_EMAIL_TRACKING_COMPONENTS:
 				if component == "sendgrid_headers":
 					componentData = message.sendgrid_headers.as_string()
