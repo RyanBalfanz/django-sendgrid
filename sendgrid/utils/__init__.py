@@ -10,7 +10,7 @@ try:
 	import cStringIO as StringIO
 except ImportError:
 	try:
-		from StringIO import StringIO
+		import StringIO
 	except ImportError:
 		from io import StringIO
 
