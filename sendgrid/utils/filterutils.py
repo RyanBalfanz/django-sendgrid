@@ -29,10 +29,10 @@ def validate_filter_setting_value(filter, setting, value, ignoreMissingTests=IGN
 	"""
 	if filter not in INTERFACES:
 		raise AttributeError("The filter {f} is not valid".format(f=filter))
-		
+
 	if setting not in INTERFACES[filter]:
 		raise AttributeError("The setting {s} is not valid for the filter {f}".format(s=setting, f=filter))
-		
+
 	testName = ".".join([filter, setting])
 	try:
 		test = FILTER_SETTING_VALUE_TESTS[testName]
@@ -43,7 +43,7 @@ def validate_filter_setting_value(filter, setting, value, ignoreMissingTests=IGN
 			raise e
 	else:
 		result = test(value)
-		
+
 	return result
 
 def validate_filter_specification(f):
@@ -53,8 +53,8 @@ def validate_filter_specification(f):
 	passedAllTests = None
 
 	testResults = {}
-	for filter, spec in f.iteritems():
-		for setting, value in spec.iteritems():
+	for filter, spec in f.items():
+		for setting, value in spec.items():
 			testKey = ".".join([filter, setting])
 			testResult = validate_filter_setting_value(filter, setting, value)
 			testResults[testKey] = testResult
@@ -71,9 +71,9 @@ def update_filters(email, filterSpec, validate=VALIDATE_FILTER_SPECIFICATION):
 		filterSpecIsValid = validate_filter_specification(filterSpec)
 		if not filterSpecIsValid:
 			raise Exception("Invalid filter specification")
-			
-	for filter, spec in filterSpec.iteritems():
-		for setting, value in spec.iteritems():
+
+	for filter, spec in filterSpec.items():
+		for setting, value in spec.items():
 			email.sendgrid_headers.addFilterSetting(fltr=filter, setting=setting, val=value)
 
 	return

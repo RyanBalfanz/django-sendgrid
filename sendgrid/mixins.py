@@ -4,9 +4,9 @@ try:
 except ImportError:
 	from django.utils import simplejson as json
 
-from utils import add_unsubscribes
-from utils import delete_unsubscribes
-from utils import get_unsubscribes
+from .utils import add_unsubscribes
+from .utils import delete_unsubscribes
+from .utils import get_unsubscribes
 
 
 SENDGRID_EMAIL_USERNAME = getattr(settings, "SENDGRID_EMAIL_USERNAME", None)
@@ -24,7 +24,7 @@ class SendGridUserMixin:
 		response = get_unsubscribes(email=self.email)
 		results = json.loads(response)
 		return len(results) > 0
-		
+
 	def add_to_unsubscribes(self):
 		"""
 		Adds the ``User``.``email`` from the unsubscribe list.
@@ -32,7 +32,7 @@ class SendGridUserMixin:
 		response = add_unsubscribes(email=self.email)
 		result = json.loads(response)
 		return result
-		
+
 	def delete_from_unsubscribes(self):
 		"""
 		Removes the ``User``.``email`` from the unsubscribe list.

@@ -17,21 +17,21 @@ def check_settings(fail_silently=False):
 	Checks that the required settings are available.
 	"""
 	allOk = True
-	
+
 	checks = {
 		"SENDGRID_EMAIL_HOST": SENDGRID_EMAIL_HOST,
 		"SENDGRID_EMAIL_PORT": SENDGRID_EMAIL_PORT,
 		"SENDGRID_EMAIL_USERNAME": SENDGRID_EMAIL_USERNAME,
 		"SENDGRID_EMAIL_PASSWORD": SENDGRID_EMAIL_PASSWORD,
 	}
-	
-	for key, value in checks.iteritems():
+
+	for key, value in checks.items():
 		if not value:
 			logger.warn("{k} is not set".format(k=key))
 			allOk = False
 			if not fail_silently:
 				raise ImproperlyConfigured("{k} was not found".format(k=key))
-			
+
 	return allOk
 
 
