@@ -1,4 +1,4 @@
-Django==1.4.2
+Django==2.2.24
 django-debug-toolbar==0.9.4
 South==0.7.5
 distribute==0.6.24
